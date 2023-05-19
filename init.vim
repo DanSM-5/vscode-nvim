@@ -10,7 +10,7 @@ nmap gcc <Plug>VSCodeCommentaryLine
 
 " Useful keybindings
 " Replace word under the cursor with content of register 0
-nmap <leader>p ciw<C-r>0<ESC>
+nmap <leader>v ciw<C-r>0<ESC>
 
 " Camel case motion keybindings
 let g:camelcasemotion_key = '<leader>'
