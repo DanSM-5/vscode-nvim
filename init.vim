@@ -74,13 +74,13 @@ source ~/.SpaceVim.d/utils/system-copy-maps.vim
 " Load plugins
 set runtimepath^=~/.cache/vimfiles/repos/github.com/DanSM-5/vim-system-copy
 set runtimepath^=~/.config/vscode-nvim/plugins/vim-repeat
-set runtimepath^=~/.config/vscode-nvim/plugins/CamelCaseMotion
+set runtimepath^=~/.cache/vimfiles/repos/github.com/bkad/CamelCaseMotion
 set runtimepath^=~/.cache/vimfiles/repos/github.com/tpope/vim-surround
 set runtimepath^=~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion
 set runtimepath^=~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim
 
 source ~/.cache/vimfiles/repos/github.com/DanSM-5/vim-system-copy/plugin/system_copy.vim
-source ~/.config/vscode-nvim/plugins/CamelCaseMotion/plugin/camelcasemotion.vim
+source ~/.cache/vimfiles/repos/github.com/bkad/CamelCaseMotion/plugin/camelcasemotion.vim
 source ~/.cache/vimfiles/repos/github.com/tpope/vim-surround/plugin/surround.vim
 source ~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion/sort_motion.vim
 source ~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim/plugin/repeatable.vim
