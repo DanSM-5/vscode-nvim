@@ -2,6 +2,10 @@
 " let g:vscode_loaded = 1
 " VSCode extension
 
+" Change location of shada files for VSCode to avoid conflicts
+" with nvim profile in terminal
+set shada+='1000,n$HOME/.cache/vscode-nvim/main.shada
+
 " Vim commentary emulation
 xmap gc  <Plug>VSCodeCommentary
 nmap gc  <Plug>VSCodeCommentary
