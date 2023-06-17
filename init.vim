@@ -94,6 +94,21 @@ source ~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim/plugin/repeatab
 Repeatable nnoremap mlu :<C-U>m-2<CR>==
 Repeatable nnoremap mld :<C-U>m+<CR>==
 
-" Windows specific
-set shell=cmd
-set shellcmdflag=/c
+if $IS_WINDOWS == 'true'
+  " Windows specific
+  set shell=cmd
+  set shellcmdflag=/c
+endif
+
+" Load utility clipboard functions
+source ~/.SpaceVim.d/utils/clipboard.vim
+
+" Map clipboard functions
+xnoremap <silent> <Leader>y :<C-u>call clipboard#yank()<cr>
+nnoremap <expr> <Leader>p clipboard#paste('p')
+nnoremap <expr> <Leader>P clipboard#paste('P')
+xnoremap <expr> <Leader>p clipboard#paste('p')
+xnoremap <expr> <Leader>P clipboard#paste('P')
+
+" Clean trailing whitespace in file
+nnoremap <silent> <Leader>c :%s/\s\+$//e
