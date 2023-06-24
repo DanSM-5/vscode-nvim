@@ -55,10 +55,6 @@ nnoremap <C-s> :<C-u>w<CR>
 vnoremap <C-s> :<C-u>w<CR>
 cnoremap <C-s> <C-u>w<CR>
 
-" Set system_copy variables
-let g:system_copy#paste_command = 'pbpaste.exe'
-let g:system_copy#copy_command = 'pbcopy.exe'
-
 " System copy maps
 source ~/.SpaceVim.d/utils/system-copy-maps.vim
 
@@ -86,7 +82,7 @@ set runtimepath^=~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim
 source ~/.cache/vimfiles/repos/github.com/DanSM-5/vim-system-copy/plugin/system_copy.vim
 source ~/.cache/vimfiles/repos/github.com/bkad/CamelCaseMotion/plugin/camelcasemotion.vim
 source ~/.cache/vimfiles/repos/github.com/tpope/vim-surround/plugin/surround.vim
-source ~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion/sort_motion.vim
+" source ~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion/sort_motion.vim
 source ~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim/plugin/repeatable.vim
 
 " Move line up/down
@@ -98,6 +94,15 @@ if $IS_WINDOWS == 'true'
   " Windows specific
   set shell=cmd
   set shellcmdflag=/c
+
+  " Set system_copy variables
+  let g:system_copy#paste_command = 'pbpaste.exe'
+  let g:system_copy#copy_command = 'pbcopy.exe'
+
+elseif $IS_MAC == 'true'
+  " Set system_copy variables
+  let g:system_copy#paste_command = 'pbpaste'
+  let g:system_copy#copy_command = 'pbcopy'
 endif
 
 " Load utility clipboard functions
