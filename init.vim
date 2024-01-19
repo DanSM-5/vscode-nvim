@@ -117,3 +117,6 @@ xnoremap <expr> <Leader>P clipboard#paste('P')
 
 " Clean trailing whitespace in file
 nnoremap <silent> <Leader>c :%s/\s\+$//e<cr>
+
+nnoremap <silent> <tab> :bn<cr>
+nnoremap <silent> <s-tab> :bN<cr>
