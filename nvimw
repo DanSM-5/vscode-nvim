@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+# Load config to setup required env variables
+export VSCODE_NVIM=true
+[ -f "$HOME/.usr_conf/load_conf.sh" ] && \. "$HOME/.usr_conf/load_conf.sh"
+
+# Add nix to environment
+if [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
+  \. "$HOME/.nix-profile/etc/profile.d/nix.sh"
+fi # added by Nix installer
+
+# Add home manager if available
+if [ -f "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ]; then
+  \. "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
+fi
+
+# Launch nvim
+nvim "$@"
