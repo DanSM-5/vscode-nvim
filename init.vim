@@ -18,6 +18,8 @@ nmap <leader>v ciw<C-r>0<ESC>
 
 " Camel case motion keybindings
 let g:camelcasemotion_key = '<leader>'
+" Vim-Asterisk keep cursor position under current letter with
+let g:asterisk#keeppos = 1
 
 ""Ctrl+Shift+Up/Down to move up and down
 nmap <silent><C-S-Down> :m .+1<CR>==
@@ -26,7 +28,6 @@ imap <silent><C-S-Down> <Esc>:m .+1<CR>==gi
 imap <silent><C-S-Up> <Esc>:m .-2<CR>==gi
 vmap <silent><C-S-Down> :m '>+1<CR>gv=gv
 vmap <silent><C-S-Up> :m '<-2<CR>gv=gv
-
 
 " ]<End> or ]<Home> move current line to the end or the begin of current buffer
 nnoremap <silent>]<End> ddGp``
@@ -76,21 +77,23 @@ set runtimepath^=~/.cache/vimfiles/repos/github.com/DanSM-5/vim-system-copy
 set runtimepath^=~/.config/vscode-nvim/plugins/vim-repeat
 set runtimepath^=~/.cache/vimfiles/repos/github.com/bkad/CamelCaseMotion
 set runtimepath^=~/.cache/vimfiles/repos/github.com/tpope/vim-surround
-set runtimepath^=~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion
+" set runtimepath^=~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion
 set runtimepath^=~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim
+set runtimepath^=~/.cache/vimfiles/repos/github.com/haya14busa/vim-asterisk
 
 source ~/.cache/vimfiles/repos/github.com/DanSM-5/vim-system-copy/plugin/system_copy.vim
 source ~/.cache/vimfiles/repos/github.com/bkad/CamelCaseMotion/plugin/camelcasemotion.vim
 source ~/.cache/vimfiles/repos/github.com/tpope/vim-surround/plugin/surround.vim
 " source ~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion/sort_motion.vim
 source ~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim/plugin/repeatable.vim
+source ~/.cache/vimfiles/repos/github.com/haya14busa/vim-asterisk/plugin/asterisk.vim
 
 " Move line up/down
 " Require repeatable.vim
 Repeatable nnoremap mlu :<C-U>m-2<CR>==
 Repeatable nnoremap mld :<C-U>m+<CR>==
 
-if $IS_WINDOWS == 'true'
+if $IS_WINSHELL == 'true'
   " Windows specific
   set shell=cmd
   set shellcmdflag=/c
@@ -98,7 +101,10 @@ if $IS_WINDOWS == 'true'
   " Set system_copy variables
   let g:system_copy#paste_command = 'pbpaste.exe'
   let g:system_copy#copy_command = 'pbcopy.exe'
-
+elseif $IS_WSL == 'true'
+  " Set system_copy variables
+  let g:system_copy#paste_command = 'pbpaste.exe'
+  let g:system_copy#copy_command = 'pbcopy.exe'
 elseif $IS_MAC == 'true'
   " Set system_copy variables
   let g:system_copy#paste_command = 'pbpaste'
@@ -117,6 +123,22 @@ xnoremap <expr> <Leader>P clipboard#paste('P')
 
 " Clean trailing whitespace in file
 nnoremap <silent> <Leader>c :%s/\s\+$//e<cr>
+
+" vim-asterisk
+map *   <Plug>(asterisk-*)
+map #   <Plug>(asterisk-#)
+map g*  <Plug>(asterisk-g*)
+map g#  <Plug>(asterisk-g#)
+map z*  <Plug>(asterisk-z*)
+map gz* <Plug>(asterisk-gz*)
+map z#  <Plug>(asterisk-z#)
+map gz# <Plug>(asterisk-gz#)
+
+" Set "stay" behavior by default
+" map *  <Plug>(asterisk-z*)
+" map #  <Plug>(asterisk-z#)
+" map g* <Plug>(asterisk-gz*)
+" map g# <Plug>(asterisk-gz#)
 
 nnoremap <silent> <tab> :bn<cr>
 nnoremap <silent> <s-tab> :bN<cr>
