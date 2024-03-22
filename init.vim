@@ -123,6 +123,8 @@ xnoremap <expr> <Leader>P clipboard#paste('P')
 
 " Clean trailing whitespace in file
 nnoremap <silent> <Leader>c :%s/\s\+$//e<cr>
+" Clean carriage returns '^M'
+nnoremap <silent> <Leader>r :%s/\r$//g<cr>
 
 " vim-asterisk
 map *   <Plug>(asterisk-*)
