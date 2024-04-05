@@ -144,7 +144,7 @@ map gz* <Plug>(asterisk-gz*)
 map z#  <Plug>(asterisk-z#)
 map gz# <Plug>(asterisk-gz#)
 
-" Set "stay" behavior by default
+" Set 'stay' behavior by default
 " map *  <Plug>(asterisk-z*)
 " map #  <Plug>(asterisk-z#)
 " map g* <Plug>(asterisk-gz*)
