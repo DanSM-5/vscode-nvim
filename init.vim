@@ -6,6 +6,9 @@
 " with nvim profile in terminal
 set shada+='1000,n$HOME/.cache/vscode-nvim/main.shada
 
+" Make nocompatible explisit
+set nocompatible
+
 " Vim commentary emulation
 xmap gc  <Plug>VSCodeCommentary
 nmap gc  <Plug>VSCodeCommentary
@@ -125,6 +128,11 @@ xnoremap <expr> <Leader>P clipboard#paste('P')
 nnoremap <silent> <Leader>c :%s/\s\+$//e<cr>
 " Clean carriage returns '^M'
 nnoremap <silent> <Leader>r :%s/\r$//g<cr>
+" Quick buffer overview an completion to change
+nnoremap gb :ls<CR>:b<Space>
+" Move between buffers with tab
+nnoremap <silent> <tab> :bn<cr>
+nnoremap <silent> <s-tab> :bN<cr>
 
 " vim-asterisk
 map *   <Plug>(asterisk-*)
@@ -142,5 +150,3 @@ map gz# <Plug>(asterisk-gz#)
 " map g* <Plug>(asterisk-gz*)
 " map g# <Plug>(asterisk-gz#)
 
-nnoremap <silent> <tab> :bn<cr>
-nnoremap <silent> <s-tab> :bN<cr>
