@@ -83,6 +83,7 @@ set runtimepath^=~/.cache/vimfiles/repos/github.com/tpope/vim-surround
 " set runtimepath^=~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion
 set runtimepath^=~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim
 set runtimepath^=~/.cache/vimfiles/repos/github.com/haya14busa/vim-asterisk
+set runtimepath^=~/.config/vscode-nvim/plugins/vim-smoothie
 
 source ~/.cache/vimfiles/repos/github.com/DanSM-5/vim-system-copy/plugin/system_copy.vim
 source ~/.cache/vimfiles/repos/github.com/bkad/CamelCaseMotion/plugin/camelcasemotion.vim
@@ -90,6 +91,7 @@ source ~/.cache/vimfiles/repos/github.com/tpope/vim-surround/plugin/surround.vim
 " source ~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion/sort_motion.vim
 source ~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim/plugin/repeatable.vim
 source ~/.cache/vimfiles/repos/github.com/haya14busa/vim-asterisk/plugin/asterisk.vim
+source ~/.config/vscode-nvim/plugins/vim-smoothie/plugin/smoothie.vim
 
 " Move line up/down
 " Require repeatable.vim
@@ -162,3 +164,15 @@ map gz# <Plug>(asterisk-gz#)
 " map g* <Plug>(asterisk-gz*)
 " map g# <Plug>(asterisk-gz#)
 
+" " Down
+" nnoremap <C-d> <C-d>zz
+" " Up
+" nnoremap <C-u> <C-u>zz
+" " Forwards
+" nnoremap <C-f> <C-f>zz
+" " Backwards
+" nnoremap <C-b> <C-b>zz
+" nnoremap <PageUp> <PageUp>zz
+" nnoremap <PageDown> <PageDown>zz
+" nnoremap <S-Up> <S-Up>zz
+" nnoremap <S-Down> <S-Down>zz
