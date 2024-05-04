@@ -2,7 +2,14 @@
 
 # Load config to setup required env variables
 export VSCODE_NVIM=true
-[ -f "$HOME/.usr_conf/load_conf.sh" ] && \. "$HOME/.usr_conf/load_conf.sh"
+# if [ -f "$HOME/user-scripts/bin/detection" ]; then
+#   \. "$HOME/user-scripts/bin/detection"
+# elif [ -f "$HOME/.usr_conf/load_conf.sh" ]; then
+#   \. "$HOME/.usr_conf/load_conf.sh"
+# fi
+script_path="$(readlink -f "$0")"
+script_dir="$(dirname "$script_path")"
+\. "$script_dir/detection"
 
 # Add nix to environment
 if [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
@@ -15,4 +22,5 @@ if [ -f "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ]; then
 fi
 
 # Launch nvim
-nvim "$@"
+exec nvim "$@"
+

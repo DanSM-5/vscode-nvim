@@ -104,14 +104,26 @@ if $IS_WINSHELL == 'true'
   " Set system_copy variables
   let g:system_copy#paste_command = 'pbpaste.exe'
   let g:system_copy#copy_command = 'pbcopy.exe'
-elseif $IS_WSL == 'true'
+elseif has('wsl') && $IS_WSL1 == 'true'
   " Set system_copy variables
   let g:system_copy#paste_command = 'pbpaste.exe'
   let g:system_copy#copy_command = 'pbcopy.exe'
-elseif $IS_MAC == 'true'
+elseif !empty($DISPLAY) && executable('xclip')
+  let g:system_copy#copy_command = 'xclip -i -selection clipboard'
+  let g:system_copy#paste_command = 'xclip -o -selection clipboard'
+elseif !empty($DISPLAY) && executable('xsel')
+  let g:system_copy#copy_command = 'xsel -i -b'
+  let g:system_copy#paste_command = 'xsel -o -b'
+elseif !empty($WAYLAND_DISPLAY) && executable('wl-copy') && executable('wl-paste')
+  let g:system_copy#copy_command = 'wl-copy --foreground --type text/plain'
+  let g:system_copy#paste_command = 'wl-paste --no-newline'
+elseif has('mac')
   " Set system_copy variables
   let g:system_copy#paste_command = 'pbpaste'
   let g:system_copy#copy_command = 'pbcopy'
+elseif executable('pbcopy.exe')
+  let g:system_copy#paste_command = 'pbpaste.exe'
+  let g:system_copy#copy_command = 'pbcopy.exe'
 endif
 
 " Load utility clipboard functions
