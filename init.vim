@@ -128,7 +128,7 @@ elseif executable('pbcopy.exe')
   let g:system_copy#copy_command = 'pbcopy.exe'
 endif
 
-# Prevent open dialog
+" Prevent open dialog
 let g:system_copy_silent = 1
 
 " Load utility clipboard functions
