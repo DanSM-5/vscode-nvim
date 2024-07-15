@@ -98,6 +98,16 @@ source ~/.config/vscode-nvim/plugins/vim-smoothie/plugin/smoothie.vim
 Repeatable nnoremap mlu :<C-U>m-2<CR>==
 Repeatable nnoremap mld :<C-U>m+<CR>==
 
+" Load utility clipboard functions
+source ~/.SpaceVim.d/utils/clipboard.vim
+
+" Map clipboard functions
+xnoremap <silent> <Leader>y :<C-u>call clipboard#yank()<cr>
+nnoremap <expr> <Leader>p clipboard#paste('p')
+nnoremap <expr> <Leader>P clipboard#paste('P')
+xnoremap <expr> <Leader>p clipboard#paste('p')
+xnoremap <expr> <Leader>P clipboard#paste('P')
+
 if $IS_WINSHELL == 'true'
   " Windows specific
   set shell=cmd
@@ -106,6 +116,11 @@ if $IS_WINSHELL == 'true'
   " Set system_copy variables
   let g:system_copy#paste_command = 'pbpaste.exe'
   let g:system_copy#copy_command = 'pbcopy.exe'
+elseif $IS_FROM_CONTAINER == 'true'
+  " Set system_copy variables
+  let g:system_copy#paste_command = 'fs-paste'
+  let g:system_copy#copy_command = 'fs-copy'
+  call clipboard#set(g:system_copy#copy_command, g:system_copy#paste_command)
 elseif has('wsl') && $IS_WSL1 == 'true'
   " Set system_copy variables
   let g:system_copy#paste_command = 'pbpaste.exe'
@@ -130,16 +145,6 @@ endif
 
 " Prevent open dialog
 let g:system_copy_silent = 1
-
-" Load utility clipboard functions
-source ~/.SpaceVim.d/utils/clipboard.vim
-
-" Map clipboard functions
-xnoremap <silent> <Leader>y :<C-u>call clipboard#yank()<cr>
-nnoremap <expr> <Leader>p clipboard#paste('p')
-nnoremap <expr> <Leader>P clipboard#paste('P')
-xnoremap <expr> <Leader>p clipboard#paste('p')
-xnoremap <expr> <Leader>P clipboard#paste('P')
 
 " Clean trailing whitespace in file
 nnoremap <silent> <Leader>c :%s/\s\+$//e<cr>
