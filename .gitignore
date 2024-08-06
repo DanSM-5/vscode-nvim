@@ -1,2 +1,5 @@
 
 plugins/*
+plugged/*
+autoload/plug.vim
+
