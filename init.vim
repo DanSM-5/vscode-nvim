@@ -1,4 +1,6 @@
 
+" vim:fileencoding=utf-8:foldmethod=marker
+
 " let g:vscode_loaded = 1
 " VSCode extension
 
@@ -19,10 +21,16 @@ nmap gcc <Plug>VSCodeCommentaryLine
 " Replace word under the cursor with content of register 0
 nmap <leader>v ciw<C-r>0<ESC>
 
+" Location for the vscode-nvim config
+let g:config_dir = '~/.config/vscode-nvim'
+" Location for vimplug
+let g:plug_home = g:config_dir . '/plugged'
 " Camel case motion keybindings
 let g:camelcasemotion_key = '<leader>'
 " Vim-Asterisk keep cursor position under current letter with
 let g:asterisk#keeppos = 1
+" Prevent smoothie default mappings
+let g:smoothie_no_default_mappings = 1
 
 ""Ctrl+Shift+Up/Down to move up and down
 nmap <silent><C-S-Down> :m .+1<CR>==
@@ -60,7 +68,7 @@ vnoremap <C-s> :<C-u>w<CR>
 cnoremap <C-s> <C-u>w<CR>
 
 " System copy maps
-source ~/.SpaceVim.d/utils/system-copy-maps.vim
+source ~/vim-config/utils/system-copy-maps.vim
 
 "" move selected lines up one line
 "xnoremap <A-Up> :m-2<CR>gv=gv
@@ -75,31 +83,68 @@ source ~/.SpaceVim.d/utils/system-copy-maps.vim
 "" move current line down in insert mode
 "inoremap <A-Down> <Esc>:m .+1<CR>==gi
 
+func! g:OnVimEnter () abort
+  " Install plugins
+  if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+    PlugInstall --sync | q
+  endif
+
+  " Move line up/down
+  " Require repeatable.vim
+  Repeatable nnoremap mlu :<C-U>m-2<CR>==
+  Repeatable nnoremap mld :<C-U>m+<CR>==
+endfunction
+
+" On enter setup
+autocmd VimEnter * call g:OnVimEnter()
+
+": Plugings {{{ :-------------------------------------------------
 " Load plugins
-set runtimepath^=~/.cache/vimfiles/repos/github.com/DanSM-5/vim-system-copy
-set runtimepath^=~/.config/vscode-nvim/plugins/vim-repeat
-set runtimepath^=~/.cache/vimfiles/repos/github.com/bkad/CamelCaseMotion
-set runtimepath^=~/.cache/vimfiles/repos/github.com/tpope/vim-surround
-" set runtimepath^=~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion
-set runtimepath^=~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim
-set runtimepath^=~/.cache/vimfiles/repos/github.com/haya14busa/vim-asterisk
-set runtimepath^=~/.config/vscode-nvim/plugins/vim-smoothie
+" set runtimepath^=~/.cache/vimfiles/repos/github.com/DanSM-5/vim-system-copy
+" set runtimepath^=~/.config/vscode-nvim/plugins/vim-repeat
+" set runtimepath^=~/.cache/vimfiles/repos/github.com/bkad/CamelCaseMotion
+" set runtimepath^=~/.cache/vimfiles/repos/github.com/tpope/vim-surround
+" " set runtimepath^=~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion
+" set runtimepath^=~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim
+" set runtimepath^=~/.cache/vimfiles/repos/github.com/haya14busa/vim-asterisk
+" set runtimepath^=~/.config/vscode-nvim/plugins/vim-smoothie
 
-source ~/.cache/vimfiles/repos/github.com/DanSM-5/vim-system-copy/plugin/system_copy.vim
-source ~/.cache/vimfiles/repos/github.com/bkad/CamelCaseMotion/plugin/camelcasemotion.vim
-source ~/.cache/vimfiles/repos/github.com/tpope/vim-surround/plugin/surround.vim
-" source ~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion/sort_motion.vim
-source ~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim/plugin/repeatable.vim
-source ~/.cache/vimfiles/repos/github.com/haya14busa/vim-asterisk/plugin/asterisk.vim
-source ~/.config/vscode-nvim/plugins/vim-smoothie/plugin/smoothie.vim
+" source ~/.cache/vimfiles/repos/github.com/DanSM-5/vim-system-copy/plugin/system_copy.vim
+" source ~/.cache/vimfiles/repos/github.com/bkad/CamelCaseMotion/plugin/camelcasemotion.vim
+" source ~/.cache/vimfiles/repos/github.com/tpope/vim-surround/plugin/surround.vim
+" " source ~/.cache/vimfiles/repos/github.com/christoomey/vim-sort-motion/sort_motion.vim
+" source ~/.cache/vimfiles/repos/github.com/kreskij/Repeatable.vim/plugin/repeatable.vim
+" source ~/.cache/vimfiles/repos/github.com/haya14busa/vim-asterisk/plugin/asterisk.vim
+" source ~/.config/vscode-nvim/plugins/vim-smoothie/plugin/smoothie.vim
 
-" Move line up/down
-" Require repeatable.vim
-Repeatable nnoremap mlu :<C-U>m-2<CR>==
-Repeatable nnoremap mld :<C-U>m+<CR>==
+" Automatically install VimPlug from within (n)vim
+if empty(glob(g:config_dir . '/autoload/plug.vim'))
+  silent execute '!curl -fLo ' . g:config_dir . '/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+endif
+
+call plug#begin(g:plug_home)
+  " List your plugins here
+  Plug 'DanSM-5/vim-system-copy'
+  Plug 'tpope/vim-repeat'
+  " Plug 'christoomey/vim-sort-motion'
+  Plug 'bkad/CamelCaseMotion'
+  Plug 'tpope/vim-surround'
+  Plug 'kreskij/Repeatable.vim'
+  Plug 'haya14busa/vim-asterisk'
+  Plug 'psliwka/vim-smoothie'
+call plug#end()
+
+": }}} :----------------------------------------------------------
+
+vnoremap <S-down> <cmd>call smoothie#do("\<C-D>")<CR>
+nnoremap <S-down> <cmd>call smoothie#do("\<C-D>")<CR>
+vnoremap <S-up> <cmd>call smoothie#do("\<C-U>")<CR>
+nnoremap <S-up> <cmd>call smoothie#do("\<C-U>")<CR>
+" vnoremap zz <Cmd>call smoothie#do("zz")<CR>
+" nnoremap zz <Cmd>call smoothie#do("zz")<CR>
 
 " Load utility clipboard functions
-source ~/.SpaceVim.d/utils/clipboard.vim
+source ~/vim-config/utils/clipboard.vim
 
 " Map clipboard functions
 xnoremap <silent> <Leader>y :<C-u>call clipboard#yank()<cr>
