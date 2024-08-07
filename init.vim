@@ -19,7 +19,7 @@ nmap gcc <Plug>VSCodeCommentaryLine
 
 " Useful keybindings
 " Replace word under the cursor with content of register 0
-nmap <leader>v ciw<C-r>0<ESC>
+nmap <leader>vp ciw<C-r>0<ESC>
 
 " Location for the vscode-nvim config
 let g:config_dir = '~/.config/vscode-nvim'
@@ -192,9 +192,9 @@ endif
 let g:system_copy_silent = 1
 
 " Clean trailing whitespace in file
-nnoremap <silent> <Leader>c :%s/\s\+$//e<cr>
+nnoremap <silent> <Leader>cc :%s/\s\+$//e<cr>
 " Clean carriage returns '^M'
-nnoremap <silent> <Leader>r :%s/\r$//g<cr>
+nnoremap <silent> <Leader>cr :%s/\r$//g<cr>
 " Quick buffer overview an completion to change
 nnoremap gb :ls<CR>:b<Space>
 " Move between buffers with tab
