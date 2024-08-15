@@ -2,4 +2,5 @@
 plugins/*
 plugged/*
 autoload/plug.vim
+lazy/*
 
