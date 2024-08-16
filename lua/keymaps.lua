@@ -220,6 +220,20 @@ vim.keymap.set({ 'n', 'v', 'o' }, 'gz#', '<Plug>(asterisk-gz#)', {
 -- Vscode actions -- LSP like bindings
 local vscode = require('vscode')
 
+-- Go to implementation mappings
+vim.keymap.set({ 'n', 'x' }, 'gi', function()
+  vscode.action('editor.action.goToImplementation')
+end, {
+  desc = '[VSCode] Show implementations',
+  noremap = true,
+})
+vim.keymap.set({ 'n', 'x' }, 'gI', function()
+  vscode.action('editor.action.peakImplementation')
+end, {
+  desc = '[VSCode] Peak implementations',
+  noremap = true,
+})
+
 -- Show references
 vim.keymap.set({ 'n', 'x' }, 'gr', function()
   vscode.action('editor.action.referenceSearch.trigger')
