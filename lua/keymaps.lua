@@ -221,14 +221,14 @@ vim.keymap.set({ 'n', 'v', 'o' }, 'gz#', '<Plug>(asterisk-gz#)', {
 local vscode = require('vscode')
 
 -- Go to implementation mappings
-vim.keymap.set({ 'n', 'x' }, 'gi', function()
+vim.keymap.set({ 'n', 'x' }, 'gI', function()
   vscode.action('editor.action.goToImplementation')
 end, {
   desc = '[VSCode] Show implementations',
   noremap = true,
 })
-vim.keymap.set({ 'n', 'x' }, 'gI', function()
-  vscode.action('editor.action.peakImplementation')
+vim.keymap.set({ 'n', 'x' }, 'gi', function()
+  vscode.action('editor.action.peekImplementation')
 end, {
   desc = '[VSCode] Peak implementations',
   noremap = true,
