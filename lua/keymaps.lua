@@ -13,18 +13,18 @@ vim.keymap.set('n', 'gcc', '<Plug>VSCodeCommentaryLine', {
 })
 
 -- Ctrl+Shift+Up/Down to move up and down
-vim.keymap.set('n', '<C-S-Down>', ':m .+1<cr>==',
-  { desc = 'Move line under the cursor down', silent = true })
-vim.keymap.set('n', '<C-S-Up>', ':m .-2<cr>==',
-  { desc = 'Move line under the cursor up', silent = true })
-vim.keymap.set('i', '<C-S-Down>', '<Esc>:m .+1<cr>==gi',
-  { desc = 'Move line under the cursor down', silent = true })
-vim.keymap.set('i', '<C-S-Up>', '<Esc>:m .-2<cr>==gi',
-  { desc = 'Move line under the cursor up', silent = true })
-vim.keymap.set('v', '<C-S-Down>', ":m '>+1<cr>gv=gv",
-  { desc = 'Move line under the cursor down', silent = true })
-vim.keymap.set('v', '<C-S-Up>', ":m '<-2<cr>gv=gv",
-  { desc = 'Move line under the cursor up', silent = true })
+-- vim.keymap.set('n', '<C-S-Down>', ':m .+1<cr>==',
+--   { desc = 'Move line under the cursor down', silent = true })
+-- vim.keymap.set('n', '<C-S-Up>', ':m .-2<cr>==',
+--   { desc = 'Move line under the cursor up', silent = true })
+-- vim.keymap.set('i', '<C-S-Down>', '<Esc>:m .+1<cr>==gi',
+--   { desc = 'Move line under the cursor down', silent = true })
+-- vim.keymap.set('i', '<C-S-Up>', '<Esc>:m .-2<cr>==gi',
+--   { desc = 'Move line under the cursor up', silent = true })
+-- vim.keymap.set('v', '<C-S-Down>', ":m '>+1<cr>gv=gv",
+--   { desc = 'Move line under the cursor down', silent = true })
+-- vim.keymap.set('v', '<C-S-Up>', ":m '<-2<cr>gv=gv",
+--   { desc = 'Move line under the cursor up', silent = true })
 
 -- ]<End> or ]<Home> move current line to the end or the begin of current buffer
 vim.keymap.set('n', ']<End>', 'ddGp``',
@@ -54,9 +54,9 @@ vim.keymap.set('n', '<', '<<_',
 
 -- smart up and down
 vim.keymap.set('n', '<down>', 'gj',
-  { desc = 'Move down in wrapped lines', silent = true })
+  { desc = 'Move down in wrapped lines', silent = true, remap = true })
 vim.keymap.set('n', '<up>', 'gk',
-  { desc = 'Move up in wrapped lines', silent = true })
+  { desc = 'Move up in wrapped lines', silent = true, remap = true })
 -- nnoremap <expr> k (v:count == 0 ? 'gk' : 'k')
 -- nnoremap <expr> j (v:count == 0 ? 'gj' : 'j')
 
@@ -110,20 +110,35 @@ vim.cmd('source ' .. '~/vim-config/utils/clipboard.vim')
 
 -- Map clipboard functions
 vim.keymap.set('x', '<Leader>y', ':<C-u>call clipboard#yank()<cr>',
-  { desc = 'Yank selection to system clipboard',
-    silent = true, noremap = true })
+  {
+    desc = 'Yank selection to system clipboard',
+    silent = true,
+    noremap = true
+  })
 vim.keymap.set('n', '<Leader>p', 'clipboard#paste("p")',
-  { desc = 'Paste content of system clipboard after the cursor',
-    expr = true, noremap = true })
+  {
+    desc = 'Paste content of system clipboard after the cursor',
+    expr = true,
+    noremap = true
+  })
 vim.keymap.set('n', '<Leader>P', 'clipboard#paste("P")',
-  { desc = 'Paste content of system clipboard after the cursor',
-    expr = true, noremap = true })
+  {
+    desc = 'Paste content of system clipboard after the cursor',
+    expr = true,
+    noremap = true
+  })
 vim.keymap.set('x', '<Leader>p', 'clipboard#paste("p")',
-  { desc = 'Paste content of system clipboard after the cursor',
-    expr = true, noremap = true })
+  {
+    desc = 'Paste content of system clipboard after the cursor',
+    expr = true,
+    noremap = true
+  })
 vim.keymap.set('x', '<Leader>P', 'clipboard#paste("P")',
-  { desc = 'Paste content of system clipboard after the cursor',
-    expr = true, noremap = true })
+  {
+    desc = 'Paste content of system clipboard after the cursor',
+    expr = true,
+    noremap = true
+  })
 
 -- Clean trailing whitespace in file
 vim.keymap.set('n', '<Leader>cc', ':%s/\\s\\+$//e<cr>', {
@@ -142,17 +157,19 @@ vim.keymap.set('n', 'gb', ':ls<cr>:b<space>', {
   desc = 'List open buffers and set command mode for quick navigation',
   noremap = true,
 })
+
 -- " Move between buffers with tab
-vim.keymap.set('n', '<tab>', ':bn<cr>', {
-  desc = 'Move to next buffer',
-  noremap = true,
-  silent = true,
-})
-vim.keymap.set('n', '<s-tab>', ':bN<cr>', {
-  desc = 'Move to previous buffer',
-  noremap = true,
-  silent = true,
-})
+-- NOTE: disabled for issues on vscode handling of buffer next/prev
+-- vim.keymap.set('n', '<tab>', ':bn<cr>', {
+--   desc = 'Move to next buffer',
+--   noremap = true,
+--   silent = true,
+-- })
+-- vim.keymap.set('n', '<s-tab>', ':bN<cr>', {
+--   desc = 'Move to previous buffer',
+--   noremap = true,
+--   silent = true,
+-- })
 
 -- vim-asterisk
 vim.keymap.set({ 'n', 'v', 'o' }, '*', '<Plug>(asterisk-*)', {
@@ -198,3 +215,108 @@ vim.keymap.set({ 'n', 'v', 'o' }, 'gz#', '<Plug>(asterisk-gz#)', {
 -- nnoremap <PageDown> <PageDown>zz
 -- nnoremap <S-Up> <S-Up>zz
 -- nnoremap <S-Down> <S-Down>zz
+
+
+-- Vscode actions -- LSP like bindings
+local vscode = require('vscode')
+
+-- Show references
+vim.keymap.set({ 'n', 'x' }, 'gr', function()
+  vscode.action('editor.action.referenceSearch.trigger')
+end, {
+  desc = '[VSCode] Show references',
+  noremap = true,
+})
+
+-- Format document
+vim.keymap.set('n', '<space>f', function()
+  vscode.action('editor.action.formatDocument')
+end, {
+  desc = '[VSCode] Format Document',
+  noremap = true,
+})
+
+
+-- Open reference in vertical split
+vim.keymap.set('n', 'gv', function()
+  vscode.action('editor.action.revealDefinitionAside')
+end, {
+  desc = '[VSCode] Show definition in vertical split',
+  noremap = true,
+})
+
+-- Diagnostic next
+vim.keymap.set('n', ']d', function()
+  vscode.action('editor.action.marker.next')
+end, {
+  desc = '[VSCode] Go to next diagnostic: error, warning, info',
+  noremap = true,
+})
+-- Diagnostic prev
+vim.keymap.set('n', '[d', function()
+  vscode.action('editor.action.marker.prev')
+end, {
+  desc = '[VSCode] Go to previous diagnostic: error, warning, info',
+  noremap = true,
+})
+-- also exists go to next and prev in same file:
+-- editor.action.marker.nextInFiles and
+-- editor.action.marker.prevInFiles
+
+-- Code Actions (Quickfix)
+vim.keymap.set({ 'n', 'x' }, '<space>ca', function()
+  vscode.action('editor.action.quickFix')
+end, {
+  desc = '[VSCode] Open editor actions',
+  noremap = true,
+})
+
+
+-- Fold Toggle
+vim.keymap.set('n', 'za', function()
+  vscode.action('editor.toggleFold')
+end, {
+  desc = '[VSCode] Toggle fold',
+  noremap = true,
+})
+
+-- Below is the function in vimscript
+-- function! s:manageEditorSize(...)
+--     let count = a:1
+--     let to = a:2
+--     for i in range(1, count ? count : 1)
+--         call VSCodeNotify(to ==# 'increase' ? 'workbench.action.increaseViewSize' : 'workbench.action.decreaseViewSize')
+--     endfor
+-- endfunction
+
+---@param count number
+---@param action string
+local manageEditorSize = function(count, action)
+  for _ in pairs(vim.fn.range(1, count ~= 0 and count or 1)) do
+    vscode.action(action)
+  end
+end
+
+-- Window resize vsplit
+vim.keymap.set({ 'n', 'x' }, '<A-.>', function()
+  manageEditorSize(vim.v.count, 'workbench.action.increaseViewWidth')
+end, {
+  desc = '[VSCode] Increase editor window width'
+})
+vim.keymap.set({ 'n', 'x' }, '<A-,>', function()
+  manageEditorSize(vim.v.count, 'workbench.action.decreaseViewWidth')
+end, {
+  desc = '[VSCode] Decrease editor window width'
+})
+
+-- Window resize split
+vim.keymap.set({ 'n', 'x' }, '<A-t>', function()
+  manageEditorSize(vim.v.count, 'workbench.action.increaseViewHeight')
+end, {
+  desc = '[VSCode] Increase editor window height'
+})
+vim.keymap.set({ 'n', 'x' }, '<A-s>', function()
+  manageEditorSize(vim.v.count, 'workbench.action.decreaseViewHeight')
+end, {
+  desc = '[VSCode] Decrease editor window height'
+})

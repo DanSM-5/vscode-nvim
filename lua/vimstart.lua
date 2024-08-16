@@ -19,8 +19,6 @@ vim.cmd('set cursorline')
 -- vim.g.maplocalleader = ' '
 -- Leader key
 vim.g.mapleader = '\\'
--- Location for the vscode-nvim config
-vim.g.config_dir = '~/.config/vscode-nvim'
 -- Location for vimplug
 -- vim.g.plug_home = vim.g.config_dir .. '/plugged'
 -- Camel case motion keybindings
@@ -32,9 +30,6 @@ vim.g.smoothie_no_default_mappings = 1
 -- Prevent open dialog
 vim.g.system_copy_silent = 1
 --: }}} :------------------------------------------------------------------
-
--- Add config dir to runtimepath
-vim.opt.rtp:append(vim.g.config_dir)
 
 OnVimEnter = function ()
   -- Move line up/down

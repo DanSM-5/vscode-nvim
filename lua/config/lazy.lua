@@ -1,3 +1,4 @@
+local pluginspath = vim.fn.expand('~/.cache/vscode-nvim/lazy/plugins')
 -- Bootstrap lazy.nvim
 -- local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 local lazypath = vim.g.config_dir .. '/lazy/lazy.nvim'
@@ -23,6 +24,7 @@ require('lazy').setup({
     -- import your plugins
     { import = 'plugins' },
   },
+  root = pluginspath,
   -- Configure any other settings here. See the documentation for more details.
   -- colorscheme that will be used when installing plugins.
   -- install = { colorscheme = { 'habamax' } },
