@@ -13,6 +13,8 @@ vim.cmd('set nocompatible')
 vim.cmd('set encoding=UTF-8')
 -- show line under the cursor
 vim.cmd('set cursorline')
+-- show numbers
+vim.cmd('set number relativenumber')
 
 
 --: Global variables {{{ :-------------------------------------------------
