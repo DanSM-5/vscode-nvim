@@ -15,7 +15,8 @@ vim.cmd('set encoding=UTF-8')
 vim.cmd('set cursorline')
 -- show numbers
 vim.cmd('set number relativenumber')
-
+-- set smart case
+vim.cmd('set smartcase')
 
 --: Global variables {{{ :-------------------------------------------------
 -- vim.g.maplocalleader = ' '
