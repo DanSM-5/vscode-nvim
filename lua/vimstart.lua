@@ -15,6 +15,8 @@ vim.cmd('set encoding=UTF-8')
 vim.cmd('set cursorline')
 -- show numbers
 vim.cmd('set number relativenumber')
+-- ignore case in search
+vim.cmd('set ignorecase')
 -- set smart case
 vim.cmd('set smartcase')
 
