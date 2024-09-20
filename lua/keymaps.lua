@@ -233,6 +233,12 @@ end, {
   desc = '[VSCode] Peak implementations',
   noremap = true,
 })
+vim.keymap.set('n', '<space>rn', function ()
+  vscode.action('editor.action.rename')
+end, {
+  desc = '[VSCode] Rename symbol',
+  noremap = true,
+})
 
 -- Show references
 vim.keymap.set({ 'n', 'x' }, 'gr', function()
@@ -334,3 +340,4 @@ vim.keymap.set({ 'n', 'x' }, '<A-s>', function()
 end, {
   desc = '[VSCode] Decrease editor window height'
 })
+
