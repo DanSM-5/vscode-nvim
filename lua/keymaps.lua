@@ -279,6 +279,24 @@ end, {
   desc = '[VSCode] Go to previous diagnostic: error, warning, info',
   noremap = true,
 })
+
+-- Action marker next/prev doesn't support moving per specific levels
+-- error/warning/info/hint etc. So we duplicate the common case for complitness.
+-- Diagnostic next
+vim.keymap.set('n', '<space>ne', function()
+  vscode.action('editor.action.marker.next')
+end, {
+  desc = '[VSCode] Go to next diagnostic: error, warning, info',
+  noremap = true,
+})
+-- Diagnostic prev
+vim.keymap.set('n', '<space>nE', function()
+  vscode.action('editor.action.marker.prev')
+end, {
+  desc = '[VSCode] Go to previous diagnostic: error, warning, info',
+  noremap = true,
+})
+
 -- also exists go to next and prev in same file:
 -- editor.action.marker.nextInFiles and
 -- editor.action.marker.prevInFiles
