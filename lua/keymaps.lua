@@ -265,6 +265,16 @@ end, {
   noremap = true,
 })
 
+-- Hunk next
+vim.keymap.set('n', '<space>nh', function ()
+  vscode.action('workbench.action.editor.nextChange')
+end)
+
+-- Hunk next
+vim.keymap.set('n', '<space>nH', function ()
+  vscode.action('workbench.action.editor.previousChange')
+end)
+
 -- Diagnostic next
 vim.keymap.set('n', ']d', function()
   vscode.action('editor.action.marker.next')
