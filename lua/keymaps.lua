@@ -268,12 +268,33 @@ end, {
 -- Hunk next
 vim.keymap.set('n', '<space>nh', function ()
   vscode.action('workbench.action.editor.nextChange')
-end)
+end, { desc = '[VSCode] Go to next change', noremap = true })
 
 -- Hunk next
 vim.keymap.set('n', '<space>nH', function ()
   vscode.action('workbench.action.editor.previousChange')
-end)
+end, { desc = '[VSCode] Go to previous change', noremap = true })
+
+-- Hunk stage
+vim.keymap.set('n', '<leader>hs', function ()
+  vscode.action('git.stageChange')
+end, { desc = '[VSCode] Stage hunk', noremap = true })
+vim.keymap.set('v', '<leader>hs', function ()
+  vscode.action('git.stageSelectedRanges')
+end, { desc = '[VSCode] Stage hunk', noremap = true })
+
+-- Hunk undo
+vim.keymap.set('n', '<leader>hu', function ()
+  vscode.action('git.revertChange')
+end, { desc = '[VSCode] Revert hunk', noremap = true })
+
+-- Hunk preview
+vim.keymap.set('n', '<leader>hp', function ()
+  vscode.action('editor.action.dirtydiff.next')
+end, { desc = '[VSCode] Preview hunk', noremap = true })
+vim.keymap.set('n', '<leader>hP', function ()
+  vscode.action('editor.action.dirtydiff.prev')
+end, { desc = '[VSCode] Preview hunk', noremap = true })
 
 -- Diagnostic next
 vim.keymap.set('n', ']d', function()
@@ -293,12 +314,12 @@ end, {
 -- Go to next merge conflict
 vim.keymap.set('n', ']n', function ()
   vscode.action('merge-conflict.next')
-end, { desc = '[VSCode] Go to next merge conflict' })
+end, { desc = '[VSCode] Go to next merge conflict', noremap = true })
 
 -- Go to prev merge conflict
 vim.keymap.set('n', '[n', function ()
   vscode.action('merge-conflict.previous')
-end, { desc = '[VSCode] Go to prev merge conflict' })
+end, { desc = '[VSCode] Go to prev merge conflict', noremap = true })
 
 -- Action marker next/prev doesn't support moving per specific levels
 -- error/warning/info/hint etc. So we duplicate the common case for complitness.
