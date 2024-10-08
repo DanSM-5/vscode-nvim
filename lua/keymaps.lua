@@ -290,6 +290,16 @@ end, {
   noremap = true,
 })
 
+-- Go to next merge conflict
+vim.keymap.set('n', ']n', function ()
+  vscode.action('merge-conflict.next')
+end, { desc = '[VSCode] Go to next merge conflict' })
+
+-- Go to prev merge conflict
+vim.keymap.set('n', '[n', function ()
+  vscode.action('merge-conflict.previous')
+end, { desc = '[VSCode] Go to prev merge conflict' })
+
 -- Action marker next/prev doesn't support moving per specific levels
 -- error/warning/info/hint etc. So we duplicate the common case for complitness.
 -- Diagnostic next
