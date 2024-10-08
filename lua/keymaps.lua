@@ -287,6 +287,9 @@ end, { desc = '[VSCode] Stage hunk', noremap = true })
 vim.keymap.set('n', '<leader>hu', function ()
   vscode.action('git.revertChange')
 end, { desc = '[VSCode] Revert hunk', noremap = true })
+vim.keymap.set('v', '<leader>hu', function ()
+  vscode.action('git.revertSelectedRanges')
+end, { desc = '[VSCode] Revert hunk', noremap = true })
 
 -- Hunk preview
 vim.keymap.set('n', '<leader>hp', function ()
