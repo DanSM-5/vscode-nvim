@@ -293,7 +293,7 @@ vim.keymap.set('n', '<leader>hp', function ()
   vscode.action('editor.action.dirtydiff.next')
 end, { desc = '[VSCode] Preview hunk', noremap = true })
 vim.keymap.set('n', '<leader>hP', function ()
-  vscode.action('editor.action.dirtydiff.prev')
+  vscode.action('editor.action.dirtydiff.previous')
 end, { desc = '[VSCode] Preview hunk', noremap = true })
 
 -- Diagnostic next
