@@ -341,6 +341,22 @@ end, {
   noremap = true,
 })
 
+-- Next ocurrence of symbol
+vim.keymap.set('n', ']r', function ()
+  vscode.action('editor.action.wordHighlight.next')
+end, {
+  desc = '[VSCode] Go to next matching symbol',
+  noremap = true,
+})
+
+-- Previous ocurrence of symbol
+vim.keymap.set('n', '[r', function ()
+  vscode.action('editor.action.wordHighlight.prev')
+end, {
+  desc = '[VSCode] Go to prev matching symbol',
+  noremap = true,
+})
+
 -- also exists go to next and prev in same file:
 -- editor.action.marker.nextInFiles and
 -- editor.action.marker.prevInFiles
