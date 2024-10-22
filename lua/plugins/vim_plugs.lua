@@ -6,7 +6,10 @@ return {
   -- 'christoomey/vim-sort-motion',
   'bkad/CamelCaseMotion',
   'tpope/vim-surround',
-  'kreskij/Repeatable.vim',
+  {
+    'kreskij/Repeatable.vim',
+    cmd = { 'Repeatable' },
+  },
   'haya14busa/vim-asterisk',
   'psliwka/vim-smoothie',
   {
