@@ -2,6 +2,8 @@ local vscode = require('vscode')
 
 return {
   set_defualt = function ()
+    local nx = { 'n', 'x' }
+
     -- Vim commentary emulation
     vim.keymap.set('x', 'gc', '<Plug>VSCodeCommentary', {
       desc = '[VSCommentary]: Start comment action with word objects'
@@ -399,27 +401,48 @@ return {
     end
 
     -- Window resize vsplit
-    vim.keymap.set({ 'n', 'x' }, '<A-.>', function()
+    vim.keymap.set(nx, '<A-.>', function()
       manageEditorSize(vim.v.count, 'workbench.action.increaseViewWidth')
     end, {
       desc = '[VSCode] Increase editor window width'
     })
-    vim.keymap.set({ 'n', 'x' }, '<A-,>', function()
+    vim.keymap.set(nx, '<A-,>', function()
       manageEditorSize(vim.v.count, 'workbench.action.decreaseViewWidth')
     end, {
       desc = '[VSCode] Decrease editor window width'
     })
 
     -- Window resize split
-    vim.keymap.set({ 'n', 'x' }, '<A-t>', function()
+    vim.keymap.set(nx, '<A-t>', function()
       manageEditorSize(vim.v.count, 'workbench.action.increaseViewHeight')
     end, {
       desc = '[VSCode] Increase editor window height'
     })
-    vim.keymap.set({ 'n', 'x' }, '<A-s>', function()
+    vim.keymap.set(nx, '<A-s>', function()
       manageEditorSize(vim.v.count, 'workbench.action.decreaseViewHeight')
     end, {
       desc = '[VSCode] Decrease editor window height'
+    })
+
+    vim.keymap.set(nx, '<A-j>', function ()
+      vscode.action('workbench.action.navigateDown')
+    end, {
+      desc = '[VSCode] Navigate to down window'
+    })
+    vim.keymap.set(nx, '<A-k>', function ()
+      vscode.action('workbench.action.navigateUp')
+    end, {
+      desc = '[VSCode] Navigate to up window'
+    })
+    vim.keymap.set(nx, '<A-h>', function ()
+      vscode.action('workbench.action.navigateLeft')
+    end, {
+      desc = '[VSCode] Navigate to left window'
+    })
+    vim.keymap.set(nx, '<A-l>', function ()
+      vscode.action('workbench.action.navigateRight')
+    end, {
+      desc = '[VSCode] Navigate to right window'
     })
   end,
 
