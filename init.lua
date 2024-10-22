@@ -16,8 +16,6 @@ require('utils.repeat_motion')
 require('keymaps')
 
 require('vimstart')
--- vim.cmd('set runtimepath^=' .. vim.g.config_dir)
--- vim.cmd('set runtimepath-=' .. vim.fn.expand('~/AppData/Local/nvim'))
 require('platform_setup')
 require('config.lazy')
 -- NOTE: Lazy adds the default directory again after loading 🙃

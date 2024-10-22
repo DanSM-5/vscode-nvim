@@ -1,9 +1,7 @@
 ---@class RepeatOptions
----@field forward boolean Initial movement of motion
----@field on_forward function Callback when moving forward
----@field on_backward function Callback when moving backward
+---@field fn function Function to make repeatable with motions
 
----@class MirrorMap
+---@class RepeatPair
 ---@field keys string Key to be used when creating a map
 ---@field prefix_forward string|nil prefix key to be used on forward binding
 ---@field prefix_backward string|nil prefix key to be used on backward binding
@@ -13,28 +11,20 @@
 ---@field desc_forward string Keymap description for forward binding
 ---@field desc_backward string Keymap description for backward binding
 
+---@class MotionKeys
+---@field move_forward string Key to be used when repeating a direction motion
+---@field move_backward string Key to be used when repeating a direction motion
+
 local repeat_motion = {}
 
----Creates repeatable motions for ',' and ';' using demicolon plugin.
----The on_forward and on_backward will be used for directionality of the movement
----The forward prop is important as it signals the initial direction of the motion
----and it is used by demicolon (it mutates the ref object) to keep track of the directionality
+---Creates repeatable function using nvim-treesitter-textobjects
+---It accepts an object that uses a `forward` for directionality
 ---@param options RepeatOptions
-repeat_motion.repeat_pair = function(options)
-  local repeatably_do = require('demicolon.jump').repeatably_do
-  local repeat_func = function()
-    ---Main repeatable logic
-    ---@param opts RepeatOptions
-    repeatably_do(function(opts)
-      if opts.forward == nil or opts.forward then
-        opts.on_forward()
-      else
-        opts.on_backward()
-      end
-    end, options)
-  end
-
-  return repeat_func
+---@return fun(opts: { forward: boolean }|table): nil
+repeat_motion.repeat_direction = function(options)
+  local func = require('nvim-treesitter.textobjects.repeatable_move')
+    .make_repeatable_move(options.fn)
+  return func
 end
 
 ---Creates dot repeatable motions using vim-repeat and repeatable.vim
@@ -46,27 +36,37 @@ repeat_motion.repeat_dot = function(map_string)
 end
 
 ---Create a pair of maps. Square brackers are used by default '[' ']'
----@param options MirrorMap
-repeat_motion.mirror_map = function(options)
+---Maps are repeatable through the motion keys set by `set_motion_keys`
+---Depends of nvim-treesitter-textobjects
+---@param options RepeatPair
+repeat_motion.repeat_pair = function(options)
   local prefix_forward = options.prefix_forward or ']'
   local prefix_backward = options.prefix_backward or '['
   local mode = options.mode or 'n'
   local keymap_forward = prefix_forward .. options.keys
   local keymap_backward = prefix_backward .. options.keys
+  local forward, backward  = require('nvim-treesitter.textobjects.repeatable_move')
+    .make_repeatable_move_pair(options.on_forward, options.on_backward)
 
   -- Forward map
-  vim.keymap.set(mode, keymap_forward, repeat_motion.repeat_pair({
-    forward = true,
-    on_forward = options.on_forward,
-    on_backward = options.on_backward
-  }), { desc = options.desc_forward, noremap = true })
+  vim.keymap.set(mode, keymap_forward, forward, { desc = options.desc_forward, noremap = true })
 
   -- Backward map
-  vim.keymap.set(mode, keymap_backward, repeat_motion.repeat_pair({
-    forward = false,
-    on_forward = options.on_forward,
-    on_backward = options.on_backward
-  }), { desc = options.desc_backward, noremap = true })
+  vim.keymap.set(mode, keymap_backward, backward, { desc = options.desc_backward, noremap = true })
+end
+
+---Sets the keymaps to use as motions. By default uses ',' and ';' for similar behavior of t, T, f and F.
+---Other maps can be used such as '<' and '>'
+---Depends of nvim-treesitter-textobjects
+---@param opts MotionKeys|nil
+repeat_motion.set_motion_keys = function (opts)
+  local options = vim.tbl_deep_extend('force', { move_forward = ';', move_backward = ',' }, opts or {})
+  local ts_repeatable_move = require('nvim-treesitter.textobjects.repeatable_move')
+  local nxo = { 'n', 'x', 'o' }
+
+  -- Set repeatable motions
+  vim.keymap.set(nxo, options.move_forward, ts_repeatable_move.repeat_last_move_next)
+  vim.keymap.set(nxo, options.move_backward, ts_repeatable_move.repeat_last_move_previous)
 end
 
 return repeat_motion

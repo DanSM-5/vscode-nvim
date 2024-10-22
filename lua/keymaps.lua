@@ -424,7 +424,9 @@ return {
   end,
 
   set_repeatable = function ()
-    local mirror_map = require('utils.repeat_motion').mirror_map
+    local repeat_motion = require('utils.repeat_motion')
+    repeat_motion.set_motion_keys()
+    local repeat_pair = repeat_motion.repeat_pair
 
     -- Hunk next
     local nextChange = function ()
@@ -435,7 +437,7 @@ return {
       vscode.action('workbench.action.editor.previousChange')
     end
 
-    mirror_map({
+    repeat_pair({
       keys = 'c',
       desc_forward = '[VSCode] Go to next change',
       desc_backward =  '[VSCode] Go to previous change',
@@ -452,7 +454,7 @@ return {
       vscode.action('merge-conflict.previous')
     end
 
-    mirror_map({
+    repeat_pair({
       keys = 'n',
       desc_forward = '[VSCode] Go to next merge conflict',
       desc_backward =  '[VSCode] Go to prev merge conflict',
@@ -469,14 +471,14 @@ return {
       vscode.action('editor.action.marker.prev')
     end
 
-    mirror_map({
+    repeat_pair({
       keys = 'e',
       on_forward = nextDiagnostic,
       on_backward = prevDiagnostic,
       desc_forward = '[VSCode] Go to next diagnostic: error, warning, info',
       desc_backward = '[VSCode] Go to previous diagnostic: error, warning, info',
     })
-    mirror_map({
+    repeat_pair({
       keys = 'd',
       on_forward = nextDiagnostic,
       on_backward = prevDiagnostic,
@@ -493,7 +495,7 @@ return {
       vscode.action('editor.action.wordHighlight.prev')
     end
 
-    mirror_map({
+    repeat_pair({
       keys = 'r',
       on_forward = nextSymbol,
       on_backward = prevSymbol,
