@@ -444,6 +444,18 @@ return {
     end, {
       desc = '[VSCode] Navigate to right window'
     })
+
+    -- Move next buffer
+    vim.keymap.set('n', '<tab>', function ()
+      -- vscode.action('workbench.action.nextEditor')
+      vscode.action('workbench.action.nextEditorInGroup')
+    end, { desc = '[VSCode] Move to next buffer', noremap = true })
+    -- Move to previous buffer
+    vim.keymap.set('n', '<s-tab>', function ()
+      -- vscode.action('workbench.action.previousEditor')
+      vscode.action('workbench.action.previousEditorInGroup')
+    end, { desc = '[VSCode] Move to previous buffer', noremap = true })
+
   end,
 
   set_repeatable = function ()
