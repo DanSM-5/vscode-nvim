@@ -14,6 +14,7 @@ vim.cmd('set runtimepath-=' .. vim.fn.expand('~/AppData/Local/nvim'))
 -- requiring this modules here to avoid cache issues
 require('utils.repeat_motion')
 require('keymaps')
+require('commands')
 
 require('vimstart')
 require('platform_setup')
