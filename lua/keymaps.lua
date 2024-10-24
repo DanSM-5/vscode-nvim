@@ -525,6 +525,24 @@ return {
       desc_forward = '[VSCode] Go to next matching symbol',
       desc_backward = '[VSCode] Go to prev matching symbol',
     })
+
+    -- NOTE: Requires extension "Go to Next/Previous Member"
+    -- Next member
+    local nextMember = function ()
+      vscode.action('gotoNextPreviousMember.nextMember')
+    end
+    local prevMember = function ()
+      vscode.action('gotoNextPreviousMember.previousMember')
+    end
+
+
+    repeat_pair({
+      keys = 'a',
+      on_forward = nextMember,
+      on_backward = prevMember,
+      desc_forward = '[VSCode] Go to next file member',
+      desc_backward = '[VSCode] Go to prev file member',
+    })
   end
 }
 
