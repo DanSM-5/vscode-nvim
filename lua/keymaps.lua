@@ -456,6 +456,14 @@ return {
       vscode.action('workbench.action.previousEditorInGroup')
     end, { desc = '[VSCode] Move to previous buffer', noremap = true })
 
+
+    -- Clean carriage returns '^M'
+    vim.keymap.set('n', '<leader>cr', ':%s/\r$//g<cr>', {
+      desc = 'Clean carriage returns',
+      noremap = true,
+      silent = true,
+    })
+
   end,
 
   set_repeatable = function ()
