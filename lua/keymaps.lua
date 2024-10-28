@@ -288,11 +288,20 @@ return {
       vscode.action('git.stageSelectedRanges')
     end, { desc = '[VSCode] Stage hunk', noremap = true })
 
-    -- Hunk undo
+    -- Hunk undo stage
     vim.keymap.set('n', '<leader>hu', function ()
+      -- vscode.action('git.stageChange')
+      vscode.action('git.unstageSelectedRanges')
+    end, { desc = '[VSCode] Stage hunk', noremap = true })
+    vim.keymap.set('v', '<leader>hu', function ()
+      vscode.action('git.unstageSelectedRanges')
+    end, { desc = '[VSCode] Stage hunk', noremap = true })
+
+    -- Hunk reset
+    vim.keymap.set('n', '<leader>hr', function ()
       vscode.action('git.revertChange')
     end, { desc = '[VSCode] Revert hunk', noremap = true })
-    vim.keymap.set('v', '<leader>hu', function ()
+    vim.keymap.set('v', '<leader>hr', function ()
       vscode.action('git.revertSelectedRanges')
     end, { desc = '[VSCode] Revert hunk', noremap = true })
 
