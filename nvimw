@@ -2,6 +2,8 @@
 
 # Load config to setup required env variables
 export VSCODE_NVIM=true
+export NVIM_APPNAME='vscode-nvim'
+
 # if [ -f "$HOME/user-scripts/bin/detection" ]; then
 #   \. "$HOME/user-scripts/bin/detection"
 # elif [ -f "$HOME/.usr_conf/load_conf.sh" ]; then

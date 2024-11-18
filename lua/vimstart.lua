@@ -4,9 +4,11 @@
 -- Running in vscode can be identified by checking the existance of the
 -- variable vim.g.vscode or exists(g:vscode)
 
+-- NOTE: Old shada config. No longer relevant.
 -- Change location of shada files for VSCode to avoid conflicts
 -- with nvim profile in terminal
-vim.cmd("set shada+='1000,n$HOME/.cache/vscode-nvim/main.shada")
+-- vim.cmd("set shada+='1000,n$HOME/.cache/vscode-nvim/main.shada")
+
 -- Make nocompatible explisit
 vim.cmd('set nocompatible')
 -- Default encoding
