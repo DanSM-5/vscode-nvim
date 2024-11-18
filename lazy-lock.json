@@ -1,0 +1,10 @@
+{
+  "CamelCaseMotion": { "branch": "master", "commit": "de439d7c06cffd0839a29045a103fe4b44b15cdc" },
+  "Repeatable.vim": { "branch": "master", "commit": "ab536625ef25e423514105dd790cb8a8450ec88b" },
+  "lazy.nvim": { "branch": "main", "commit": "7967abe55752aa90532e6bb4bd4663fe27a264cb" },
+  "vim-asterisk": { "branch": "master", "commit": "77e97061d6691637a034258cc415d98670698459" },
+  "vim-repeat": { "branch": "master", "commit": "65846025c15494983dafe5e3b46c8f88ab2e9635" },
+  "vim-smoothie": { "branch": "master", "commit": "df1e324e9f3395c630c1c523d0555a01d2eb1b7e" },
+  "vim-surround": { "branch": "master", "commit": "3d188ed2113431cf8dac77be61b842acb64433d9" },
+  "vim-system-copy": { "branch": "master", "commit": "7104bca5631dc34cac994dda3ec5fbaacfb55060" }
+}
