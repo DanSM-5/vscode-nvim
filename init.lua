@@ -13,6 +13,7 @@ vim.cmd('set runtimepath-=' .. vim.fn.expand('~/AppData/Local/nvim'))
 -- NOTE: Lazy is messing up with the rtp and it forces default path location.
 -- requiring this modules here to avoid cache issues
 require('utils.repeat_motion')
+-- require('utils.repeatable_move')
 require('keymaps')
 require('commands')
 
@@ -23,5 +24,6 @@ require('config.lazy')
 vim.cmd('set runtimepath^=' .. vim.g.config_dir)
 vim.cmd('set runtimepath-=' .. vim.fn.expand('~/AppData/Local/nvim'))
 require('vscode_config')
-require('keymaps').set_defualt()
+require('keymaps').set_default()
+require('keymaps').set_repeatable()
 

@@ -1,7 +1,7 @@
 local vscode = require('vscode')
 
 return {
-  set_defualt = function ()
+  set_default = function ()
     local nx = { 'n', 'x' }
 
     -- Vim commentary emulation
@@ -472,7 +472,6 @@ return {
       noremap = true,
       silent = true,
     })
-
   end,
 
   set_repeatable = function ()
