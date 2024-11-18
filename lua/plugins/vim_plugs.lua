@@ -14,6 +14,8 @@ return {
   'psliwka/vim-smoothie',
   {
     'nvim-treesitter/nvim-treesitter-textobjects',
+    -- Fix issue ENAMETOOLONG in linux
+    name = 'tsto',
     dependencies = {
       'nvim-treesitter/nvim-treesitter',
     },
