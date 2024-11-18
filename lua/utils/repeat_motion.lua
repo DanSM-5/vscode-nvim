@@ -22,7 +22,7 @@ local repeat_motion = {}
 ---@param options RepeatOptions
 ---@return fun(opts: { forward: boolean }|table): nil
 repeat_motion.repeat_direction = function(options)
-  local func = require('nvim-treesitter.textobjects.repeatable_move')
+  local func = require('utils.repeatable_move')
     .make_repeatable_move(options.fn)
   return func
 end
@@ -45,7 +45,7 @@ repeat_motion.repeat_pair = function(options)
   local mode = options.mode or 'n'
   local keymap_forward = prefix_forward .. options.keys
   local keymap_backward = prefix_backward .. options.keys
-  local forward, backward  = require('nvim-treesitter.textobjects.repeatable_move')
+  local forward, backward  = require('utils.repeatable_move')
     .make_repeatable_move_pair(options.on_forward, options.on_backward)
 
   -- Forward map
@@ -61,12 +61,23 @@ end
 ---@param opts MotionKeys|nil
 repeat_motion.set_motion_keys = function (opts)
   local options = vim.tbl_deep_extend('force', { move_forward = ';', move_backward = ',' }, opts or {})
-  local ts_repeatable_move = require('nvim-treesitter.textobjects.repeatable_move')
+  local repeatable_move = require('utils.repeatable_move')
   local nxo = { 'n', 'x', 'o' }
 
-  -- Set repeatable motions
-  vim.keymap.set(nxo, options.move_forward, ts_repeatable_move.repeat_last_move_next)
-  vim.keymap.set(nxo, options.move_backward, ts_repeatable_move.repeat_last_move_previous)
+  -- Set repeatable motions with ; and ,
+  -- ensure ; goes forward and , goes backward regardless of the last direction
+  vim.keymap.set(nxo, options.move_forward, repeatable_move.repeat_last_move_next)
+  vim.keymap.set(nxo, options.move_backward, repeatable_move.repeat_last_move_previous)
+
+  -- vim way: ; goes to the direction you were moving.
+  -- vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move)
+  -- vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_opposite)
+
+  -- Optionally, make builtin f, F, t, T also repeatable with ; and ,
+  vim.keymap.set({ "n", "x", "o" }, "f", repeatable_move.builtin_f_expr, { expr = true })
+  vim.keymap.set({ "n", "x", "o" }, "F", repeatable_move.builtin_F_expr, { expr = true })
+  vim.keymap.set({ "n", "x", "o" }, "t", repeatable_move.builtin_t_expr, { expr = true })
+  vim.keymap.set({ "n", "x", "o" }, "T", repeatable_move.builtin_T_expr, { expr = true })
 end
 
 return repeat_motion
