@@ -1,8 +1,8 @@
 local vscode = require('vscode')
+local nx = { 'n', 'x' }
 
 return {
   set_default = function ()
-    local nx = { 'n', 'x' }
 
     -- Vim commentary emulation
     vim.keymap.set('x', 'gc', '<Plug>VSCodeCommentary', {
@@ -401,38 +401,6 @@ return {
     --     endfor
     -- endfunction
 
-    ---@param count number
-    ---@param action string
-    local manageEditorSize = function(count, action)
-      for _ in pairs(vim.fn.range(1, count ~= 0 and count or 1)) do
-        vscode.action(action)
-      end
-    end
-
-    -- Window resize vsplit
-    vim.keymap.set(nx, '<A-.>', function()
-      manageEditorSize(vim.v.count, 'workbench.action.increaseViewWidth')
-    end, {
-      desc = '[VSCode] Increase editor window width'
-    })
-    vim.keymap.set(nx, '<A-,>', function()
-      manageEditorSize(vim.v.count, 'workbench.action.decreaseViewWidth')
-    end, {
-      desc = '[VSCode] Decrease editor window width'
-    })
-
-    -- Window resize split
-    vim.keymap.set(nx, '<A-t>', function()
-      manageEditorSize(vim.v.count, 'workbench.action.increaseViewHeight')
-    end, {
-      desc = '[VSCode] Increase editor window height'
-    })
-    vim.keymap.set(nx, '<A-s>', function()
-      manageEditorSize(vim.v.count, 'workbench.action.decreaseViewHeight')
-    end, {
-      desc = '[VSCode] Decrease editor window height'
-    })
-
     vim.keymap.set(nx, '<A-j>', function ()
       vscode.action('workbench.action.navigateDown')
     end, {
@@ -570,6 +538,48 @@ return {
       on_backward = prevMember,
       desc_forward = '[VSCode] Go to next file member',
       desc_backward = '[VSCode] Go to prev file member',
+    })
+
+    ---@param count number
+    ---@param action string
+    local manageEditorSize = function(count, action)
+      for _ in pairs(vim.fn.range(1, count ~= 0 and count or 1)) do
+        vscode.action(action)
+      end
+    end
+
+    local create_repeatable_pair = repeat_motion.create_repeatable_pair
+
+    local vsplit_bigger, vsplit_smaller  = create_repeatable_pair(function ()
+      manageEditorSize(vim.v.count, 'workbench.action.increaseViewWidth')
+    end, function ()
+      manageEditorSize(vim.v.count, 'workbench.action.decreaseViewWidth')
+    end)
+
+    -- Window resize vsplit
+    vim.keymap.set(nx, '<A-.>', vsplit_bigger, {
+      desc = '[VSCode] Increase editor window width',
+      noremap = true
+    })
+    vim.keymap.set(nx, '<A-,>', vsplit_smaller, {
+      desc = '[VSCode] Decrease editor window width',
+      noremap = true
+    })
+
+    local split_bigger, split_smaller = create_repeatable_pair(function ()
+      manageEditorSize(vim.v.count, 'workbench.action.increaseViewHeight')
+    end, function ()
+      manageEditorSize(vim.v.count, 'workbench.action.decreaseViewHeight')
+    end)
+
+    -- Window resize split
+    vim.keymap.set(nx, '<A-t>', split_bigger, {
+      desc = '[VSCode] Increase editor window height',
+      noremap = true
+    })
+    vim.keymap.set(nx, '<A-s>', split_smaller, {
+      desc = '[VSCode] Decrease editor window height',
+      noremap = true
     })
   end
 }
