@@ -11,6 +11,6 @@ return {
     cmd = { 'Repeatable' },
   },
   'haya14busa/vim-asterisk',
-  'psliwka/vim-smoothie',
+  -- 'psliwka/vim-smoothie',
 }
 

@@ -88,25 +88,62 @@ return {
       desc = '[SystemCopy] Paste line below',
     })
 
+    -- @deprecated in favor of native vscode editorScroll command
     -- VimSmoothie maps
-    vim.keymap.set('v', '<S-down>', '<cmd>call smoothie#do("\\<C-D>")<CR>', {
+    -- vim.keymap.set('v', '<S-down>', '<cmd>call smoothie#do("\\<C-D>")<CR>', {
+    --   desc = '[VimSmoothie] Move down (ctrl-d)',
+    --   noremap = true,
+    -- })
+    -- vim.keymap.set('n', '<S-down>', '<cmd>call smoothie#do("\\<C-D>")<CR>', {
+    --   desc = '[VimSmoothie] Move down (ctrl-d)',
+    --   noremap = true,
+    -- })
+    -- vim.keymap.set('v', '<S-up>', '<cmd>call smoothie#do("\\<C-U>")<CR>', {
+    --   desc = '[VimSmoothie] Move up (ctrl-d)',
+    --   noremap = true,
+    -- })
+    -- vim.keymap.set('n', '<S-up>', '<cmd>call smoothie#do("\\<C-U>")<CR>', {
+    --   desc = '[VimSmoothie] Move up (ctrl-d)',
+    --   noremap = true,
+    -- })
+
+    local jumpStep = 8
+    vim.keymap.set('v', '<S-down>', function ()
+      vscode.call('editorScroll', { args = { by = 'line', to = 'down', value = jumpStep, revealCursor = true }})
+      vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
+    end, {
       desc = '[VimSmoothie] Move down (ctrl-d)',
       noremap = true,
     })
-    vim.keymap.set('n', '<S-down>', '<cmd>call smoothie#do("\\<C-D>")<CR>', {
+    vim.keymap.set('n', '<S-down>', function ()
+      vscode.call('editorScroll', { args = { by = 'line', to = 'down', value = jumpStep, revealCursor = true }})
+      vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
+    end, {
       desc = '[VimSmoothie] Move down (ctrl-d)',
       noremap = true,
     })
-    vim.keymap.set('v', '<S-up>', '<cmd>call smoothie#do("\\<C-U>")<CR>', {
+    vim.keymap.set('v', '<S-up>', function ()
+      vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = jumpStep, revealCursor = true }})
+      local line = vim.fn.line('.')
+      if line > jumpStep then
+        vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
+      end
+    end, {
       desc = '[VimSmoothie] Move up (ctrl-d)',
       noremap = true,
     })
-    vim.keymap.set('n', '<S-up>', '<cmd>call smoothie#do("\\<C-U>")<CR>', {
+    vim.keymap.set('n', '<S-up>', function ()
+      vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = jumpStep, revealCursor = true }})
+      local line = vim.fn.line('.')
+      if line > jumpStep then
+        vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
+      end
+    end, {
       desc = '[VimSmoothie] Move up (ctrl-d)',
       noremap = true,
     })
 
-    vim.cmd('source ' .. '~/vim-config/utils/clipboard.vim')
+    vim.cmd.source('~/vim-config/utils/clipboard.vim')
 
     -- Map clipboard functions
     vim.keymap.set('x', '<Leader>y', ':<C-u>call clipboard#yank()<cr>', {
