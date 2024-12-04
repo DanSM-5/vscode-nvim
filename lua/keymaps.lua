@@ -455,6 +455,23 @@ return {
     end
     vim.keymap.set('n', '<leader>ss', select_symbol, { noremap = true, desc = '[VSCode] Select symbol' })
     vim.keymap.set('n', '<leader>fa', select_symbol, { noremap = true, desc = '[VSCode] Select symbol' })
+
+    -- WARN: Do not remap <c-o> in vscode
+    -- it cannot handle it properly and cursor position is lost
+    --
+    -- vim.keymap.set('n', '<c-o><c-o>', '<c-o>', { desc = 'Regular <c-o> or jumplist backwards', noremap = true })
+    -- vim.keymap.set('n', '<c-o><esc>', '<esc>', { desc = 'Placeholder to cancel O-pending mode', noremap = true })
+
+    vim.keymap.set('n', '<leader>fr', function ()
+      vscode.action('workbench.action.findInFiles', {
+        args = {
+          query = vim.fn.expand('<cword>') or ''
+        }
+      })
+    end, { desc = '[VSCode] Search word under the cursor', noremap = true })
+    vim.keymap.set('v', '<leader>fr', function ()
+      vscode.action('workbench.action.findInFiles')
+    end, { desc = '[VSCode] Search word under the cursor', noremap = true })
   end,
 
   set_repeatable = function()
