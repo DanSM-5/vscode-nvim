@@ -143,8 +143,6 @@ return {
       noremap = true,
     })
 
-    vim.cmd.source('~/vim-config/utils/clipboard.vim')
-
     -- Map clipboard functions
     vim.keymap.set('x', '<Leader>y', ':<C-u>call clipboard#yank()<cr>', {
       desc = 'Yank selection to system clipboard',
