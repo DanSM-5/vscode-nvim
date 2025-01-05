@@ -470,6 +470,18 @@ return {
     vim.keymap.set('v', '<leader>fr', function ()
       vscode.action('workbench.action.findInFiles')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
+
+    -- Move cursor to position on screen
+    vim.keymap.set('n', 'zz', function ()
+      vscode.action('revealLine', { args = { at = 'center', lineNumber = vim.api.nvim_win_get_cursor(0)[1] } })
+    end, { desc = '[VSCode] Move cursor to the center of the screen', noremap = true })
+    vim.keymap.set('n', 'zt', function ()
+      vscode.action('revealLine', { args = { at = 'top', lineNumber = vim.api.nvim_win_get_cursor(0)[1] } })
+    end, { desc = '[VSCode] Move cursor to the top of the screen', noremap = true })
+    vim.keymap.set('n', 'zb', function ()
+      vscode.action('revealLine', { args = { at = 'bottom', lineNumber = vim.api.nvim_win_get_cursor(0)[1] } })
+    end, { desc = '[VSCode] Move cursor to the bottom of the screen', noremap = true })
+
   end,
 
   set_repeatable = function()
