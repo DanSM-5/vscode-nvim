@@ -10,7 +10,7 @@
 ---@field on_backward function Callback when moving backward
 ---@field desc_forward string Keymap description for forward binding
 ---@field desc_backward string Keymap description for backward binding
----@field bufnr? integer Buffer to attach keymap
+---@field buffer? integer Buffer to attach keymap
 
 ---@class MotionKeys
 ---@field move_forward string Key to be used when repeating a direction motion
@@ -110,9 +110,9 @@ repeat_motion.repeat_pair = function(options)
   local forward_opts = { desc = options.desc_forward, noremap = true }
   local backward_opts = { desc = options.desc_forward, noremap = true }
 
-  if options.bufnr ~= nil then
-    forward_opts.bufnr = options.bufnr
-    backward_opts.bufnr = options.bufnr
+  if options.buffer ~= nil then
+    forward_opts.buffer = options.buffer
+    backward_opts.buffer = options.buffer
   end
 
   -- Forward map
