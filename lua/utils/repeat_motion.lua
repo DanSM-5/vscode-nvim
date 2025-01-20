@@ -10,10 +10,19 @@
 ---@field on_backward function Callback when moving backward
 ---@field desc_forward string Keymap description for forward binding
 ---@field desc_backward string Keymap description for backward binding
+---@field bufnr? integer Buffer to attach keymap
 
 ---@class MotionKeys
 ---@field move_forward string Key to be used when repeating a direction motion
 ---@field move_backward string Key to be used when repeating a direction motion
+
+local get_repeat_module = function ()
+  if vim.env.NVIM_APPNAME == 'vscode-nvim' then
+    return require('utils.repeatable_move')
+  end
+
+  return require('nvim-treesitter.textobjects.repeatable_move')
+end
 
 ---@class RepeatMotion
 ---@field repeat_direction fun(options: RepeatOptions): fun(opts: { forward: boolean }|table): nil
@@ -31,7 +40,7 @@ local repeat_motion = {}
 ---@param options RepeatOptions
 ---@return fun(opts: { forward: boolean }|table): nil
 repeat_motion.repeat_direction = function(options)
-  local func = require('utils.repeatable_move')
+  local func = get_repeat_module()
     .make_repeatable_move(options.fn)
   return func
 end
@@ -79,7 +88,7 @@ end
 ---@return TForward
 ---@return TBackward
 repeat_motion.create_repeatable_pair = function (forward, backward)
-  local rep_forward, rep_backward = require('utils.repeatable_move')
+  local rep_forward, rep_backward = get_repeat_module()
     .make_repeatable_move_pair(forward, backward)
 
   return rep_forward, rep_backward
@@ -95,14 +104,22 @@ repeat_motion.repeat_pair = function(options)
   local mode = options.mode or 'n'
   local keymap_forward = prefix_forward .. options.keys
   local keymap_backward = prefix_backward .. options.keys
-  local forward, backward  = require('utils.repeatable_move')
+  local forward, backward  = get_repeat_module()
     .make_repeatable_move_pair(options.on_forward, options.on_backward)
 
+  local forward_opts = { desc = options.desc_forward, noremap = true }
+  local backward_opts = { desc = options.desc_forward, noremap = true }
+
+  if options.bufnr ~= nil then
+    forward_opts.bufnr = options.bufnr
+    backward_opts.bufnr = options.bufnr
+  end
+
   -- Forward map
-  vim.keymap.set(mode, keymap_forward, forward, { desc = options.desc_forward, noremap = true })
+  vim.keymap.set(mode, keymap_forward, forward, forward_opts)
 
   -- Backward map
-  vim.keymap.set(mode, keymap_backward, backward, { desc = options.desc_backward, noremap = true })
+  vim.keymap.set(mode, keymap_backward, backward, backward_opts)
 end
 
 ---Sets the keymaps to use as motions. By default uses ',' and ';' for similar behavior of t, T, f and F.
@@ -111,7 +128,7 @@ end
 ---@param opts MotionKeys|nil
 repeat_motion.set_motion_keys = function (opts)
   local options = vim.tbl_deep_extend('force', { move_forward = ';', move_backward = ',' }, opts or {})
-  local repeatable_move = require('utils.repeatable_move')
+  local repeatable_move = get_repeat_module()
   local nxo = { 'n', 'x', 'o' }
 
   -- Set repeatable motions with ; and ,
@@ -124,10 +141,10 @@ repeat_motion.set_motion_keys = function (opts)
   -- vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_opposite)
 
   -- Optionally, make builtin f, F, t, T also repeatable with ; and ,
-  vim.keymap.set({ "n", "x", "o" }, "f", repeatable_move.builtin_f_expr, { expr = true })
-  vim.keymap.set({ "n", "x", "o" }, "F", repeatable_move.builtin_F_expr, { expr = true })
-  vim.keymap.set({ "n", "x", "o" }, "t", repeatable_move.builtin_t_expr, { expr = true })
-  vim.keymap.set({ "n", "x", "o" }, "T", repeatable_move.builtin_T_expr, { expr = true })
+  vim.keymap.set({ 'n', 'x', 'o' }, 'f', repeatable_move.builtin_f_expr, { expr = true })
+  vim.keymap.set({ 'n', 'x', 'o' }, 'F', repeatable_move.builtin_F_expr, { expr = true })
+  vim.keymap.set({ 'n', 'x', 'o' }, 't', repeatable_move.builtin_t_expr, { expr = true })
+  vim.keymap.set({ 'n', 'x', 'o' }, 'T', repeatable_move.builtin_T_expr, { expr = true })
 end
 
 return repeat_motion
