@@ -107,39 +107,51 @@ return {
     --   noremap = true,
     -- })
 
+    -- Smooth scroll up/down
+    -- Combine with: "editor.cursorSmoothCaretAnimation": "on"
+    -- Set an appropriate jumpStep value. 8 seems to be on the sweet spot.
+    -- You can try: "editor.smoothScrolling": true
+    -- but animation felt yanky
+
     local jumpStep = 8
-    vim.keymap.set('v', '<S-down>', function ()
-      vscode.call('editorScroll', { args = { by = 'line', to = 'down', value = jumpStep, revealCursor = true }})
-      vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
-    end, {
-      desc = '[VimSmoothie] Move down (ctrl-d)',
-      noremap = true,
-    })
-    vim.keymap.set('n', '<S-down>', function ()
-      vscode.call('editorScroll', { args = { by = 'line', to = 'down', value = jumpStep, revealCursor = true }})
-      vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
-    end, {
-      desc = '[VimSmoothie] Move down (ctrl-d)',
-      noremap = true,
-    })
-    vim.keymap.set('v', '<S-up>', function ()
-      vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = jumpStep, revealCursor = true }})
+    local upScrollCallback =  function ()
+      -- Locate current cursor
+      local current = vim.fn.line('.')
+      -- if we are even (or less) with the jumpStep, attempt to scroll half of it
+      if current <= jumpStep then
+        vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = math.floor(jumpStep / 2), revealCursor = true }})
+      else
+        vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = jumpStep, revealCursor = true }})
+      end
+      -- Get new line
       local line = vim.fn.line('.')
-      if line > jumpStep then
+      -- If we are less than twice the jumpStep, then set the cursor to move up with half the value of jumpStep
+      if line < (jumpStep * 2) then
+        vscode.call('cursorMove', { args = { to = 'up', value = math.floor(jumpStep / 2) }})
+      else
         vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
       end
-    end, {
-      desc = '[VimSmoothie] Move up (ctrl-d)',
+    end
+
+    local downScrollCallback = function ()
+      vscode.call('editorScroll', { args = { by = 'line', to = 'down', value = jumpStep, revealCursor = true }})
+      vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
+    end
+
+    vim.keymap.set('v', '<S-down>', downScrollCallback, {
+      desc = '[VimSmoothie] Move down (shift-d)',
       noremap = true,
     })
-    vim.keymap.set('n', '<S-up>', function ()
-      vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = jumpStep, revealCursor = true }})
-      local line = vim.fn.line('.')
-      if line > jumpStep then
-        vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
-      end
-    end, {
-      desc = '[VimSmoothie] Move up (ctrl-d)',
+    vim.keymap.set('n', '<S-down>', downScrollCallback, {
+      desc = '[VimSmoothie] Move down (shift-d)',
+      noremap = true,
+    })
+    vim.keymap.set('v', '<S-up>', upScrollCallback, {
+      desc = '[VimSmoothie] Move up (shift-d)',
+      noremap = true,
+    })
+    vim.keymap.set('n', '<S-up>', upScrollCallback, {
+      desc = '[VimSmoothie] Move up (shift-d)',
       noremap = true,
     })
 
