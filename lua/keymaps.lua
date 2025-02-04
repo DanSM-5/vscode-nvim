@@ -112,25 +112,23 @@ return {
     -- Set an appropriate jumpStep value. 8 seems to be on the sweet spot.
     -- You can try: "editor.smoothScrolling": true
     -- but animation felt yanky at the end of the buffer
+    -- https://stackoverflow.com/questions/47040925/microsoft-vs-code-jump-10-lines-vertically-at-once/48568520#48568520
 
     local jumpStep = 8
     local upScrollCallback =  function ()
-      -- Locate current cursor
       local current = vim.fn.line('.')
-      -- if we are even (or less) with the jumpStep, attempt to scroll half of it
       if current <= jumpStep then
         vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = math.floor(jumpStep / 2), revealCursor = true }})
       else
         vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = jumpStep, revealCursor = true }})
       end
-      -- Get new line
-      local line = vim.fn.line('.')
-      -- If we are less than twice the jumpStep, then set the cursor to move up with half the value of jumpStep
-      if line < (jumpStep * 2) then
-        vscode.call('cursorMove', { args = { to = 'up', value = math.floor(jumpStep / 2) }})
+
+      if current <= (jumpStep * 3) then
+        vscode.call('cursorMove', { args = { to = 'up', value = jumpStep }})
       else
-        vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
+        vscode.call('cursorMove', { args = { to = 'viewPortCenter', value = jumpStep }})
       end
+
     end
 
     local downScrollCallback = function ()
@@ -141,10 +139,10 @@ return {
       -- Improves when "editor.smoothScrolling": true
       local line = vim.fn.line('.')
       local eof = vim.fn.line('$')
-      if line >= (eof - (2 * jumpStep)) then
+      if line <= (eof - (3 * jumpStep)) then
         vscode.call('cursorMove', { args = { to = 'down', value = math.floor(jumpStep / 2) }})
       else
-        vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
+        vscode.call('cursorMove', { args = { to = 'viewPortCenter', value = jumpStep }})
       end
     end
 
