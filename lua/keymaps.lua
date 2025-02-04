@@ -111,7 +111,7 @@ return {
     -- Combine with: "editor.cursorSmoothCaretAnimation": "on"
     -- Set an appropriate jumpStep value. 8 seems to be on the sweet spot.
     -- You can try: "editor.smoothScrolling": true
-    -- but animation felt yanky
+    -- but animation felt yanky at the end of the buffer
 
     local jumpStep = 8
     local upScrollCallback =  function ()
@@ -135,7 +135,17 @@ return {
 
     local downScrollCallback = function ()
       vscode.call('editorScroll', { args = { by = 'line', to = 'down', value = jumpStep, revealCursor = true }})
-      vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
+      -- Works better if "editor.smoothScrolling": false
+      -- vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
+
+      -- Improves when "editor.smoothScrolling": true
+      local line = vim.fn.line('.')
+      local eof = vim.fn.line('$')
+      if line >= (eof - (2 * jumpStep)) then
+        vscode.call('cursorMove', { args = { to = 'down', value = math.floor(jumpStep / 2) }})
+      else
+        vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
+      end
     end
 
     vim.keymap.set('v', '<S-down>', downScrollCallback, {
