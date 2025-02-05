@@ -26,6 +26,9 @@ local is_cursor_in_hunk = function (hunk)
   return false
 end
 
+-- //wsl.localhost/UbuntuDev/home/eduardo/projects/nbcu_main_mw
+-- vscode-remote://wsl%2Bubuntudev/home/eduardo/projects/nbcu_main_mw
+
 -- git vscode extension
 -- https://github.com/microsoft/vscode/blob/main/extensions/git/src/commands.ts#L1724
 
@@ -39,10 +42,19 @@ end
 local get_hunks = function (file)
   -- local dir = vim.fn.expand('%:p:h')
 
-  local git_dir = vim.fn.substitute(vim.fn.system({ 'git', 'rev-parse', '--show-toplevel' }), '[\r\n]', '', 'g')
-  hunk_command = string.format(hunk_command, git_dir, file or '')
-  vim.print(hunk_command)
-  local hunks_str = vim.fn.systemlist(hunk_command)
+  local git_dir 
+  if file then
+    git_repo_cmd = { 'git', '-C', file, 'rev-parse', '--show-toplevel' }
+  else
+    git_repo_cmd = { 'git', 'rev-parse', '--show-toplevel' }
+  end
+
+  git_dir = vim.fn.substitute(vim.fn.system(git_repo_cmd), '[\r\n]', '', 'g')
+
+  -- local git_dir = vim.fn.substitute(vim.fn.system({ 'git', 'rev-parse', '--show-toplevel' }), '[\r\n]', '', 'g')
+  -- local updated_cmd = string.format(hunk_command, git_dir, '')
+  local updated_cmd = string.format(hunk_command, git_dir, file or '')
+  local hunks_str = vim.fn.systemlist(updated_cmd)
 
   local hunks = {}
 
@@ -60,22 +72,87 @@ local get_hunks = function (file)
   return hunks
 end
 
-local get_hunk_under_cursor = function ()
-  local file = vim.fn.expand('%:p')
+local decodeURI
+do
+    local char, gsub, tonumber = string.char, string.gsub, tonumber
+    local function _(hex) return char(tonumber(hex, 16)) end
+
+    function decodeURI(s)
+        s = gsub(s, '%%(%x%x)', _)
+        return s
+    end
+end
+
+-- print(decodeURI('%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82'))
+
+local get_file = function ()
+  if vim.fn.has('win32') then
+    local file, matches = vim.fn.expand('%:p:h'):gsub('%%2B', '.'):gsub('vscode%-remote://wsl%.', '')
+    if matches > 0 then
+      -- in vscode
+      file = '//wsl.localhost/' .. file
+    end
+    return file
+  else
+    return vim.fn.expand('%:p:h')
+  end
+end
+
+local get_hunk_under_cursor = function (filename)
+  local file = filename and filename or get_file()
+  -- vim.print('file:'..file)
   local hunks = get_hunks(file)
+  -- vim.print('Hunks:', hunks)
 
   for _, hunk in ipairs(hunks) do
     local hunk_under_cursor = is_cursor_in_hunk(hunk)
     if hunk_under_cursor then
+      -- vim.print('Found:', hunk)
       return hunk
     end
   end
-
 end
 
+local get_hunks_vscode = function ()
+  local file = get_file()
+  return get_hunks(file)
+end
+
+local stage_hunk_under_cursor = function ()
+  local vscode = require('vscode')
+  local uri = vscode.eval('return vscode.window.activeTextEditor.document.uri.toString()')
+  local hunk_under_cursor = require('utils.gitgutter').get_hunk_under_cursor()
+  if not hunk_under_cursor then
+    vim.print('no hunk')
+    return
+  end
+  local line_change = {
+    originalStartLineNumber = hunk_under_cursor[1],
+    originalEndLineNumber = hunk_under_cursor[2],
+    modifiedStartLineNumber = hunk_under_cursor[3],
+    modifiedEndLineNumber = hunk_under_cursor[4],
+  }
+  -- local args = {
+  --   uri = decodeURI(uri),
+  --   changes = { line_change },
+  --   index = 0,
+  -- }
+  local args = {
+    uri,
+    -- decodeURI(uri),
+    { line_change },
+    0,
+  }
+  vim.print('all:', args)
+  vscode.action('git.stageChange', { args })
+  require('vscode').action('git.stageChange', { uri = require('vscode').eval('return vscode.window.activeTextEditor.document.uri.toString()') })
+end
 return {
   is_cursor_in_hunk = is_cursor_in_hunk,
   get_hunks = get_hunks,
   get_hunk_under_cursor = get_hunk_under_cursor,
+  get_file = get_file,
+  stage_hunk_under_cursor = stage_hunk_under_cursor,
+  get_hunks_vscode = get_hunks_vscode,
 }
 

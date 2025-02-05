@@ -310,8 +310,8 @@ return {
     -- end, { desc = '[VSCode] Go to previous change', noremap = true })
 
     -- Hunk stage
-    vim.keymap.set('n', '<leader>hs', function()
-      vscode.action('git.stageChange')
+    vim.keymap.set('n', '<leader>hs', function ()
+      require('utils.gitgutter').stage_hunk_under_cursor()
     end, { desc = '[VSCode] Stage hunk', noremap = true })
     vim.keymap.set('v', '<leader>hs', function()
       vscode.action('git.stageSelectedRanges')
