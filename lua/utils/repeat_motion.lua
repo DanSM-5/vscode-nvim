@@ -2,7 +2,7 @@
 ---@field fn function Function to make repeatable with motions
 
 ---@class RepeatPair
----@field keys string Key to be used when creating a map
+---@field keys string|[string,string] Key(s) to be used when creating a map
 ---@field prefix_forward string|nil prefix key to be used on forward binding
 ---@field prefix_backward string|nil prefix key to be used on backward binding
 ---@field mode string|table|nil Mode to add keymaps to. Defaults to normal.
@@ -102,8 +102,15 @@ repeat_motion.repeat_pair = function(options)
   local prefix_forward = options.prefix_forward or ']'
   local prefix_backward = options.prefix_backward or '['
   local mode = options.mode or 'n'
-  local keymap_forward = prefix_forward .. options.keys
-  local keymap_backward = prefix_backward .. options.keys
+  local keys = options.keys
+  local fkey, bkey
+  if type(keys) == 'table' then
+    fkey, bkey = keys[1], keys[2]
+  else
+    fkey, bkey = keys, keys
+  end
+  local keymap_forward = prefix_forward .. fkey
+  local keymap_backward = prefix_backward .. bkey
   local forward, backward  = get_repeat_module()
     .make_repeatable_move_pair(options.on_forward, options.on_backward)
 
