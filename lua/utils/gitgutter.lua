@@ -2,7 +2,8 @@
 ---[ baseStart, baseRange, newStart, newRange ]
 ---@alias Hunk { baseStart: integer, baseRange: integer, newStart: integer, newRange: integer } Represents a hunk from git cli
 
-local hunk_command = "git -C %s diff %s | awk '$0 ~ /^@@/ { print substr($2, 2)\",\"substr($3, 2) }'"
+local unstaged_hunk_command = "git -C %s diff %s | awk '$0 ~ /^@@/ { print substr($2, 2)\",\"substr($3, 2) }'"
+local staged_hunk_command = "git -C %s diff --cached %s | awk '$0 ~ /^@@/ { print substr($2, 2)\",\"substr($3, 2) }'"
 
 ---Splits a string by the given delimiter
 ---@param str string string to split
@@ -51,9 +52,11 @@ end
 -- package.path = package.path .. vim.fn.fnamemodify(debug.getinfo(1, "S").source:match("@(.*)$"), ':p:h') .. '\\lua\\utils\\?.lua;'
 
 ---Get the hunks on the given directory or the current one if none is provided
+---@param staged boolean|nil Whether to get the cached hunks or working area hunks
 ---@param dir string? Path to directory
 ---@return Hunk[]
-local get_hunks = function (dir)
+local get_hunks = function (staged, dir)
+  local hunks_cmd = staged and staged_hunk_command or unstaged_hunk_command
 
   local git_repo_cmd
   if dir then
@@ -67,7 +70,7 @@ local get_hunks = function (dir)
 
   -- local git_dir = vim.fn.substitute(vim.fn.system({ 'git', 'rev-parse', '--show-toplevel' }), '[\r\n]', '', 'g')
   -- local updated_cmd = string.format(hunk_command, git_dir, '')
-  local updated_cmd = string.format(hunk_command, git_dir, dir or '')
+  local updated_cmd = string.format(hunks_cmd, git_dir, dir or '')
   -- vim.print('Cmd:', updated_cmd)
   local hunks_str = vim.fn.systemlist(updated_cmd)
   -- vim.print('Out:', hunks_str)
@@ -124,13 +127,14 @@ local get_file = function ()
 end
 
 ---Get the current hunk under the cursor
+---@param staged? boolean Whether or not get the staged hunks
 ---@return Hunk? The hunk under the cursor or nil if non is found
-local get_hunk_under_cursor = function ()
+local get_hunk_under_cursor = function (staged)
   local file = get_file()
   -- We need a filename for get_hunks
   local dir = vim.fn.fnamemodify(file, ':p:h')
 
-  local hunks = get_hunks(dir)
+  local hunks = get_hunks(staged, dir)
 
   for _, hunk in ipairs(hunks) do
     local hunk_under_cursor = is_cursor_in_hunk(hunk)
@@ -160,6 +164,42 @@ local stage_hunk_under_cursor_vscode = function ()
     })
 end
 
+local unstage_hunk_under_cursor_vscode = function ()
+  local hunk = get_hunk_under_cursor(true)
+  if not hunk then
+    return
+  end
+
+  require('vscode')
+    .action('git.unstageSelectedRanges', {
+      range = { hunk.newStart, hunk.newStart + hunk.newRange },
+      restore_selection = true,
+    })
+end
+
+local revert_hunk_under_cursor_vscode = function ()
+  local hunk = get_hunk_under_cursor()
+  if not hunk then
+    return
+  end
+
+  require('vscode')
+    .action('git.revertSelectedRanges', {
+      range = { hunk.newStart, hunk.newStart + hunk.newRange },
+      restore_selection = false,
+    })
+end
+
+---Revert all changes in the file using the git cli
+local revert_all_changes = function ()
+  local file = get_file()
+  local dir = vim.fn.fnamemodify(file, ':p:h')
+  local git_repo_cmd = { 'git', '-C', dir, 'rev-parse', '--show-toplevel' }
+  local git_dir = vim.fn.substitute(vim.fn.system(git_repo_cmd), '[\r\n]', '', 'g')
+  local git_cmd = { 'git', '-C', git_dir, 'checkout', '--', file }
+  vim.fn.system(git_cmd)
+end
+
 local stage_hunk_under_cursor = function ()
   -- NOTE: Calling `git.stageChange` do not work
   -- local uri = vscode.eval('return vscode.window.activeTextEditor.document.uri.toString()')
@@ -181,6 +221,18 @@ local stage_hunk_under_cursor = function ()
   end
 end
 
+local unstage_hunk_under_cursor = function ()
+  if vim.g.vscode then
+    unstage_hunk_under_cursor_vscode()
+  end
+end
+
+local revert_hunk_under_cursor = function ()
+  if vim.g.vscode then
+    revert_hunk_under_cursor_vscode()
+  end
+end
+
 return {
   is_cursor_in_hunk = is_cursor_in_hunk,
   get_hunks = get_hunks,
@@ -188,5 +240,10 @@ return {
   get_file = get_file,
   stage_hunk_under_cursor = stage_hunk_under_cursor,
   stage_hunk_under_cursor_vscode = stage_hunk_under_cursor_vscode,
+  unstage_hunk_under_cursor = unstage_hunk_under_cursor,
+  unstage_hunk_under_cursor_vscode = unstage_hunk_under_cursor_vscode,
+  revert_hunk_under_cursor = revert_hunk_under_cursor,
+  revert_hunk_under_cursor_vscode = revert_hunk_under_cursor_vscode,
+  revert_all_changes = revert_all_changes,
 }
 
