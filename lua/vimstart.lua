@@ -53,3 +53,13 @@ vim.api.nvim_create_autocmd('VimEnter', {
   callback = OnVimEnter
 })
 
+-- Fix cursor shape on exit
+-- Windows version of neovim won't set back the cursor shape
+vim.api.nvim_create_autocmd('VimLeave', {
+  group = vim.api.nvim_create_augroup('RestoreCursorShapeOnExit', { clear = true }),
+  pattern = '*',
+  callback = function ()
+    vim.opt.guicursor = 'a:ver100-blinkon100'
+  end,
+})
+
