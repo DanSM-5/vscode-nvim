@@ -2,6 +2,12 @@
 ---[ baseStart, baseRange, newStart, newRange ]
 ---@alias Hunk { baseStart: integer, baseRange: integer, newStart: integer, newRange: integer } Represents a hunk from git cli
 
+-- NOTE: Commands fail on windows when it meets the following conditions:
+-- - vscode-neovim extension uses the `nvim` binary from windows
+-- - vscode is working using the remote extension e.g. WSL
+-- - awk binary from scoop (gawk package) is used (gitbash awk is not afected).
+-- TODO: Rework commands in windows to use a different solution like powershell
+-- or a binary that is reliable under the windows environment.
 local unstaged_hunk_command = "git -C %s diff %s | awk '$0 ~ /^@@/ { print substr($2, 2)\",\"substr($3, 2) }'"
 local staged_hunk_command = "git -C %s diff --cached %s | awk '$0 ~ /^@@/ { print substr($2, 2)\",\"substr($3, 2) }'"
 
@@ -94,21 +100,6 @@ local get_hunks = function (staged, dir)
 
   return hunks
 end
-
-local decodeURI
-do
-    local char, gsub, tonumber = string.char, string.gsub, tonumber
-    local function _(hex) return char(tonumber(hex, 16)) end
-
-    function decodeURI(s)
-        s = gsub(s, '%%(%x%x)', _)
-        return s
-    end
-end
-
--- print(decodeURI('%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82'))
-
--- =require('utils.gitgutter').get_hunks()
 
 ---Get the current file absolute path
 ---@return string Path to the current file
