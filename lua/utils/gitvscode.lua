@@ -181,9 +181,61 @@ local revert_hunk_under_cursor_vscode = function ()
     })
 end
 
+---Generates a random string
+---@param v integer Lenght of the random string
+---@return string The random string
+local function randomString(v)
+	local length = math.random(10,v)
+	local array = {}
+	for i = 1, length do
+		array[i] = string.char(math.random(48, 122))
+	end
+	return table.concat(array)
+end
+
+---Return the temp directory for the given
+---platform and detection if running on
+---remote extension
+---@return string
+local get_tmp_dir = function ()
+  if not vim.fn.has('win32') then
+    return '/tmp'
+  end
+
+  -- If the avobe was true, it means we are using windows nvim binary
+  -- Detect if file is currently working on the remote extension.
+  local _, matches = vim.fn.expand('%:p'):gsub('vscode%-remote:', '')
+
+  -- It matches when using the remote extension
+  if matches > 0 then
+    return '/tmp'
+  end
+
+  return vim.fn.substitute(os.getenv('TEMP') or '', '\\', '/', 'g')
+end
+
+---Saves backup of file
+---@param file string Filename to backup
+local backup_file = function (file)
+  -- Save current changes
+  -- vim.cmd.write()
+  local vscode = require('vscode')
+  vscode.call('workbench.action.files.save')
+  local bac_file = vim.fn.fnamemodify(file, ':t')
+  local tmp_dir = get_tmp_dir()
+  local hash = randomString(10):gsub("[\\/:!?*%[%]%%\"\'><`^, ]", '_')
+  local back_name = tmp_dir .. '/' .. bac_file .. '.' .. os.time() .. '_' .. hash .. '.bac'
+  -- local back_name = 'C:/Users/daniel/AppData/Local/Temp/App.jsx.yd=yDJSb_k.bac'
+  vim.print('Backup at: '..back_name)
+  -- vim.cmd.write(back_name)
+  vim.cmd('write! '.. back_name)
+  vscode.action('workbench.action.closeActiveEditor')
+end
+
 ---Revert all changes in the file using the git cli
 local revert_all_changes = function ()
   local file = get_file()
+  -- backup_file(file)
   local dir = vim.fn.fnamemodify(file, ':p:h')
   local git_repo_cmd = { 'git', '-C', dir, 'rev-parse', '--show-toplevel' }
   local git_dir = vim.fn.substitute(vim.fn.system(git_repo_cmd), '[\r\n]', '', 'g')
