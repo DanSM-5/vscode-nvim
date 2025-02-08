@@ -42,8 +42,12 @@ vim.g.maplocalleader = ' '
 require('vimstart')
 require('platform_setup')
 require('config.lazy')
+
+-- If loading in regular nvim
+if not vim.g.vscode then
+  return
+end
+
+-- Requires running in actual vscode
 require('vscode_config')
-require('keymaps').set_default()
-require('keymaps').set_repeatable()
-require('commands')
 
