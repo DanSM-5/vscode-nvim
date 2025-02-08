@@ -45,6 +45,9 @@ require('config.lazy')
 
 -- If loading in regular nvim
 if not vim.g.vscode then
+  -- TODO: Add config to load when debugging.
+  -- This is helpful when opening the config from
+  -- the command line and not from vscode.
   return
 end
 
