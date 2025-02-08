@@ -473,7 +473,7 @@ return {
 
     -- Hunk stage
     vim.keymap.set('n', '<leader>hs', repeat_action(function ()
-      require('utils.gitgutter').stage_hunk_under_cursor()
+      require('utils.gitvscode').stage_hunk_under_cursor()
     end), { desc = '[VSCode] Stage hunk', noremap = true })
     vim.keymap.set('v', '<leader>hs', repeat_action(function()
       vscode.action('git.stageSelectedRanges')
@@ -485,7 +485,7 @@ return {
     --NOTE: Currently not working... 😓
     -- Hunk undo stage
     vim.keymap.set('n', '<leader>hu', repeat_action(function()
-      require('utils.gitgutter').unstage_hunk_under_cursor()
+      require('utils.gitvscode').unstage_hunk_under_cursor()
     end), { desc = '[VSCode] Unstage hunk', noremap = true })
     vim.keymap.set('v', '<leader>hu', repeat_action(function()
       vscode.action('git.unstageSelectedRanges')
@@ -496,13 +496,13 @@ return {
 
     -- Hunk reset
     vim.keymap.set('n', '<leader>hr', repeat_action(function()
-      require('utils.gitgutter').revert_hunk_under_cursor()
+      require('utils.gitvscode').revert_hunk_under_cursor()
     end), { desc = '[VSCode] Revert hunk', noremap = true })
     vim.keymap.set('v', '<leader>hr', repeat_action(function()
       vscode.action('git.revertSelectedRanges')
     end), { desc = '[VSCode] Revert hunk', noremap = true })
     vim.keymap.set('n', '<leader>hR', repeat_action(function()
-      require('utils.gitgutter').revert_all_changes()
+      require('utils.gitvscode').revert_all_changes()
     end), { desc = '[VSCode] Revert buffer', noremap = true })
 
     -- Hunk preview next
