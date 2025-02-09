@@ -13,6 +13,10 @@ return {
   'haya14busa/vim-asterisk',
   -- 'psliwka/vim-smoothie',
   {
+    'echasnovski/mini.ai',
+    opts = {},
+  },
+  {
     'lewis6991/gitsigns.nvim',
     enabled = vim.g.vscode ~= 1,
     event = { 'VimEnter' },
