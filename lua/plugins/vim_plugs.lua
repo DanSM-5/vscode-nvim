@@ -113,7 +113,7 @@ return {
             goto_next_end = {
               [']M'] = { query = '@function.outer', desc = '[TS] Next function end' },
               [']['] = { query = '@class.outer', desc = '[TS] Next class end' },
-              [']B'] = { query = '@block.*', desc = '[TS] Next block end' },
+              [']B'] = { query = '@block.outer', desc = '[TS] Next block end' },
             },
             goto_previous_start = {
               ['[m'] = { query = '@function.outer', desc = '[TS] Previous function start' },
@@ -124,7 +124,7 @@ return {
             goto_previous_end = {
               ['[M'] = { query = '@function.outer', desc = '[TS] Previous function end' },
               ['[]'] = { query = '@class.outer', desc = '[TS] Previous class end' },
-              ['[B'] = { query = '@block.*', desc = '[TS] Previous block end' },
+              ['[B'] = { query = '@block.outer', desc = '[TS] Previous block end' },
             },
             -- Below will go to either the start or the end, whichever is closer.
             -- Use if you want more granular movements
