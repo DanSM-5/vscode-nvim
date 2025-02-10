@@ -35,14 +35,14 @@ return {
       require('nvim-treesitter.configs').setup({
         sync_intall = true,
         auto_install = true,
-        highlight = { enable = false },
-        indent = { enable = false },
+        highlight = { enable = not is_vscode },
+        indent = { enable = not is_vscode },
         sync_install = true,
         ensure_installed = {},
         ignore_install = {},
         textobjects = {
           lsp_interop = {
-            enable = false,
+            enable = not is_vscode,
             border = 'rounded', -- 'none',
             floating_preview_opts = {},
             peek_definition_code = {
@@ -142,8 +142,16 @@ return {
     end,
   },
   {
+    'psliwka/vim-smoothie',
+    enabled = not is_vscode,
+  },
+  {
+    'tpope/vim-fugitive',
+    enabled = not is_vscode,
+  },
+  {
     'lewis6991/gitsigns.nvim',
-    enabled = not is_vscode and has_fzf,
+    enabled = not is_vscode,
     event = { 'VimEnter' },
     config = function()
       local gitsigns = require('gitsigns')
@@ -205,7 +213,7 @@ return {
   },
   {
     'junegunn/fzf.vim',
-    enabled = not is_vscode,
+    enabled = not is_vscode and has_fzf,
   }
 }
 
