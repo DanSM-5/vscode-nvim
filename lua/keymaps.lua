@@ -668,6 +668,26 @@ return {
       desc = '[VSCode] Decrease editor window height',
       noremap = true,
     })
+
+    -- Override next-prev matching bracket
+    local next_close_bracket, prev_close_bracket = create_repeatable_pair(
+      function ()
+        vim.fn.search('}')
+      end, function ()
+        vim.fn.search('}', 'b')
+      end
+    )
+    local next_open_bracket, prev_open_bracket = create_repeatable_pair(
+      function ()
+        vim.fn.search('{')
+      end, function ()
+        vim.fn.search('{', 'b')
+      end
+    )
+    vim.keymap.set('n', ']}', next_close_bracket, { desc = '[Bracket]: Go to next close bracket', silent = true, noremap = true })
+    vim.keymap.set('n', '[}', prev_close_bracket, { desc = '[Bracket]: Go to previous close bracket', silent = true, noremap = true })
+    vim.keymap.set('n', ']{', next_open_bracket, { desc = '[Bracket]: Go to next open bracket', silent = true, noremap = true })
+    vim.keymap.set('n', '[{', prev_open_bracket, { desc = '[Bracket]: Go to previous open bracket', silent = true, noremap = true })
   end,
 }
 
