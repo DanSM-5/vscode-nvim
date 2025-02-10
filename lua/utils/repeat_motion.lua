@@ -94,7 +94,7 @@ repeat_motion.create_repeatable_pair = function (forward, backward)
   return rep_forward, rep_backward
 end
 
----Create a pair of maps. Square brackers are used by default '[' ']'
+---Create a pair of maps. Square brackets are used by default '[' ']'
 ---Maps are repeatable through the motion keys set by `set_motion_keys`
 ---Depends of nvim-treesitter-textobjects
 ---@param options RepeatPair
