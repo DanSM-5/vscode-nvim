@@ -3,6 +3,17 @@ local nx = { 'n', 'x' }
 
 return {
   set_default = function()
+    -- Indent text object
+    -- :h indent-object
+    vim.keymap.set('x', 'ii', '<Plug>(indent-object_linewise-none)', {
+      remap = true,
+      desc = '[Indent-Object] Select inner indent'
+    })
+    vim.keymap.set('o', 'ii', '<Plug>(indent-object_blockwise-none)', {
+      remap = true,
+      desc = '[Indent-Object] O-Pending inner indent'
+    })
+
     -- Vim commentary emulation
     vim.keymap.set('x', 'gc', '<Plug>VSCodeCommentary', {
       desc = '[VSCommentary]: Start comment action with word objects',

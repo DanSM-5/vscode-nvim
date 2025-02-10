@@ -38,6 +38,15 @@ vim.g.smoothie_no_default_mappings = 1
 vim.g.system_copy_silent = 1
 --: }}} :------------------------------------------------------------------
 
+-- Vimscript specific
+vim.cmd([[
+  command! -nargs=1 NXOnoremap nnoremap <args><Bar>xnoremap <args><Bar>onoremap <args>
+
+  " Make search consistent
+  NXOnoremap <expr>n (v:searchforward ? 'n' : 'N').'zv'
+  NXOnoremap <expr>N (v:searchforward ? 'N' : 'n').'zv'
+]])
+
 OnVimEnter = function ()
   -- Move line up/down
   -- Require repeatable.vim
