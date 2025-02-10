@@ -17,9 +17,9 @@
 ---@field move_backward string Key to be used when repeating a direction motion
 
 local get_repeat_module = function ()
-  if vim.env.NVIM_APPNAME == 'vscode-nvim' then
-    return require('utils.repeatable_move')
-  end
+  -- if vim.env.NVIM_APPNAME == 'vscode-nvim' then
+  --   return require('utils.repeatable_move')
+  -- end
 
   return require('nvim-treesitter.textobjects.repeatable_move')
 end
