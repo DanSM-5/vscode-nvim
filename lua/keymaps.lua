@@ -474,6 +474,12 @@ return {
     vim.keymap.set('n', '<leader>hd', function ()
       vscode.action('git.openChange')
     end, { desc = '[VSCode] Diff hunk', noremap = true })
+
+    -- Errors in vscode show with hover rather than a
+    -- separate action, so map this one as well
+    vim.keymap.set({ 'n', 'x' }, '<space>e', function ()
+      vscode.action('editor.action.showHover')
+    end, { desc = '[VSCode] Show error window', noremap = true })
   end,
 
   set_repeatable = function()
@@ -587,6 +593,13 @@ return {
     })
     repeat_pair({
       keys = 'd',
+      on_forward = nextDiagnostic,
+      on_backward = prevDiagnostic,
+      desc_forward = '[VSCode] Go to next diagnostic: error, warning, info',
+      desc_backward = '[VSCode] Go to previous diagnostic: error, warning, info',
+    })
+    repeat_pair({
+      keys = 'w',
       on_forward = nextDiagnostic,
       on_backward = prevDiagnostic,
       desc_forward = '[VSCode] Go to next diagnostic: error, warning, info',
