@@ -480,6 +480,12 @@ return {
     vim.keymap.set({ 'n', 'x' }, '<space>e', function ()
       vscode.action('editor.action.showHover')
     end, { desc = '[VSCode] Show error window', noremap = true })
+    vim.keymap.set({ 'n' }, '<space>q', function ()
+      vscode.action('workbench.actions.view.problems')
+    end, { desc = '[VSCode] Show problems and warnings', noremap = true })
+    vim.keymap.set({ 'n' }, '<space>l', function ()
+      vscode.action('workbench.actions.view.problems')
+    end, { desc = '[VSCode] Show problems and warnings', noremap = true })
   end,
 
   set_repeatable = function()
