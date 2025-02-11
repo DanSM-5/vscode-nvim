@@ -20,6 +20,7 @@ return {
   -- 'psliwka/vim-smoothie',
   {
     'echasnovski/mini.ai',
+    event = 'VeryLazy',
     opts = {
       search_method = 'cover',
       n_lines = 100,
@@ -27,6 +28,7 @@ return {
   },
   {
     'nvim-treesitter/nvim-treesitter-textobjects',
+    event = 'VeryLazy',
     dependencies = {
       'nvim-treesitter/nvim-treesitter',
     },
@@ -143,10 +145,12 @@ return {
   },
   {
     'psliwka/vim-smoothie',
+    event = 'VeryLazy',
     enabled = not is_vscode,
   },
   {
     'tpope/vim-fugitive',
+    event = 'VeryLazy',
     enabled = not is_vscode,
   },
   {
@@ -208,11 +212,13 @@ return {
   },
   {
     enabled = not is_vscode and has_fzf,
+    event = 'VeryLazy',
     dir = vim.fn.expand('~/user-scripts/fzf'),
     name = 'fzf',
   },
   {
     'junegunn/fzf.vim',
+    event = 'VeryLazy',
     enabled = not is_vscode and has_fzf,
   }
 }
