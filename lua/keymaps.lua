@@ -436,11 +436,32 @@ return {
       silent = true,
     })
 
+    -- Show Symbols
     local select_symbol = function()
       vscode.action('workbench.action.gotoSymbol')
     end
-    vim.keymap.set('n', '<leader>ss', select_symbol, { noremap = true, desc = '[VSCode] Select symbol' })
+    -- vim.keymap.set('n', '<leader>ss', select_symbol, { noremap = true, desc = '[VSCode] Select symbol' })
     vim.keymap.set('n', '<leader>fa', select_symbol, { noremap = true, desc = '[VSCode] Select symbol' })
+    vim.keymap.set({ 'n', 'x' }, '<leader>ss', function()
+      vscode.action('breadcrumbs.focusAndSelect')
+    end, {
+      desc = '[VSCode] Show symbols',
+      noremap = true,
+    })
+
+    vim.keymap.set('n', '<space>df', function ()
+      vscode.action('editor.action.peekDefinition')
+    end, {
+      noremap = true,
+      desc = '[VSCode] Peek symbol definition'
+    })
+    vim.keymap.set('n', '<space>dF', function ()
+      vscode.action('editor.action.peekDeclaration')
+    end, {
+      noremap = true,
+      desc = '[VSCode] Peek symbol declaration'
+    })
+
 
     -- WARN: Do not remap <c-o> in vscode
     -- it cannot handle it properly and cursor position is lost
