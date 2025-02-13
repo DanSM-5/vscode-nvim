@@ -23,7 +23,7 @@ return {
     event = 'VeryLazy',
     opts = {
       search_method = 'cover',
-      n_lines = 100,
+      n_lines = 999999,
     },
   },
   {
