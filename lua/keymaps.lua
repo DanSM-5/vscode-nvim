@@ -514,6 +514,7 @@ return {
     repeat_motion.set_motion_keys()
     local repeat_pair = repeat_motion.repeat_pair
     local repeat_action = repeat_motion.create_repeatable_func
+    local create_dot_map = repeat_motion.repeat_dot_map
 
     -- Hunk stage
     vim.keymap.set('n', '<leader>hs', repeat_action(function ()
@@ -749,6 +750,45 @@ return {
     vim.keymap.set('n', '[}', prev_bracket_pair, { desc = '[Bracket]: Go to previous bracket pair', silent = true, noremap = true })
     vim.keymap.set('n', ']{', next_matching_bracket, { desc = '[Bracket]: Go to next matching bracket', silent = true, noremap = true })
     vim.keymap.set('n', '[{', prev_matching_bracket, { desc = '[Bracket]: Go to previous matching bracket', silent = true, noremap = true })
+
+    local duplicate_and_comment = repeat_action(function ()
+      vim.cmd([[:t.]])
+      vim.cmd.normal('k')
+      -- vscode.call('editor.action.commentLine')
+      local line = vim.fn.line('.') - 1 -- 0-indexed
+      vscode.action('editor.action.commentLine', {
+        range = { line, line },
+        callback = function ()
+          vim.cmd.normal('j')
+        end,
+      })
+    end)
+    local duplicate_and_comment_up = repeat_action(function ()
+      vim.cmd([[:t.]])
+      local line = vim.fn.line('.') - 1 -- 0-indexed
+      vscode.action('editor.action.commentLine', {
+        range = { line, line },
+        callback = function ()
+          vim.cmd.normal('k')
+        end
+      })
+    end)
+
+    vim.keymap.set('n', 'yc', duplicate_and_comment, {
+      desc = '[Comment] Duplicate line, comment original',
+      noremap = true,
+    })
+    vim.keymap.set('n', 'yC', duplicate_and_comment_up, {
+      desc = '[Comment] Duplicate line, comment new',
+      noremap = true,
+    })
+
+    -- Dot repeatable maps
+    create_dot_map('nnoremap <A-y> :<C-U>t.<cr>')
+    create_dot_map('nnoremap <A-e> :<C-U>t-1<cr>')
+    -- Better to stick with shift+alt+up/down
+    -- create_dot_map('inoremap <A-y> <esc>:<C-U>t-1<cr>a')
+    -- create_dot_map('inoremap <A-e> <esc>:<C-U>t-1<cr>a')
   end,
 }
 
