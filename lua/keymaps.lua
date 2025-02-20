@@ -440,12 +440,18 @@ return {
     local select_symbol = function()
       vscode.action('workbench.action.gotoSymbol')
     end
-    -- vim.keymap.set('n', '<leader>ss', select_symbol, { noremap = true, desc = '[VSCode] Select symbol' })
+    vim.keymap.set('n', '<space>sd', select_symbol, { noremap = true, desc = '[VSCode] Select symbol' })
     vim.keymap.set('n', '<leader>fa', select_symbol, { noremap = true, desc = '[VSCode] Select symbol' })
     vim.keymap.set({ 'n', 'x' }, '<leader>ss', function()
       vscode.action('breadcrumbs.focusAndSelect')
     end, {
       desc = '[VSCode] Show symbols',
+      noremap = true,
+    })
+    vim.keymap.set('n', '<space>sw', function ()
+      vscode.action('workbench.action.showAllSymbols')
+    end, {
+      desc = '[VSCode] Show workspace symbols',
       noremap = true,
     })
 
