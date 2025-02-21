@@ -115,7 +115,7 @@ repeat_motion.repeat_pair = function(options)
     .make_repeatable_move_pair(options.on_forward, options.on_backward)
 
   local forward_opts = { desc = options.desc_forward, noremap = true }
-  local backward_opts = { desc = options.desc_forward, noremap = true }
+  local backward_opts = { desc = options.desc_backward, noremap = true }
 
   if options.buffer ~= nil then
     forward_opts.buffer = options.buffer
