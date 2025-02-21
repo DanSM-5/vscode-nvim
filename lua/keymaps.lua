@@ -267,13 +267,13 @@ return {
     -- Vscode actions -- LSP like bindings
 
     -- Go to implementation mappings
-    vim.keymap.set({ 'n', 'x' }, 'gI', function()
+    vim.keymap.set({ 'n', 'x' }, '<space>I', function()
       vscode.action('editor.action.goToImplementation')
     end, {
       desc = '[VSCode] Show implementations',
       noremap = true,
     })
-    vim.keymap.set({ 'n', 'x' }, 'gi', function()
+    vim.keymap.set({ 'n', 'x' }, '<space>i', function()
       vscode.action('editor.action.peekImplementation')
     end, {
       desc = '[VSCode] Peak implementations',
