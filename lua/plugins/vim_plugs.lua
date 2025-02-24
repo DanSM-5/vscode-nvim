@@ -24,6 +24,12 @@ return {
     opts = {
       search_method = 'cover',
       n_lines = 999999,
+      custom_textobjects = {
+        ["'"] = false,
+        ['"'] = false,
+        ['`'] = false,
+        -- ['f'] = false,
+      },
     },
   },
   {
