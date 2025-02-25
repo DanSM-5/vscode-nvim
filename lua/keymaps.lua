@@ -529,6 +529,13 @@ return {
     -- " Search in visual selected area
     vim.kemap.set('x', 'g/', '<esc>/\\%V', { noremap = true, desc = 'Search in visual selected area' })
 
+    vim.keymap.set('n', 'yd', function()
+      require('utils.funcs').regmove('+', '"')
+    end, { noremap = true, desc = 'Move content from unnamed register to clipboard' })
+    vim.keymap.set('n', 'yD', function()
+      require('utils.funcs').regmove('"', '+')
+    end, { noremap = true, desc = 'Move clipboard content to unnamed register' })
+
   end,
 
   set_repeatable = function()

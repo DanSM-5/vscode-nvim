@@ -26,7 +26,15 @@ local delete_marks_curr_line = function()
   end
 end
 
+---Copy the content from a register to another
+---@param destination string Name of register to copy to
+---@param source string Name of register to copy from
+local function regmove(destination, source)
+  vim.fn.setreg(destination, vim.fn.getreg(source))
+end
+
 return {
   delete_marks_curr_line = delete_marks_curr_line,
+  regmove = regmove,
 }
 
