@@ -513,6 +513,22 @@ return {
     vim.keymap.set({ 'n' }, '<space>l', function ()
       vscode.action('workbench.actions.view.problems')
     end, { desc = '[VSCode] Show problems and warnings', noremap = true })
+
+    -- " Delete marks in line under cursor
+    vim.keymap.set('n', '<leader>`d', function ()
+      require('utils.funcs').delete_marks_curr_line()
+    end, {
+      desc = 'Remove marks on current line',
+      noremap = true,
+    })
+
+    -- " Reselect previous yank
+    -- " This obscures default gV that prevents reselection of :vmenu commands
+    vim.kemap.set('n', 'gV', '`[v`]', { noremap = true, desc = 'Reselect last yank area' })
+
+    -- " Search in visual selected area
+    vim.kemap.set('x', 'g/', '<esc>/\\%V', { noremap = true, desc = 'Search in visual selected area' })
+
   end,
 
   set_repeatable = function()
