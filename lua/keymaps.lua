@@ -524,10 +524,10 @@ return {
 
     -- " Reselect previous yank
     -- " This obscures default gV that prevents reselection of :vmenu commands
-    vim.kemap.set('n', 'gV', '`[v`]', { noremap = true, desc = 'Reselect last yank area' })
+    vim.keymap.set('n', 'gV', '`[v`]', { noremap = true, desc = 'Reselect last yank area' })
 
     -- " Search in visual selected area
-    vim.kemap.set('x', 'g/', '<esc>/\\%V', { noremap = true, desc = 'Search in visual selected area' })
+    vim.keymap.set('x', 'g/', '<esc>/\\%V', { noremap = true, desc = 'Search in visual selected area' })
 
     vim.keymap.set('n', 'yd', function()
       require('utils.funcs').regmove('+', '"')
