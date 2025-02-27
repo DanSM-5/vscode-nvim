@@ -550,7 +550,11 @@ return {
       require('utils.gitvscode').stage_hunk_under_cursor()
     end), { desc = '[VSCode] Stage hunk', noremap = true })
     vim.keymap.set('v', '<leader>hs', repeat_action(function()
-      vscode.action('git.stageSelectedRanges')
+      -- NOTE: This has to be called with call to ensure
+      -- selection is made with the selected text.
+      vscode.call('git.stageSelectedRanges', {
+        restore_selection = true,
+      })
     end), { desc = '[VSCode] Stage hunk', noremap = true })
     vim.keymap.set('n', '<leader>hS', repeat_action(function ()
       vscode.action('git.stage')
@@ -562,7 +566,7 @@ return {
       require('utils.gitvscode').unstage_hunk_under_cursor()
     end), { desc = '[VSCode] Unstage hunk', noremap = true })
     vim.keymap.set('v', '<leader>hu', repeat_action(function()
-      vscode.action('git.unstageSelectedRanges')
+      vscode.call('git.unstageSelectedRanges')
     end), { desc = '[VSCode] Unstage hunk', noremap = true })
     vim.keymap.set('n', '<leader>hU', repeat_action(function()
       vscode.action('git.unstageAll')
