@@ -448,6 +448,12 @@ return {
       desc = '[VSCode] Show symbols',
       noremap = true,
     })
+    vim.keymap.set({ 'n', 'x' }, '<leader>sc', function()
+      vscode.action('editor.showCallHierarchy')
+    end, {
+      desc = '[VSCode] Show call hierarchy',
+      noremap = true,
+    })
     vim.keymap.set('n', '<space>sw', function ()
       vscode.action('workbench.action.showAllSymbols')
     end, {
