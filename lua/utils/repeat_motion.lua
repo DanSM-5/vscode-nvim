@@ -21,7 +21,13 @@ local get_repeat_module = function ()
   --   return require('utils.repeatable_move')
   -- end
 
-  return require('nvim-treesitter.textobjects.repeatable_move')
+  local ts_ok, repeatable_move = pcall(require, 'nvim-treesitter.textobjects.repeatable_move')
+
+  if ts_ok then
+    return repeatable_move
+  end
+
+  return require('utils.repeatable_move')
 end
 
 ---@class RepeatMotion
