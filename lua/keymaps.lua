@@ -542,6 +542,15 @@ return {
       require('utils.funcs').regmove('"', '+')
     end, { noremap = true, desc = 'Move clipboard content to unnamed register' })
 
+    vim.keymap.set('n', '<leader>vp', 'ciw<C-r>0<esc>', { desc = 'Paste text replacing word under the cursor', noremap = true })
+
+    vim.keymap.set('n', '<leader>ve', function ()
+      vscode.action('workbench.view.explorer')
+    end, {
+      noremap = true,
+      desc = '[VSCode] Open explorer',
+    })
+
   end,
 
   set_repeatable = function()
