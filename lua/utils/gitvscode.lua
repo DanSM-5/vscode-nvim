@@ -208,7 +208,11 @@ local get_tmp_dir = function ()
 
   -- It matches when using the remote extension
   if matches > 0 then
-    return '/tmp'
+    -- Defaults to current workspace open in vscode remote
+    -- Same as attempting to save using `/tmp` as root is unaccessible from windows nvim
+    -- And attempting to save using C:/Users/USER/AppData/Local/Temp will result
+    -- in saving file under ~/Temp in the remote filesystem
+    return 'tmp'
   end
 
   return vim.fn.substitute(os.getenv('TEMP') or '', '\\', '/', 'g')
@@ -218,24 +222,21 @@ end
 ---@param file string Filename to backup
 local backup_file = function (file)
   -- Save current changes
-  -- vim.cmd.write()
   local vscode = require('vscode')
   vscode.call('workbench.action.files.save')
   local bac_file = vim.fn.fnamemodify(file, ':t')
   local tmp_dir = get_tmp_dir()
   local hash = randomString(10):gsub("[\\/:!?*%[%]%%\"\'><`^, ]", '_')
+  -- /path/to/tmp/filename-with-ext.timestamp_10-char-hash.bac
   local back_name = tmp_dir .. '/' .. bac_file .. '.' .. os.time() .. '_' .. hash .. '.bac'
-  -- local back_name = 'C:/Users/daniel/AppData/Local/Temp/App.jsx.yd=yDJSb_k.bac'
   vim.print('Backup at: '..back_name)
-  -- vim.cmd.write(back_name)
   vim.cmd('write! '.. back_name)
-  vscode.action('workbench.action.closeActiveEditor')
 end
 
 ---Revert all changes in the file using the git cli
 local revert_all_changes = function ()
   local file = get_file()
-  -- backup_file(file)
+  pcall(backup_file, file) -- Attempt to backup file before reset
   local dir = vim.fn.fnamemodify(file, ':p:h')
   local git_repo_cmd = { 'git', '-C', dir, 'rev-parse', '--show-toplevel' }
   local git_dir = vim.fn.substitute(vim.fn.system(git_repo_cmd), '[\r\n]', '', 'g')
