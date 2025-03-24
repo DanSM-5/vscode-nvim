@@ -150,7 +150,7 @@ local stage_hunk_under_cursor_vscode = function ()
 
   require('vscode')
     .action('git.stageSelectedRanges', {
-      range = { hunk.newStart, hunk.newStart + hunk.newRange },
+      range = { hunk.newStart - 1, hunk.newStart - 1 + hunk.newRange },
       restore_selection = true,
     })
 end
@@ -163,7 +163,7 @@ local unstage_hunk_under_cursor_vscode = function ()
 
   require('vscode')
     .action('git.unstageSelectedRanges', {
-      range = { hunk.newStart, hunk.newStart + hunk.newRange },
+      range = { hunk.newStart - 1, hunk.newStart - 1 + hunk.newRange },
       restore_selection = true,
     })
 end
@@ -176,7 +176,7 @@ local revert_hunk_under_cursor_vscode = function ()
 
   require('vscode')
     .action('git.revertSelectedRanges', {
-      range = { hunk.newStart, hunk.newStart + hunk.newRange },
+      range = { hunk.newStart - 1, hunk.newStart - 1 + hunk.newRange },
       restore_selection = false,
     })
 end
