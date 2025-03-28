@@ -294,6 +294,28 @@ return {
       noremap = true,
     })
 
+    -- Show definition
+    vim.keymap.set({ 'n', 'x' }, 'gd', function()
+      vscode.action('editor.action.revealDefinition')
+    end, {
+      desc = '[VSCode] Reveal definition',
+      noremap = true,
+    })
+    vim.keymap.set({ 'n', 'x' }, '<space>vs', function()
+      vscode.call('workbench.action.splitEditorDown')
+      vscode.action('editor.action.revealDefinition')
+    end, {
+      desc = '[VSCode] Reveal definition in split',
+      noremap = true,
+    })
+    vim.keymap.set({ 'n', 'x' }, '<space>vv', function()
+      vscode.call('workbench.action.splitEditorRight')
+      vscode.action('editor.action.revealDefinition')
+    end, {
+      desc = '[VSCode] Reveal definition in vertical split',
+      noremap = true,
+    })
+
     -- Format document
     vim.keymap.set('n', '<space>f', function()
       vscode.action('editor.action.formatDocument')
