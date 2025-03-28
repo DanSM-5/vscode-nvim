@@ -551,6 +551,14 @@ return {
       desc = '[VSCode] Open explorer',
     })
 
+    -- Signature help
+    vim.keymap.set('n', '<C-k>', function ()
+      vscode.call('editor.action.triggerParameterHints')
+    end, {
+      noremap = true,
+      desc = '[VSCode] Open signature helpt',
+    })
+
   end,
 
   set_repeatable = function()
