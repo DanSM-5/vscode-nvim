@@ -7,6 +7,9 @@ vim.opt.scrolloff = 5
 
 vim.g.markdown_folding = 1
 
+local repeat_motion = require('utils.repeat_motion')
+repeat_motion.set_motion_keys()
+
 -- Mappings to help navigation
 vim.keymap.set('n', '<c-p>', ':<C-u>GFiles<cr>', {
   noremap = true,
@@ -387,7 +390,7 @@ local set_lsp_keys = function(client, bufnr)
 end
 
 -- Add keymaps on lsp attach
-vim.api.nvim_create_autocmd('LspAttatch', {
+vim.api.nvim_create_autocmd('LspAttach', {
   ---Add keymaps for lsp attached
   ---@param opts vim.api.keyset.create_autocmd.callback_args
   callback = function(opts)
