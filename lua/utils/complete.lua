@@ -1,12 +1,22 @@
 local configure = function (client, buffer)
+  if not client:supports_method('textDocument/completion') then
+    return
+  end
+
   ---[[Code required to activate autocompletion and trigger it on each keypress
-  client.server_capabilities.completionProvider.triggerCharacters = vim.split('qwertyuiopasdfghjklzxcvbnm. ', '')
-  vim.api.nvim_create_autocmd({ 'TextChangedI' }, {
-    buffer = buffer,
-    callback = function()
-      vim.lsp.completion.get()
-    end
-  })
+  client.server_capabilities.completionProvider.triggerCharacters = vim.split('abcdefghijklmnopqrstuvwxyz.', '')
+
+  -- NOTE: The below autocommand makes completion to start more often
+  -- but it become very spamy
+  -- vim.api.nvim_create_autocmd({ 'TextChangedI' }, {
+  --   buffer = buffer,
+  --   callback = function()
+  --     vim.lsp.completion.get()
+  --   end
+  -- })
+  ---]]
+
+  ---[[ Code that starts the auto completion
   vim.lsp.completion.enable(true, client.id, buffer, { autotrigger = true })
   ---]]
 
