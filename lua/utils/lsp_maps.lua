@@ -39,6 +39,10 @@ local set_lsp_keys = function(client, bufnr)
     vim.keymap.set(mode, key, func, opts)
   end
 
+  set_map('i', '<c-b>', function ()
+    vim.lsp.completion.get()
+  end, '[Lsp] Start completion')
+
   set_map('n', '<space>td', function()
     vim.diagnostic.enable(not vim.diagnostic.is_enabled())
   end, '[Lsp]: Toggle diagnostics')
