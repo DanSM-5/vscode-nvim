@@ -405,10 +405,25 @@ return {
     -- Fold Toggle
     vim.keymap.set('n', 'za', function()
       vscode.action('editor.toggleFold')
-    end, {
-      desc = '[VSCode] Toggle fold',
-      noremap = true,
-    })
+    end, { desc = '[VSCode] Toggle fold', noremap = true })
+    vim.keymap.set('n', 'zM', function()
+      vscode.action('editor.foldAll')
+    end, { desc = '[VSCode] Fold all', noremap = true })
+    vim.keymap.set('n', 'zR', function()
+      vscode.action('editor.unfoldAll')
+    end, { desc = '[VSCode] Unfold all', noremap = true })
+    vim.keymap.set('n', 'zc', function()
+      vscode.action('editor.fold')
+    end, { desc = '[VSCode] Fold current', noremap = true })
+    vim.keymap.set('n', 'zC', function()
+      vscode.action('editor.foldRecursively')
+    end, { desc = '[VSCode] Fold recursively', noremap = true })
+    vim.keymap.set('n', 'zo', function()
+      vscode.action('editor.unfold')
+    end, { desc = '[VSCode] Unfold current', noremap = true })
+    vim.keymap.set('n', 'zO', function()
+      vscode.action('editor.unfoldRecursively')
+    end, { desc = '[VSCode] Unfold recursively', noremap = true })
 
     -- Below is the function in vimscript
     -- function! s:manageEditorSize(...)
