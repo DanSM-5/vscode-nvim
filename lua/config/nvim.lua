@@ -8,14 +8,10 @@ vim.opt.scrolloff = 5
 vim.g.markdown_folding = 1
 
 local configs = {}
-for _, v in ipairs(vim.api.nvim_get_runtime_file('lua/lsp/*', true)) do
+for _, v in ipairs(vim.api.nvim_get_runtime_file('lsp/*', true)) do
   local name = vim.fn.fnamemodify(v, ':t:r')
 
   configs[name] = true
-  local ok, config = pcall(require, 'lsp.'..name)
-  if ok then
-    vim.lsp.config(name, config)
-  end
 end
 -- Start lsps
 vim.lsp.enable(vim.tbl_keys(configs))
