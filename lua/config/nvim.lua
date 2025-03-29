@@ -449,6 +449,30 @@ vim.keymap.set(
   vim.diagnostic.open_float,
   { desc = 'LSP: Open float window', silent = true, noremap = true }
 )
+vim.keymap.set(
+  'n',
+  '<space>E',
+  function ()
+    local curr_config = vim.diagnostic.config()
+    vim.diagnostic.config({ virtual_lines = { current_line = true }, virtual_text = false })
+
+    local unset = function ()
+      vim.diagnostic.config(curr_config)
+      pcall(vim.keymap.del, 'n', '<esc>', { buffer = true })
+    end
+
+    vim.keymap.set('n', '<esc>', function ()
+      unset()
+    end, { silent = true, buffer = true, desc = '[Diagnostic] Hide virtual lines' })
+
+    vim.api.nvim_create_autocmd('CursorMoved', {
+      once = true,
+      desc = '[Diagnostic] Hide virtual lines',
+      callback = unset
+    })
+  end,
+  { desc = '[Lsp] Open virtual lines', silent = true, noremap = true }
+)
 vim.keymap.set('n', '<space>l', vim.diagnostic.setloclist, { desc = 'LSP: Open diagnostic list', silent = true })
 vim.keymap.set('n', '<space>q', vim.diagnostic.setqflist , { desc = 'LSP: Open diagnostic list', silent = true })
 
