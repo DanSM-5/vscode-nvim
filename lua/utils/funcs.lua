@@ -33,8 +33,37 @@ local function regmove(destination, source)
   vim.fn.setreg(destination, vim.fn.getreg(source))
 end
 
+local git_path = function ()
+  -- " Directory holding the current file
+  local file_dir = vim.fn.trim(vim.fn.expand('%:p:h'))
+
+  local gitcmd = 'cd '..vim.fn.shellescape(file_dir)..' && git rev-parse --show-toplevel'
+  local gitpath = vim.fn.trim(vim.fn.system(gitcmd))
+
+  if vim.fn.isdirectory(gitpath) == 1 then
+    return gitpath
+  end
+
+  local buffpath = vim.fn.substitute(vim.fn.trim(vim.fn.expand('%:p:h')), '\\', '/', 'g')
+
+  if vim.fn.isdirectory(buffpath) == 1 then
+    return buffpath
+  end
+end
+
+local buffer_cd = function()
+  local buffer_path = git_path()
+  if buffer_path ~= nil and vim.fn.empty(buffer_path) ~= 1 then
+    vim.cmd('cd '..buffer_path)
+    vim.notify('Changed to: ' .. buffer_path, vim.log.levels.INFO)
+  else
+    vim.notify('Unable to cd into: ' .. buffer_path, vim.log.levels.WARN)
+  end
+end
+
 return {
   delete_marks_curr_line = delete_marks_curr_line,
   regmove = regmove,
+  git_path = git_path,
+  buffer_cd = buffer_cd,
 }
-

@@ -7,11 +7,60 @@ vim.opt.scrolloff = 5
 
 vim.g.markdown_folding = 1
 
+local configs = {}
+for _, v in ipairs(vim.api.nvim_get_runtime_file('lua/lsp/*', true)) do
+  local name = vim.fn.fnamemodify(v, ':t:r')
+
+  configs[name] = true
+  local ok, config = pcall(require, 'lsp.'..name)
+  if ok then
+    vim.lsp.config(name, config)
+  end
+end
+-- Start lsps
+vim.lsp.enable(vim.tbl_keys(configs))
+
 local repeat_motion = require('utils.repeat_motion')
 repeat_motion.set_motion_keys()
 
+vim.keymap.set('t', '<leader><esc>', '<c-\\><c-n>', {
+  noremap = true,
+  desc = '[Terminal] Escape terminal mode',
+})
+
+vim.api.nvim_create_user_command('GitFZF', function(opts)
+  local args = vim.fn.join(opts.fargs)
+  local bang = opts.bang and 1 or 0
+  local path = ''
+  if vim.fn.empty(args) == 1 then
+    path = require('utils.funcs').git_path()
+  else
+    path = args
+  end
+
+  vim.fn['fzf#vim#files'](path, vim.fn['fzf#vim#with_preview'](), bang)
+end, {
+  bang = true,
+  bar = true,
+  complete = 'dir',
+  nargs = '?',
+  force = true,
+  desc = '[Git] Open fzf in top git repo or active buffer directory',
+})
+
 -- Mappings to help navigation
-vim.keymap.set('n', '<c-p>', ':<C-u>GFiles<cr>', {
+vim.keymap.set('n', '<c-p>', '<cmd>GFiles<cr>', {
+  noremap = true,
+  desc = '[Fzf] Git files',
+})
+-- command! -bang -nargs=? -complete=dir GitFZF
+-- \ call fzfcmd#fzf_files(empty(<q-args>) ? utils#git_path() : <q-args>, g:fzf_bind_options, <bang>0)
+
+-- call fzf#vim#gitfiles(<q-args>, fzf#vim#with_preview(<q-args> == "?" ? { "placeholder": "" } : {})
+-- call fzf#vim#files(<q-args>, fzf#vim#with_preview(), <bang>0)
+vim.keymap.set('n', '<A-p>', function()
+  vim.cmd.GitFZF(vim.fn.getcwd())
+end, {
   noremap = true,
   desc = '[Fzf] Git files',
 })
@@ -40,6 +89,19 @@ vim.keymap.set('v', 'zz', '<Cmd>call smoothie#do("zz")<CR>', {
 vim.keymap.set('n', 'zz', '<Cmd>call smoothie#do("zz")<CR>', {
   noremap = true,
   desc = '[Smoothie] Scroll down',
+})
+
+-- Clean trailing whitespace in file
+vim.keymap.set('n', '<Leader>cc', ':%s/\\s\\+$//e<cr>', {
+  desc = 'Clear trailing whitespace in file',
+  noremap = true,
+  silent = true,
+})
+-- Clean carriage returns '^M'
+vim.keymap.set('n', '<Leader>cr', ':%s/\\r$//g<cr>', {
+  desc = 'Clear carriage return characters (^M)',
+  noremap = true,
+  silent = true,
 })
 
 -- Move between buffers with tab
@@ -178,6 +240,82 @@ vim.keymap.set('o', 'ii', '<Plug>(indent-object_blockwise-none)', {
   desc = '[Indent-Object] O-Pending inner indent'
 })
 
+-- vim-asterisk
+vim.keymap.set({ 'n', 'v', 'o' }, '*', '<Plug>(asterisk-*)', {
+  desc = '[Asterisk] Select word under the cursor *',
+})
+vim.keymap.set({ 'n', 'v', 'o' }, '#', '<Plug>(asterisk-#)', {
+  desc = '[Asterisk] Select word under the cursor #',
+})
+vim.keymap.set({ 'n', 'v', 'o' }, 'g*', '<Plug>(asterisk-g*)', {
+  desc = '[Asterisk] Select word under the cursor g*',
+})
+vim.keymap.set({ 'n', 'v', 'o' }, 'g#', '<Plug>(asterisk-g#)', {
+  desc = '[Asterisk] Select word under the cursor g#',
+})
+vim.keymap.set({ 'n', 'v', 'o' }, 'z*', '<Plug>(asterisk-z*)', {
+  desc = '[Asterisk] Select word under the cursor * (preserve position)',
+})
+vim.keymap.set({ 'n', 'v', 'o' }, 'gz*', '<Plug>(asterisk-gz*)', {
+  desc = '[Asterisk] Select word under the cursor # (preserve position)',
+})
+vim.keymap.set({ 'n', 'v', 'o' }, 'z#', '<Plug>(asterisk-z#)', {
+  desc = '[Asterisk] Select word under the cursor g* (preserve position)',
+})
+vim.keymap.set({ 'n', 'v', 'o' }, 'gz#', '<Plug>(asterisk-gz#)', {
+  desc = '[Asterisk] Select word under the cursor g# (preserve position)',
+})
+
+vim.keymap.set('n', '<C-d>', '<C-d>zz', { noremap = true, desc = '[Vim] Improve scroll down' })
+vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true, desc = '[Vim] Improve scroll up' })
+
+-- Window resize vsplit
+vim.keymap.set('n', '<A-,>', '<C-w>5<', { noremap = true, desc = '[Window] Resize vertical split smaller' })
+vim.keymap.set('n', '<A-.>', '<C-w>5>', { noremap = true, desc = '[Window] Resize vertical split wider' })
+-- Window resize split taller/shorter
+vim.keymap.set('n', '<A-->', '<C-w>5<', { noremap = true, desc = '[Window] Resize split shorter' })
+vim.keymap.set('n', '<A-t>', '<C-w>+', { noremap = true, desc = '[Window] Resize split taller' })
+
+-- " windows navigation
+vim.keymap.set('n', '<A-k>', '<c-w><c-k>', { noremap = true, desc = '[Window] Move to up window' })
+vim.keymap.set('n', '<A-j>', '<c-w><c-j>', { noremap = true, desc = '[Window] Move to down window' })
+vim.keymap.set('n', '<A-h>', '<c-w><c-h>', { noremap = true, desc = '[Window] Move to right window' })
+vim.keymap.set('n', '<A-l>', '<c-w><c-l>', { noremap = true, desc = '[Window] Move to left window' })
+
+-- " Duplicate line above and below without moving cursor
+vim.keymap.set('n', '<A-y>', '<cmd>t.<cr>', { noremap = true, desc = '[Vim] Copy line to below' })
+vim.keymap.set('n', '<A-e>', '<cmd>t-1<cr>', { noremap = true, desc = '[Vim] Copy line to above' })
+vim.keymap.set('i', '<A-y>', '<cmd>t.<cr>', { noremap = true, desc = '[Vim] Copy line to below' })
+vim.keymap.set('i', '<A-e>', '<cmd>t-1<cr>', { noremap = true, desc = '[Vim] Copy line to above' })
+
+-- Move content between clipboard and unnamed register
+vim.keymap.set('n', 'yd', function ()
+  require('utils.funcs').regmove('+', '"')
+end, { noremap = true, desc = 'Move content from unnamed register to clipboard' })
+vim.keymap.set('n', 'yD', function()
+  require('utils.funcs').regmove('"', '+')
+end, { noremap = true, desc = 'Move clipboard content to unnamed register' })
+
+-- Cd to current project or active buffer directory
+vim.keymap.set('n', '<leader>cd', function()
+  require('utils.funcs').buffer_cd()
+end, { noremap = true, desc = '[Vim] Change root directory' })
+
+---[[ Setup keymaps so we can accept completion using Enter and choose items using arrow keys or Tab.
+local pumMaps = {
+  ['<Tab>'] = '<C-n>',
+  ['<S-Tab>'] = '<C-p>',
+  ['<Down>'] = '<C-n>',
+  ['<Up>'] = '<C-p>',
+  ['<CR>'] = '<C-y>',
+}
+for insertKmap, pumKmap in pairs(pumMaps) do
+  vim.keymap.set('i', insertKmap, function()
+    return vim.fn.pumvisible() == 1 and pumKmap or insertKmap
+  end, { expr = true })
+end
+---]]
+
 -- Enable fold method using indent
 -- Ref: https://www.reddit.com/r/neovim/comments/10q2mjq/comment/j6nmuw8
 -- also consider plugin: https://github.com/kevinhwang91/nvim-ufo
@@ -288,113 +426,13 @@ vim.api.nvim_create_autocmd('QuickFixCmdPost', {
   command = 'cwindow',
 })
 
-local exclude_filetypes = {
-  'help',
-}
-
----Setup keymaps for lsp
----@param client vim.lsp.Client
----@param bufnr number
-local set_lsp_keys = function(client, bufnr)
-  local buf = bufnr
-
-  if
-      vim.tbl_contains(exclude_filetypes, vim.bo[buf].buftype)
-      or vim.tbl_contains(exclude_filetypes, vim.bo[buf].filetype)
-  then
-    vim.notify('[lsp][filetype] Not allowed: '..vim.bo[buf].filetype, vim.log.levels.DEBUG)
-    vim.notify('[lsp][buftype] Not allowed: '..vim.bo[buf].buftype, vim.log.levels.DEBUG)
-    return
-  end
-
-  vim.notify('[lsp][attached] Client: '..client.name..' id: '..client.id, vim.log.levels.DEBUG)
-
-  -- Enable completion triggered by <C-x><C-o>
-  -- Should now be set by default. Set anyways.
-  vim.bo[buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
-
-  -- Wrapper for setting maps with description
-  ---Set keymap
-  ---@param mode VimMode|VimMode[]
-  ---@param key string
-  ---@param func string|fun()
-  ---@param desc string
-  local set_map = function(mode, key, func, desc)
-    local opts = { buffer = buf, silent = true, noremap = true }
-
-    if desc then
-      opts.desc = desc
-    end
-
-    vim.keymap.set(mode, key, func, opts)
-  end
-
-  set_map('n', '<space>td', function()
-    vim.diagnostic.enable(not vim.diagnostic.is_enabled())
-  end, '[Lsp]: Toggle diagnostics')
-  set_map('n', '<space>ti', function()
-    vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ nil }))
-  end, '[Lsp]: Toggle inlay hints')
-  set_map('n', '<space>tt', function()
-    local config = type(vim.diagnostic.config().virtual_text) == 'boolean' and { current_line = true } or true
-    vim.diagnostic.config({ virtual_text = config })
-  end, '[Lsp]: Toggle inlay hints')
-  set_map('n', '<space>tl', function()
-    local config = type(vim.diagnostic.config().virtual_lines) == 'boolean' and { current_line = true } or false
-    vim.diagnostic.config({ virtual_lines = config })
-  end, '[Lsp]: Toggle inlay hints')
-  -- Buffer local mappings.
-  -- See `:help vim.lsp.*` for documentation on any of the below functions
-  set_map('n', 'gD', vim.lsp.buf.declaration, '[Lsp]: Go to declaration')
-  set_map('n', 'gd', vim.lsp.buf.definition, '[Lsp]: Go to definition')
-  set_map('n', '<space>vs', function()
-    vim.cmd.split()
-    vim.lsp.buf.definition()
-  end, '[Lsp]: Go to definition in vsplit')
-  set_map('n', '<space>vv', function()
-    vim.cmd.vsplit()
-    vim.lsp.buf.definition()
-  end, '[Lsp]: Go to definition in vsplit')
-  set_map('n', 'K', function() vim.lsp.buf.hover({ border = 'rounded' }) end, '[Lsp]: Hover action')
-  set_map('n', '<space>i', vim.lsp.buf.implementation, '[Lsp]: Go to implementation')
-  set_map('n', '<C-k>', function()
-    vim.lsp.buf.signature_help({ border = 'rounded' })
-  end, '[Lsp]: Show signature help')
-  set_map('n', '<space>wa', vim.lsp.buf.add_workspace_folder, '[Lsp]: Add workspace')
-  set_map('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, '[Lsp]: Remove workspace')
-  set_map('n', '<space>wl', function()
-    vim.print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-  end, '[Lsp]: List workspaces')
-  set_map('n', '<space>D', vim.lsp.buf.type_definition, '[Lsp]: Go to type definition')
-  set_map('n', '<space>rn', vim.lsp.buf.rename, '[Lsp]: Rename symbol')
-  set_map('n', '<f2>', vim.lsp.buf.rename, '[Lsp]: Rename symbol')
-  set_map('n', '<space>ca', vim.lsp.buf.code_action, '[Lsp]: Code Actions')
-  set_map('n', 'gr', vim.lsp.buf.references, '[Lsp]: Go to references')
-  set_map('n', '<space>f', function()
-    vim.lsp.buf.format({ async = false })
-    vim.cmd.retab()
-    vim.cmd.write()
-  end, '[Lsp]: Format buffer')
-  set_map('n', '<space>ci', vim.lsp.buf.incoming_calls, '[Lsp]: Incoming Calls')
-  set_map('n', '<space>co', vim.lsp.buf.outgoing_calls, '[Lsp]: Outgoing Calls')
-
-  set_map('n', '<space>sw', function()
-    vim.lsp.buf.workspace_symbol('')
-  end, '[Lsp] Open workspace symbols')
-  set_map('n', '<space>sd', function()
-    vim.lsp.buf.document_symbol({})
-  end, '[Lsp] Open document symbols')
-  set_map('n', 'gO', function()
-    vim.lsp.buf.document_symbol()
-  end, '[Lsp] Open document symbols')
-end
-
 -- Add keymaps on lsp attach
 vim.api.nvim_create_autocmd('LspAttach', {
+  group = vim.api.nvim_create_augroup('LspSetupConfig', {}),
   ---Add keymaps for lsp attached
   ---@param opts vim.api.keyset.create_autocmd.callback_args
   callback = function(opts)
-    local clientId = opts.data.clientId
+    local clientId = opts.data.client_id
     local client = vim.lsp.get_client_by_id(clientId)
     local buffer = opts.buf
 
@@ -402,6 +440,66 @@ vim.api.nvim_create_autocmd('LspAttach', {
       return
     end
 
-    set_lsp_keys(client, buffer)
+    require('utils.lsp_maps').set_lsp_keys(client, buffer)
+    require('utils.complete').configure(client, buffer)
+  end
+})
+
+-- Global diagnostic mappings
+-- See `:help vim.diagnostic.*` for documentation on any of the below functions
+vim.keymap.set(
+  'n',
+  '<space>e',
+  vim.diagnostic.open_float,
+  { desc = 'LSP: Open float window', silent = true, noremap = true }
+)
+vim.keymap.set('n', '<space>l', vim.diagnostic.setloclist, { desc = 'LSP: Open diagnostic list', silent = true })
+vim.keymap.set('n', '<space>q', vim.diagnostic.setqflist , { desc = 'LSP: Open diagnostic list', silent = true })
+
+-- Signs for diagnostics
+local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
+vim.diagnostic.config({
+  signs = { text = {
+    [vim.diagnostic.severity.ERROR] = signs.Error,
+    [vim.diagnostic.severity.WARN] = signs.Warn,
+    [vim.diagnostic.severity.HINT] = signs.Hint,
+    [vim.diagnostic.severity.INFO] = signs.Info,
+  } }
+})
+
+-- Start diagnostics (virtual text) enabled
+vim.diagnostic.config({ virtual_text = true, })
+-- Start with inlay hints enabled
+vim.lsp.inlay_hint.enable(true)
+
+vim.api.nvim_set_hl(0, 'DiagnosticUnderlineError', {
+  sp = 'Red', undercurl = true,
+  force = true,
+})
+vim.api.nvim_set_hl(0, 'DiagnosticUnderlineWarn', {
+  sp = 'Orange', undercurl = true,
+  force = true,
+})
+vim.api.nvim_set_hl(0, 'DiagnosticUnderlineOk', {
+  sp = 'LightGreen', undercurl = true,
+  force = true,
+})
+vim.api.nvim_set_hl(0, 'DiagnosticUnderlineInfo', {
+  sp = 'LightBlue', undercurl = true,
+  force = true,
+})
+vim.api.nvim_set_hl(0, 'DiagnosticUnderlineHint', {
+  sp = 'LightGrey', undercurl = true,
+  force = true,
+})
+
+-- Return to last edit position when opening files
+vim.api.nvim_create_autocmd('BufReadPost', {
+  desc = 'Recover previous cursor position in buffer',
+  pattern = { '*' },
+  callback = function()
+    if (vim.fn.line("'\"") > 0 and vim.fn.line("'\"") <= vim.fn.line("$")) then
+      vim.fn.execute("normal! g`\"zz")
+    end
   end
 })
