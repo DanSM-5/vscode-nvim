@@ -26,7 +26,8 @@ local check_for_updates = not (uv.fs_stat(vim.fn.stdpath('config') .. '/.no_upda
 require('lazy').setup({
   spec = {
     -- import your plugins
-    { import = 'plugins' },
+    { import = 'plugins_vscode' },
+    { import = 'plugins_nvim', enabled = vim.g.vscode ~= 1  },
   },
   -- Configure any other settings here. See the documentation for more details.
   -- colorscheme that will be used when installing plugins.
