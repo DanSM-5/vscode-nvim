@@ -754,7 +754,7 @@ return {
     end
 
     repeat_pair({
-      keys = 'a',
+      keys = 'S',
       on_forward = nextMember,
       on_backward = prevMember,
       desc_forward = '[VSCode] Go to next file member',
