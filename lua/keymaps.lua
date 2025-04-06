@@ -727,6 +727,23 @@ return {
       desc_backward = '[VSCode] Go to previous diagnostic: error, warning, info',
     })
 
+    -- Next fold
+    local nextFold = function()
+      vscode.action('editor.gotoNextFold')
+    end
+    -- Previous fold
+    local prevFold = function()
+      vscode.action('editor.gotoPreviousFold')
+    end
+
+    repeat_pair({
+      keys = 'z',
+      on_forward = nextFold,
+      on_backward = prevFold,
+      desc_forward = '[VSCode] Go to next fold',
+      desc_backward = '[VSCode] Go to prev fold',
+    })
+
     -- Next ocurrence of symbol
     local nextSymbol = function()
       vscode.action('editor.action.wordHighlight.next')
