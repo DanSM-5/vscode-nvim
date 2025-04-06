@@ -72,7 +72,7 @@ vim.api.nvim_create_autocmd('VimLeave', {
   end,
 })
 
-if vim.fn.has('nvim-0.11.0') == 0 then
+if vim.fn.has('nvim-0.11.0') == 1 then
   -- Unset defaults and let lsp-settings/keymaps.lua handle the keys
   vim.keymap.del('n', 'grr')
   vim.keymap.del('n', 'grn')
@@ -81,3 +81,6 @@ if vim.fn.has('nvim-0.11.0') == 0 then
   vim.keymap.del('n', 'gri')
   vim.keymap.del('n', 'gO')
 end
+
+-- Enable diagnostics. From nvim-11 is false by default.
+vim.diagnostic.enable(true)
