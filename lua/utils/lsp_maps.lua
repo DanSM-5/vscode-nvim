@@ -52,20 +52,20 @@ local set_lsp_keys = function(client, bufnr)
   set_map('n', '<space>tt', function()
     local config = type(vim.diagnostic.config().virtual_text) == 'boolean' and { current_line = true } or true
     vim.diagnostic.config({ virtual_text = config })
-  end, '[Lsp]: Toggle inlay hints')
+  end, '[Lsp]: Toggle virtual text diagnostics current line only')
   set_map('n', '<space>tl', function()
     local config = type(vim.diagnostic.config().virtual_lines) == 'boolean' and { current_line = true } or false
     vim.diagnostic.config({ virtual_lines = config })
-  end, '[Lsp]: Toggle inlay hints')
+  end, '[Lsp]: Toggle virtual lines diagnostics show current line')
   -- Buffer local mappings.
   -- See `:help vim.lsp.*` for documentation on any of the below functions
   set_map('n', 'gD', vim.lsp.buf.declaration, '[Lsp]: Go to declaration')
   set_map('n', 'gd', vim.lsp.buf.definition, '[Lsp]: Go to definition')
-  set_map('n', '<space>vs', function()
+  set_map('n', '<space>ds', function()
     vim.cmd.split()
     vim.lsp.buf.definition()
   end, '[Lsp]: Go to definition in vsplit')
-  set_map('n', '<space>vv', function()
+  set_map('n', '<space>dv', function()
     vim.cmd.vsplit()
     vim.lsp.buf.definition()
   end, '[Lsp]: Go to definition in vsplit')
@@ -86,6 +86,12 @@ local set_lsp_keys = function(client, bufnr)
   set_map('n', 'gr', vim.lsp.buf.references, '[Lsp]: Go to references')
   set_map('n', '<space>f', function()
     vim.lsp.buf.format({ async = false })
+
+    -- If we ever need it but hope we don't ??
+    if vim.env.VIM_DONT_RETAB ~= nil then
+      return
+    end
+
     vim.cmd.retab()
     vim.cmd.write()
   end, '[Lsp]: Format buffer')
@@ -95,11 +101,14 @@ local set_lsp_keys = function(client, bufnr)
   set_map('n', '<space>sw', function()
     vim.lsp.buf.workspace_symbol('')
   end, '[Lsp] Open workspace symbols')
+  set_map('n', '<space>sW', function()
+    vim.lsp.buf.workspace_symbol(vim.fn.expand('<cword>'))
+  end, '[Lsp] Open workspace symbols')
   set_map('n', '<space>sd', function()
     vim.lsp.buf.document_symbol({})
   end, '[Lsp] Open document symbols')
   set_map('n', 'gO', function()
-    vim.lsp.buf.document_symbol()
+    vim.lsp.buf.document_symbol({})
   end, '[Lsp] Open document symbols')
 end
 
