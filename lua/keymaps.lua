@@ -268,15 +268,15 @@ return {
 
     -- Go to implementation mappings
     vim.keymap.set({ 'n', 'x' }, '<space>I', function()
-      vscode.action('editor.action.goToImplementation')
-    end, {
-      desc = '[VSCode] Show implementations',
-      noremap = true,
-    })
-    vim.keymap.set({ 'n', 'x' }, '<space>i', function()
       vscode.action('editor.action.peekImplementation')
     end, {
       desc = '[VSCode] Peak implementations',
+      noremap = true,
+    })
+    vim.keymap.set({ 'n', 'x' }, '<space>i', function()
+      vscode.action('editor.action.goToImplementation')
+    end, {
+      desc = '[VSCode] Show implementations',
       noremap = true,
     })
     vim.keymap.set('n', '<space>rn', function()
@@ -301,14 +301,14 @@ return {
       desc = '[VSCode] Reveal definition',
       noremap = true,
     })
-    vim.keymap.set({ 'n', 'x' }, '<space>vs', function()
+    vim.keymap.set({ 'n', 'x' }, '<space>ds', function()
       vscode.call('workbench.action.splitEditorDown')
       vscode.action('editor.action.revealDefinition')
     end, {
       desc = '[VSCode] Reveal definition in split',
       noremap = true,
     })
-    vim.keymap.set({ 'n', 'x' }, '<space>vv', function()
+    vim.keymap.set({ 'n', 'x' }, '<space>dv', function()
       vscode.call('workbench.action.splitEditorRight')
       vscode.action('editor.action.revealDefinition')
     end, {
@@ -505,12 +505,19 @@ return {
       desc = '[VSCode] Peek symbol definition'
     })
     vim.keymap.set('n', '<space>dF', function ()
-      vscode.action('editor.action.peekDeclaration')
+      -- vscode.action('editor.action.peekDeclaration')
+      vscode.action('editor.action.peekTypeDefinition')
     end, {
       noremap = true,
       desc = '[VSCode] Peek symbol declaration'
     })
 
+    vim.keymap.set('n', '<space>D', function ()
+      vscode.action('editor.action.goToTypeDefinition')
+    end, {
+      noremap = true,
+      desc = '[VSCode] Go to type definition'
+    })
 
     -- WARN: Do not remap <c-o> in vscode
     -- it cannot handle it properly and cursor position is lost
