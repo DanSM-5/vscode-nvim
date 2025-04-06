@@ -1,4 +1,3 @@
-
 -- require('vscode').eval('return vscode.languages.getDiagnostics(vscode.window.activeTextEditor.document.uri)')
 
 ---@class VsCodeRange
@@ -34,15 +33,23 @@ local error_query = vim.treesitter.query.parse('query', '[(ERROR)(MISSING)] @a')
 local autocmd_group = vim.api.nvim_create_augroup('vscode.treesitter', { clear = true })
 local namespace = vim.api.nvim_create_namespace('vscode.treesitter.diagnostics')
 
+---Check if bufnr is remote
+---@param bufnr integer
+local is_remote = function(bufnr)
+  local path = vim.fn.fnamemodify(vim.fn.bufname(bufnr), ':p')
+  local _, matches = path:gsub('vscode%-remote:', '')
+  return matches > 0
+end
+
 ---Ensure the global object to handle diagnostic collections is enabled
-local initialize = function ()
+local initialize = function()
   require('vscode').eval([[
     globalThis.ts_diagnostics = globalThis.ts_diagnostics ? globalThis.ts_diagnostics : new Map()
   ]])
 end
 
 ---Clean all diagnostics and create a new global map
-local reset = function ()
+local reset = function()
   require('vscode').eval([[
     globalThis?.ts_diagnostics?.forEach?.(collection => {
       collection?.clear();
@@ -54,10 +61,13 @@ end
 
 ---Clear diagnostics on [bufnr]
 ---@param bufnr integer
-local clear_buff = function (bufnr)
-  require('vscode').eval([[
+local clear_buff = function(bufnr)
+  require('vscode').eval(
+    [[
     globalThis?.ts_diagnostics?.get(args.bufnr)?.clear();
-  ]], { args = { bufnr = bufnr } })
+  ]],
+    { args = { bufnr = bufnr } }
+  )
 end
 
 -- local current_file = vscode.eval("return vscode.window.activeTextEditor.document.fileName")
@@ -115,43 +125,39 @@ end
 
 ---Convert severity to vscode format
 ---@param severity string|number
-local toVscodeSeverity = function (severity)
+local toVscodeSeverity = function(severity)
   return vscodeSeverityMap[severity] - 1
 end
 
 ---Convert severity from vscode format
 ---@param severity string|number
-local fromVscodeSeverity = function (severity)
+local fromVscodeSeverity = function(severity)
   return vscodeSeverityMap[severity]
 end
 
 ---Get diagnostics from vscode
 ---@param bufnr? integer
 ---@return VsCodeDiagnostic[]
-local get_buf_diagnostics = function (bufnr)
-  local opts = {}
+local get_buf_diagnostics = function(bufnr)
+  local opts = { args = {} }
 
-  if bufnr ~= nil then
-    opts.bufnr = bufnr
-    opts.path = vim.fn.fnamemodify(vim.fn.bufname(bufnr), ':p')
-  end
+  opts.args.bufnr = bufnr or vim.api.nvim_get_current_buf()
+  opts.args.path = vim.fn.fnamemodify(vim.fn.bufname(opts.args.bufnr), ':p')
+  local _, matches = opts.args.path:gsub('vscode%-remote:', '')
+  opts.args.remote = matches > 0
 
   ---@type VsCodeDiagnostic[]
-  local diagnostics = require('vscode').eval([[
-    if (opts.bufnr && opts.bufnr !== 0) {
+  local diagnostics = require('vscode').eval(
+    [[
       const document = vscode.workspace.textDocuments.find(td => {
-        return td.uri.fsPath === args.path;
-      });
+        const path = args.remote ? td.uri?._formatted : td.uri.fsPath
+        return path === args.path;
+      }) || vscode.window.activeTextEditor.document;
 
-      return vscode.languages.getDiagnostics(
-        document?.uri || vscode.window.activeTextEditor.document.uri
-      );
-    }
-
-    return vscode.languages.getDiagnostics(
-      vscode.window.activeTextEditor.document.uri
-    )
-  ]], opts)
+      return vscode.languages.getDiagnostics(document.uri);
+  ]],
+    opts
+  )
 
   return diagnostics
 end
@@ -160,7 +166,7 @@ end
 ---@see vim.Diagnostic
 ---@param bufnr? integer Buffer to request diagnostics from
 ---@return vim.Diagnostic[]
-local get_buf_diagnostics_as_nvim = function (bufnr)
+local get_buf_diagnostics_as_nvim = function(bufnr)
   local diagnostics = get_buf_diagnostics(bufnr)
 
   ---@type vim.Diagnostic[]
@@ -177,23 +183,27 @@ local get_buf_diagnostics_as_nvim = function (bufnr)
       code = vsd.code,
       bufnr = bufnr or vim.api.nvim_get_current_buf(),
       namespace = namespace,
-      severity = fromVscodeSeverity(vsd.severity)
+      severity = fromVscodeSeverity(vsd.severity),
     })
   end
 
   return nvim_diagnostics
 end
 
-
 ---Set treesitter diagnostics in vscode
 ---@param diagnostics NvimTsDiagnostic[]
 ---@param bufnr number Buffer to apply diagnostics to
-local vsc_set_diagnostics = function (diagnostics, bufnr)
+local vsc_set_diagnostics = function(diagnostics, bufnr)
   local path = vim.fn.fnamemodify(vim.fn.bufname(bufnr), ':p')
-  require('vscode').eval_async([[
+  local _, matches = path:gsub('vscode%-remote:', '')
+  local remote = matches > 0
+
+  require('vscode').eval_async(
+    [[
     const editor = vscode.window.activeTextEditor;
     const document = vscode.workspace.textDocuments.find(td => {
-      return td.uri.fsPath === args.path;
+      const path = args.remote ? td.uri?._formatted : td.uri.fsPath
+      return path === args.path;
     }) || editor.document;
     const pathId = document.uri.fsPath;
 
@@ -225,17 +235,27 @@ local vsc_set_diagnostics = function (diagnostics, bufnr)
       bufnr: args.bufnr,
       path: args.path,
       uri: pathId,
+      remote: args.remote,
     })
 
     diagnosticCollection.set(document.uri, diagnostics);
     globalThis.ts_diagnostics?.set(args.bufnr, diagnosticCollection)
-  ]], { args = { diagnostics = diagnostics, bufnr = bufnr, path = path } })
+  ]],
+    {
+      args = {
+        diagnostics = diagnostics,
+        bufnr = bufnr,
+        path = path,
+        remote = remote,
+      },
+    }
+  )
 end
 
 ---Add treesitter diagnostics to vscode using bufnr
 ---@param bufnr number
-local diagnose_buffer = function (bufnr)
-  if not vim.diagnostic.is_enabled({bufnr = bufnr}) then
+local diagnose_buffer = function(bufnr)
+  if not vim.diagnostic.is_enabled({ bufnr = bufnr }) then
     return
   end
 
@@ -284,7 +304,7 @@ local diagnose_buffer = function (bufnr)
             message = '',
             code = string.format('%s-syntax', ltree:lang()),
             bufnr = bufnr,
-            severity = toVscodeSeverity(vim.diagnostic.severity.ERROR)
+            severity = toVscodeSeverity(vim.diagnostic.severity.ERROR),
           }
           if node:missing() then
             diagnostic.message = string.format('missing `%s`', node:type())
@@ -315,18 +335,13 @@ end
 
 --- @param args vim.api.keyset.create_autocmd.callback_args
 local function diagnose(args)
-  if vim.fn.filereadable(vim.fn.bufname(args.buf)) == 0 then
-    return
-  end
-
   vim.print('Sending diagnostics to buf:' .. args.buf)
   diagnose_buffer(args.buf)
 end
 
 ---Start treesitter diagnostics
 ---@param buf? number
-local start_ts_diagnostics = function (buf)
-  initialize()
+local start_ts_diagnostics = function(buf)
   vim.api.nvim_create_autocmd({ 'FileType', 'TextChanged', 'InsertLeave' }, {
     desc = '[TS] treesitter diagnostics',
     group = autocmd_group,
@@ -339,18 +354,21 @@ end
 
 ---Stop treesitter diagnostics
 ---@param buf number
-local stop_ts_diagnostics = function (buf)
+local stop_ts_diagnostics = function(buf)
   autocmd_group = vim.api.nvim_create_augroup('editor.treesitter', { clear = true })
   clear_buff(buf)
 end
 
 ---Set diagnostics from vscode into vim.diagnostics
 ---@param bufnr? integer
-local set_nvim_diagnostics_from_vscode = function (bufnr)
+local set_nvim_diagnostics_from_vscode = function(bufnr)
   local buf = bufnr or vim.api.nvim_get_current_buf()
   local diagnostics = get_buf_diagnostics_as_nvim(buf)
   vim.diagnostic.set(namespace, buf, diagnostics)
 end
+
+-- Ensure it is initialized when loading the module
+initialize()
 
 return {
   toVscodeSeverity = toVscodeSeverity,
@@ -364,5 +382,7 @@ return {
   start_ts_diagnostics = start_ts_diagnostics,
   stop_ts_diagnostics = stop_ts_diagnostics,
   clear_buff = clear_buff,
+  diagnose = diagnose,
   set_nvim_diagnostics_from_vscode = set_nvim_diagnostics_from_vscode,
+  is_remote = is_remote,
 }

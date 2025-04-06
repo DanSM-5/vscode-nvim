@@ -56,7 +56,9 @@ return {
               return false
             end
 
-            if vim.fn.filereadable(vim.fn.bufname(vim.api.nvim_get_current_buf())) == 0 then
+            local bufnr = vim.api.nvim_get_current_buf()
+            local remote = require('utils.diagnostics_vscode').is_remote(bufnr)
+            if (not remote) and (vim.fn.filereadable(vim.fn.bufname(bufnr)) == 0) then
               return false
             end
 
