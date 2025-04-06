@@ -41,8 +41,33 @@ return {
       'nvim-treesitter/nvim-treesitter',
     },
     config = function ()
+  
+      require('nvim-treesitter').define_modules({
+        diagnostics = {
+          attach = function(buf, _)
+            require('utils.diagnostics_vscode').start_ts_diagnostics(buf)
+          end,
+          detach = function (buf)
+            require('utils.diagnostics_vscode').stop_ts_diagnostics(buf)
+          end,
+          is_supported = function (lang)
+            -- Known bad filetypes
+            if vim.tbl_contains({ 'log' }, lang) then
+              return false
+            end
+
+            if vim.fn.filereadable(vim.fn.bufname(vim.api.nvim_get_current_buf())) == 0 then
+              return false
+            end
+
+            return true
+          end,
+        }
+      })
+
       ---@diagnostic disable-next-line: missing-fields
       require('nvim-treesitter.configs').setup({
+        diagnostics = { enable = false },
         sync_intall = true,
         auto_install = true,
         highlight = { enable = not is_vscode },
