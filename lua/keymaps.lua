@@ -213,11 +213,6 @@ return {
       noremap = true,
       silent = true,
     })
-    -- " Quick buffer overview an completion to change
-    vim.keymap.set('n', 'gb', ':ls<cr>:b<space>', {
-      desc = 'List open buffers and set command mode for quick navigation',
-      noremap = true,
-    })
 
     -- vim-asterisk
     vim.keymap.set({ 'n', 'v', 'o' }, '*', '<Plug>(asterisk-*)', {

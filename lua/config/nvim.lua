@@ -297,14 +297,20 @@ vim.keymap.set('n', '<leader>cd', function()
   require('utils.funcs').buffer_cd()
 end, { noremap = true, desc = '[Vim] Change root directory' })
 
+-- " Quick buffer overview an completion to change
+vim.keymap.set('n', '<leader>gb', ':ls<cr>:b<space>', {
+  desc = 'List open buffers and set command mode for quick navigation',
+  noremap = true,
+})
+
 ---[[ Setup keymaps so we can accept completion using Enter and choose items using arrow keys or Tab.
 local pumMaps = {
   ['<Tab>'] = '<C-n>',
   ['<S-Tab>'] = '<C-p>',
-  ['<Down>'] = '<C-n>',
-  ['<Up>'] = '<C-p>',
-  ['<CR>'] = '<C-y>',
 }
+-- ['<CR>'] = '<C-y>',
+-- ['<Down>'] = '<C-n>',
+-- ['<Up>'] = '<C-p>',
 for insertKmap, pumKmap in pairs(pumMaps) do
   vim.keymap.set('i', insertKmap, function()
     return vim.fn.pumvisible() == 1 and pumKmap or insertKmap
