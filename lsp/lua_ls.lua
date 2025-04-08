@@ -9,7 +9,14 @@ local root_markers = {
   '.git',
 }
 
+
+---@type vim.lsp.Config
 return {
+  on_attach = function (client, bufnr)
+    require('utils.lsp_maps').set_lsp_keys(client, bufnr)
+    require('utils.complete').configure(client, bufnr)
+  end,
+  capabilities = vim.lsp.protocol.make_client_capabilities(),
   cmd = { 'lua-language-server' },
   filetypes = { 'lua' },
   root_markers = root_markers,

@@ -428,25 +428,6 @@ vim.api.nvim_create_autocmd('QuickFixCmdPost', {
   command = 'cwindow',
 })
 
--- Add keymaps on lsp attach
-vim.api.nvim_create_autocmd('LspAttach', {
-  group = vim.api.nvim_create_augroup('LspSetupConfig', {}),
-  ---Add keymaps for lsp attached
-  ---@param opts vim.api.keyset.create_autocmd.callback_args
-  callback = function(opts)
-    local clientId = opts.data.client_id
-    local client = vim.lsp.get_client_by_id(clientId)
-    local buffer = opts.buf
-
-    if not client then
-      return
-    end
-
-    require('utils.lsp_maps').set_lsp_keys(client, buffer)
-    require('utils.complete').configure(client, buffer)
-  end
-})
-
 -- Global diagnostic mappings
 -- See `:help vim.diagnostic.*` for documentation on any of the below functions
 vim.keymap.set(
