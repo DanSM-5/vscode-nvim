@@ -83,5 +83,52 @@ return {
     'junegunn/fzf.vim',
     event = 'VeryLazy',
     cond = has_fzf,
-  }
+  },
+  -- Blink.cmp minimal config
+  -- Currently preferring builtin completion
+  {
+    'saghen/blink.cmp',
+    enabled = false,
+    dependencies = { 'rafamadriz/friendly-snippets' },
+    version = '1.*',
+    opts = {
+      keymap = {
+        preset = 'default',
+        ['<CR>'] = { 'accept', 'fallback' },
+      },
+      cmdline = {
+        enabled = false,
+        keymap = nil,
+        sources = {},
+      },
+      completion = {
+        -- NOTE: Currently causes issues
+        documentation = {
+          auto_show = true,
+          auto_show_delay_ms = 250,
+          treesitter_highlighting = true,
+          window = { border = 'rounded' },
+        },
+        menu = {
+          border = 'rounded',
+          draw = {
+            padding = { 1, 1 },
+            columns = {
+              { 'label', 'label_description', gap = 1 },
+              { 'kind_icon', 'kind', gap = 1 },
+              { 'source_name' },
+            },
+            components = {
+              kind_icon = { width = { fill = true }, },
+            },
+          },
+        },
+      },
+      sources = {
+        default = { 'lsp', 'path', 'snippets', 'buffer' },
+      },
+      fuzzy = { implementation = "prefer_rust_with_warning" }
+    },
+    opts_extend = { "sources.default" }
+  },
 }

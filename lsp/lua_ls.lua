@@ -15,6 +15,11 @@ return {
   on_attach = function (client, bufnr)
     require('utils.lsp_maps').set_lsp_keys(client, bufnr)
     require('utils.complete').configure(client, bufnr)
+
+    -- For disabling autocomplete if not in blink
+    -- local ok, blink = pcall(require, 'blink.cmp')
+    -- if not ok then
+    -- end
   end,
   capabilities = vim.lsp.protocol.make_client_capabilities(),
   cmd = { 'lua-language-server' },
