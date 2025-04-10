@@ -18,6 +18,8 @@ vim.lsp.enable(vim.tbl_keys(configs))
 
 local repeat_motion = require('utils.repeat_motion')
 repeat_motion.set_motion_keys()
+local create_repeatable_pair = repeat_motion.create_repeatable_pair
+local repeat_pair = repeat_motion.repeat_pair
 
 vim.keymap.set('t', '<leader><esc>', '<c-\\><c-n>', {
   noremap = true,
@@ -266,11 +268,122 @@ vim.keymap.set('n', '<C-d>', '<C-d>zz', { noremap = true, desc = '[Vim] Improve 
 vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true, desc = '[Vim] Improve scroll up' })
 
 -- Window resize vsplit
-vim.keymap.set('n', '<A-,>', '<C-w>5<', { noremap = true, desc = '[Window] Resize vertical split smaller' })
-vim.keymap.set('n', '<A-.>', '<C-w>5>', { noremap = true, desc = '[Window] Resize vertical split wider' })
+-- vim.keymap.set('n', '<A-,>', '<C-w>5<', { noremap = true, desc = '[Window] Resize vertical split smaller' })
+-- vim.keymap.set('n', '<A-.>', '<C-w>5>', { noremap = true, desc = '[Window] Resize vertical split wider' })
 -- Window resize split taller/shorter
-vim.keymap.set('n', '<A-->', '<C-w>5<', { noremap = true, desc = '[Window] Resize split shorter' })
-vim.keymap.set('n', '<A-t>', '<C-w>+', { noremap = true, desc = '[Window] Resize split taller' })
+-- vim.keymap.set('n', '<A-->', '<C-w>5<', { noremap = true, desc = '[Window] Resize split shorter' })
+-- vim.keymap.set('n', '<A-t>', '<C-w>+', { noremap = true, desc = '[Window] Resize split taller' })
+
+local ctrl_w = vim.api.nvim_replace_termcodes('<C-w>', true, true, true)
+local vsplit_bigger, vsplit_smaller = create_repeatable_pair(function()
+  vim.fn.feedkeys(ctrl_w .. '5>', 'n')
+end, function()
+    vim.fn.feedkeys(ctrl_w .. '5<', 'n')
+  end)
+
+repeat_pair({
+  keys = '>',
+  prefix_forward = '<A-.',
+  prefix_backward = '<A-,',
+  on_forward = vsplit_bigger,
+  on_backward = vsplit_smaller,
+  desc_forward = '[VSplit] Make vsplit bigger',
+  desc_backward = '[VSplit] Make vsplit smaller',
+})
+
+local split_bigger, split_smaller = create_repeatable_pair(function()
+  vim.fn.feedkeys(ctrl_w .. '+', 'n')
+end, function()
+    vim.fn.feedkeys(ctrl_w .. '-', 'n')
+  end)
+
+repeat_pair({
+  keys = '>',
+  prefix_forward = '<A-t',
+  prefix_backward = '<A-s',
+  on_forward = split_bigger,
+  on_backward = split_smaller,
+  desc_forward = '[Split] Make split bigger',
+  desc_backward = '[Split] Make split smaller',
+})
+
+-- Diagnostic mappings
+local diagnostic_jump_next = nil
+local diagnostic_jump_prev = nil
+
+if vim.diagnostic.jump then
+  diagnostic_jump_next = vim.diagnostic.jump
+  diagnostic_jump_prev = vim.diagnostic.jump
+else
+  -- Deprecated in favor of `vim.diagnostic.jump` in Neovim 0.11.0
+  diagnostic_jump_next = vim.diagnostic.goto_next
+  diagnostic_jump_prev = vim.diagnostic.goto_prev
+end
+
+local diagnostic_next,
+diagnostic_prev
+= create_repeatable_pair(
+  ---Move to next diagnostic
+  ---@param options vim.diagnostic.JumpOpts | nil
+  function(options)
+    local opts = options or {}
+    ---@diagnostic disable-next-line
+    opts.count = 1 * vim.v.count1
+    diagnostic_jump_next(opts)
+  end,
+  ---Move to provious diagnostic
+  ---@param options vim.diagnostic.JumpOpts | nil
+  function(options)
+    local opts = options or {}
+    ---@diagnostic disable-next-line
+    opts.count = -1 * vim.v.count1
+    diagnostic_jump_prev(opts)
+  end
+)
+
+-- diagnostic
+vim.keymap.set('n', ']d', function()
+  diagnostic_next({ wrap = true })
+end,
+  { desc = '[Diagnostic] Go to next diagnostic message', silent = true, noremap = true }
+)
+vim.keymap.set('n', '[d', function()
+  diagnostic_prev({ wrap = true })
+end,
+  { desc = '[Diagnostic] Go to previous diagnostic message', silent = true, noremap = true }
+)
+
+-- diagnostic ERROR
+vim.keymap.set('n', ']e', function()
+  diagnostic_next({ severity = vim.diagnostic.severity.ERROR, wrap = true })
+end, { desc = '[Diagnostic] Go to next error', silent = true, noremap = true })
+vim.keymap.set('n', '[e', function()
+  diagnostic_prev({ severity = vim.diagnostic.severity.ERROR, wrap = true })
+end, { desc = '[Diagnostic] Go to previous error', silent = true, noremap = true })
+
+-- diagnostic WARN
+vim.keymap.set('n', ']w', function()
+  diagnostic_next({ severity = vim.diagnostic.severity.WARN, wrap = true })
+end, { desc = '[Diagnostic] Go to next warning', silent = true, noremap = true })
+vim.keymap.set('n', '[w', function()
+  diagnostic_prev({ severity = vim.diagnostic.severity.WARN, wrap = true })
+end, { desc = '[Diagnostic] Go to previous warning', silent = true, noremap = true })
+
+-- diagnostic INFO, using H as it is often a variation of hint
+vim.keymap.set('n', ']H', function()
+  diagnostic_next({ severity = vim.diagnostic.severity.INFO })
+end, { desc = '[Diagnostic] Go to next info', silent = true, noremap = true })
+vim.keymap.set('n', '[H', function()
+  diagnostic_prev({ severity = vim.diagnostic.severity.INFO })
+end, { desc = '[Diagnostic] Go to previous info', silent = true, noremap = true })
+
+-- diagnostic HINT
+vim.keymap.set('n', ']h', function()
+  diagnostic_next({ severity = vim.diagnostic.severity.HINT })
+end, { desc = '[Diagnostic] Go to next hint', silent = true, noremap = true })
+vim.keymap.set('n', '[h', function()
+  diagnostic_prev({ severity = vim.diagnostic.severity.HINT })
+end, { desc = '[Diagnostic] Go to previous hint', silent = true, noremap = true })
 
 -- " windows navigation
 vim.keymap.set('n', '<A-k>', '<c-w><c-k>', { noremap = true, desc = '[Window] Move to up window' })
@@ -475,7 +588,14 @@ vim.diagnostic.config({
 })
 
 -- Start diagnostics (virtual text) enabled
-vim.diagnostic.config({ virtual_text = true, })
+vim.diagnostic.config({
+  virtual_text = true,
+  jump = {
+    float = true,
+  },
+  -- update_in_insert = true,
+})
+
 -- Start with inlay hints enabled
 vim.lsp.inlay_hint.enable(true)
 
