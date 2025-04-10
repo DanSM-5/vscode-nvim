@@ -48,12 +48,14 @@ vim.cmd([[
 ]])
 
 OnVimEnter = function ()
-  -- Move line up/down
-  -- Require repeatable.vim
-  vim.cmd([[
-    Repeatable nnoremap mlu :<C-U>m-2<CR>==
-    Repeatable nnoremap mld :<C-U>m+<CR>==
-  ]])
+  -- Border highlight on floats
+  vim.api.nvim_set_hl(0, 'FloatBorder', {
+    ctermbg = 239,
+    ctermfg=144,
+    bg = '#4a4a4a',
+    fg = '#afaf87',
+    force = true,
+  })
 end
 
 vim.api.nvim_create_autocmd('VimEnter', {
