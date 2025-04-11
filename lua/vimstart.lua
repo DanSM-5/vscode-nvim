@@ -23,9 +23,6 @@ vim.cmd('set ignorecase')
 vim.cmd('set smartcase')
 
 --: Global variables {{{ :-------------------------------------------------
--- vim.g.maplocalleader = ' '
--- Leader key
-vim.g.mapleader = '\\'
 -- Location for vimplug
 -- vim.g.plug_home = vim.g.config_dir .. '/plugged'
 -- Camel case motion keybindings
