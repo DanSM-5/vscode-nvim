@@ -14,7 +14,18 @@ return {
   {
     'kylechui/nvim-surround',
     event = 'VeryLazy',
-    opts = {},
+    config = function ()
+      if is_vscode then
+        -- Configure highlight group in vscode mode
+        vim.api.nvim_set_hl(0, 'NvimSurroundHighlight', {
+          bg = '#394963',
+          ctermbg=17,
+          force = true,
+        })
+      end
+
+      require('nvim-surround').setup({})
+    end
   },
   {
     'kreskij/Repeatable.vim',
