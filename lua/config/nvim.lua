@@ -4,17 +4,15 @@ vim.cmd.colorscheme('slate')
 -- Disable vim-smoothie remaps
 vim.g.smoothie_no_default_mappings = 1
 vim.opt.scrolloff = 5
-
 vim.g.markdown_folding = 1
 
-local configs = {}
-for _, v in ipairs(vim.api.nvim_get_runtime_file('lsp/*', true)) do
-  local name = vim.fn.fnamemodify(v, ':t:r')
-
-  configs[name] = true
+local lsp_servers = {}
+for _, file in ipairs(vim.api.nvim_get_runtime_file('lsp/*', true)) do
+  local name = vim.fn.fnamemodify(file, ':t:r')
+  table.insert(lsp_servers, name)
 end
 -- Start lsps
-vim.lsp.enable(vim.tbl_keys(configs))
+vim.lsp.enable(lsp_servers)
 
 local repeat_motion = require('utils.repeat_motion')
 repeat_motion.set_motion_keys()
