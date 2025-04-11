@@ -10,17 +10,19 @@
 -- vim.cmd("set shada+='1000,n$HOME/.cache/vscode-nvim/main.shada")
 
 -- Make nocompatible explisit
-vim.cmd('set nocompatible')
+vim.opt.compatible = false
 -- Default encoding
-vim.cmd('set encoding=UTF-8')
+vim.opt.encoding = 'UTF-8'
 -- show line under the cursor
-vim.cmd('set cursorline')
--- show numbers
-vim.cmd('set number relativenumber')
--- ignore case in search
-vim.cmd('set ignorecase')
--- set smart case
-vim.cmd('set smartcase')
+vim.opt.cursorline = true
+-- Set relative numbers
+vim.opt.number = true
+vim.opt.relativenumber = true
+-- ignore case in searches
+vim.opt.ignorecase = true
+-- Ignore casing unless using uppercase characters
+vim.opt.smartcase = true
+
 
 --: Global variables {{{ :-------------------------------------------------
 -- Location for vimplug

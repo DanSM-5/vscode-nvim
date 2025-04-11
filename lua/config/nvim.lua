@@ -438,19 +438,12 @@ vim.opt.foldenable = false
 vim.opt.foldlevel = 99
 vim.opt.foldlevelstart = 99
 
--- ignore case in searches
-vim.opt.ignorecase = true
--- Ignore casing unless using uppercase characters
-vim.opt.smartcase = true
-
 -- always open on the right
 vim.opt.splitright = true
 -- always split below
 vim.opt.splitbelow = true
 
--- Set relative numbers
-vim.opt.number = true
-vim.opt.relativenumber = true
+-- Enable terminal colors
 vim.opt.termguicolors = true
 
 -- enable filetype base indentation
