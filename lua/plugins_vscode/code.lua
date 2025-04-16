@@ -14,18 +14,18 @@ return {
   {
     'kylechui/nvim-surround',
     event = 'VeryLazy',
-    config = function ()
+    config = function()
       if is_vscode then
         -- Configure highlight group in vscode mode
         vim.api.nvim_set_hl(0, 'NvimSurroundHighlight', {
           bg = '#394963',
-          ctermbg=17,
+          ctermbg = 17,
           force = true,
         })
       end
 
       require('nvim-surround').setup({})
-    end
+    end,
   },
   {
     'kreskij/Repeatable.vim',
@@ -34,7 +34,7 @@ return {
   {
     'echasnovski/mini.ai',
     event = 'VeryLazy',
-    config = function ()
+    config = function()
       local ai = require('mini.ai')
       ai.setup({
         search_method = 'cover',
@@ -56,17 +56,16 @@ return {
     dependencies = {
       'nvim-treesitter/nvim-treesitter',
     },
-    config = function ()
-  
+    config = function()
       require('nvim-treesitter').define_modules({
         diagnostics = {
           attach = function(buf, _)
             require('utils.diagnostics_vscode').start_ts_diagnostics(buf)
           end,
-          detach = function (buf)
+          detach = function(buf)
             require('utils.diagnostics_vscode').stop_ts_diagnostics(buf)
           end,
-          is_supported = function (lang)
+          is_supported = function(lang)
             -- Known bad filetypes
             if vim.tbl_contains({ 'log' }, lang) then
               return false
@@ -80,7 +79,7 @@ return {
 
             return true
           end,
-        }
+        },
       })
 
       ---@diagnostic disable-next-line: missing-fields
@@ -93,6 +92,15 @@ return {
         sync_install = true,
         ensure_installed = {},
         ignore_install = {},
+        incremental_selection = {
+          enable = true,
+          keymaps = {
+            init_selection = '<space>nn',
+            node_incremental = '<space>nn',
+            scope_incremental = '<space>nN',
+            node_decremental = '<space>np',
+          },
+        },
         textobjects = {
           lsp_interop = {
             enable = not is_vscode,
@@ -132,7 +140,7 @@ return {
             selection_modes = {
               ['@parameter.outer'] = 'v', -- charwise
               ['@function.outer'] = 'v', -- 'V' -- linewise
-              ['@class.outer'] = 'v' -- '<c-v>', -- blockwise
+              ['@class.outer'] = 'v', -- '<c-v>', -- blockwise
             },
             -- If you set this to `true` (default is `false`) then any textobject is
             -- extended to include preceding or succeeding whitespace. Succeeding
@@ -182,10 +190,9 @@ return {
             --   ['[d'] = '@conditional.outer',
             -- }
           },
-        }
+        },
         --- END
       })
     end,
   },
 }
-
