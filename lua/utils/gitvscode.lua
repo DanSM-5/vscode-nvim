@@ -1,3 +1,5 @@
+---@module 'types.vscode'
+
 ---Structured based from gitgutter where hunk is stored in a list
 ---[ baseStart, baseRange, newStart, newRange ]
 ---@alias Hunk { baseStart: integer, baseRange: integer, newStart: integer, newRange: integer } Represents a hunk from git cli

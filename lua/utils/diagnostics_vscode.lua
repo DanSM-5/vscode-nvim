@@ -1,8 +1,6 @@
--- require('vscode').eval('return vscode.languages.getDiagnostics(vscode.window.activeTextEditor.document.uri)')
+---@module 'types.vscode'
 
----@class VsCodeRange
----@field character number Column number. 0 based indexed.
----@field line number Line number. 0 based indexed.
+-- require('vscode').eval('return vscode.languages.getDiagnostics(vscode.window.activeTextEditor.document.uri)')
 
 ---@class VsCodeDiagnostic
 ---@field code string|number Code to display in diagnostics window
