@@ -120,19 +120,24 @@ return {
     --   noremap = true,
     -- })
 
-    -- Smooth scroll up/down
+    -- Cursor based scroll
     -- Combine with: "editor.cursorSmoothCaretAnimation": "on"
     -- Set an appropriate jumpStep value. 8 seems to be on the sweet spot.
-    -- You can try: "editor.smoothScrolling": true
-    -- but animation felt yanky at the end of the buffer
-    -- https://stackoverflow.com/questions/47040925/microsoft-vs-code-jump-10-lines-vertically-at-once/48568520#48568520
+    -- Do not mix 'viewPortCenter' with "editor.smoothScrolling": true
+    -- Also notice, "editor.smoothScrolling" makes <c-f>, <c-b>, <c-u> and <c-d>
+    -- very yanky. Even with regular up/down, scroll sometimes is not very precise
+    -- Ref: https://stackoverflow.com/questions/47040925/microsoft-vs-code-jump-10-lines-vertically-at-once/48568520#48568520
+
+    local throttle = require('utils.throttle').throttle
 
     -- How many lines to move each key press
     local jumpStep = 8
     local halfJump = math.floor(jumpStep / 2)
     local doubleJump = jumpStep * 2
+    local delay = 30 -- or 40
 
-    -- Get current line from vscode as it updates faster than nvim `line('.')`
+    --- Get current line from vscode as it updates faster than nvim `line('.')`
+    --- @return integer Line number where cursor is located
     local getCurrentLine = function ()
       ---@type integer | vim.NIL
       local line = vscode.eval([[
@@ -140,6 +145,7 @@ return {
           vscode.window.activeTextEditor?.selection?.start?.line
       ]])
 
+      -- Fallback
       if line == vim.NIL then
         return vim.fn.line('.')
       end
@@ -148,6 +154,7 @@ return {
       return line + 1
     end
 
+    local upScrollCallback =  throttle(delay, function ()
       -- Current cursor line
       local current = getCurrentLine()
 
@@ -156,6 +163,7 @@ return {
         return
       end
 
+      -- Total lines (end of file)
       local eof = vim.fn.line('$')
 
       -- Scroll half jumpStep when close to the top or close to the bottom
@@ -183,10 +191,12 @@ return {
       -- else
       --   vscode.call('cursorMove', { args = { to = 'viewPortCenter', value = jumpStep }})
       -- end
-    end
+    end)
 
-    local downScrollCallback = function ()
+    local downScrollCallback = throttle(delay, function ()
+      -- Current cursor line
       local current = getCurrentLine()
+      -- Total lines (end of file)
       local eof = vim.fn.line('$')
 
       -- Already reached bottom
@@ -228,22 +238,25 @@ return {
       -- else
       --   vscode.call('cursorMove', { args = { to = 'viewPortCenter', value = jumpStep }})
       -- end
-    end
+    end)
 
+    -- NOTE: maping `visual` mode to be able to start scrollin
+    -- however vscode breaks from visual mode.
+    -- It cannot be used to do visual selection.
     vim.keymap.set('v', '<S-down>', downScrollCallback, {
-      desc = '[VimSmoothie] Move down (shift-d)',
+      desc = '[VSCode] Scroll down (shift-d)',
       noremap = true,
     })
     vim.keymap.set('n', '<S-down>', downScrollCallback, {
-      desc = '[VimSmoothie] Move down (shift-d)',
+      desc = '[VSCode] Scroll down (shift-d)',
       noremap = true,
     })
     vim.keymap.set('v', '<S-up>', upScrollCallback, {
-      desc = '[VimSmoothie] Move up (shift-d)',
+      desc = '[VSCode] Scroll up (shift-d)',
       noremap = true,
     })
     vim.keymap.set('n', '<S-up>', upScrollCallback, {
-      desc = '[VimSmoothie] Move up (shift-d)',
+      desc = '[VSCode] Scroll up (shift-d)',
       noremap = true,
     })
 
