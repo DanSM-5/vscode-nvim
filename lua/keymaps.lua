@@ -1,3 +1,5 @@
+---@module 'types.vscode'
+
 local vscode = require('vscode')
 local nx = { 'n', 'x' }
 
@@ -125,36 +127,87 @@ return {
     -- but animation felt yanky at the end of the buffer
     -- https://stackoverflow.com/questions/47040925/microsoft-vs-code-jump-10-lines-vertically-at-once/48568520#48568520
 
+    -- How many lines to move each key press
     local jumpStep = 8
+    local halfJump = math.floor(jumpStep / 2)
+    local doubleJump = jumpStep * 2
+
     local upScrollCallback =  function ()
+      -- Current cursor line
       local current = vim.fn.line('.')
-      if current <= jumpStep then
-        vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = math.floor(jumpStep / 2), revealCursor = true }})
+
+      -- Already reached top
+      if current == 1 then
+        return
+      end
+
+      -- Ease when reaching the top
+      if current <= doubleJump then
+        vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = halfJump, revealCursor = true }})
+        vscode.call('cursorMove', { args = { to = 'up', value = halfJump }})
       else
         vscode.call('editorScroll', { args = { by = 'line', to = 'up', value = jumpStep, revealCursor = true }})
-      end
-
-      if current <= (jumpStep * 3) then
         vscode.call('cursorMove', { args = { to = 'up', value = jumpStep }})
-      else
-        vscode.call('cursorMove', { args = { to = 'viewPortCenter', value = jumpStep }})
       end
 
+      -- Below is an alternative move for 'cursorMove'
+      -- It does not play nice with `editor.smoothScrolling` when reaching the top.
+      -- Jump is less precise.
+
+      -- Get visible number of lines. This varies due to zoom, windows, etc.
+      -- -@type [VsCodeRange, VsCodeRange]
+      -- local visibleRanges = vscode.eval('return vscode.window.activeTextEditor.visibleRanges')[1]
+      -- local visibleLines = (visibleRanges[2].line - visibleRanges[1].line) + 1 -- 0 based index
+
+      -- Use 'up' movement when the current line is equal or less than the remaining visible lines to the top.
+      -- Using 'viewPortCenter' prevents the cursor from reaching the top.
+      -- if current <= visibleLines then
+      --   vscode.call('cursorMove', { args = { to = 'up', value = jumpStep }})
+      -- else
+      --   vscode.call('cursorMove', { args = { to = 'viewPortCenter', value = jumpStep }})
+      -- end
     end
 
     local downScrollCallback = function ()
-      vscode.call('editorScroll', { args = { by = 'line', to = 'down', value = jumpStep, revealCursor = true }})
-      -- Works better if "editor.smoothScrolling": false
-      -- vscode.call('cursorMove', { args = { to = 'viewPortCenter' }})
-
       -- Improves when "editor.smoothScrolling": true
       local line = vim.fn.line('.')
       local eof = vim.fn.line('$')
-      if line <= (eof - (3 * jumpStep)) then
-        vscode.call('cursorMove', { args = { to = 'down', value = math.floor(jumpStep / 2) }})
-      else
-        vscode.call('cursorMove', { args = { to = 'viewPortCenter', value = jumpStep }})
+
+      -- Already reached bottom
+      if line == eof then
+        return
       end
+
+      -- scroll page down
+      if line >= (eof - doubleJump)  then
+        vscode.call('editorScroll', { args = { by = 'line', to = 'down', value = halfJump, revealCursor = true }})
+        vscode.call('cursorMove', { args = { to = 'down', value = halfJump }})
+      else
+        -- Get visible number of lines. This varies due to zoom, windows, etc.
+        ---@type [VsCodeRange, VsCodeRange]
+        local visibleRanges = vscode.eval('return vscode.window.activeTextEditor.visibleRanges')[1]
+        local visibleLines = (visibleRanges[2].line - visibleRanges[1].line) + 1 -- 0 based index
+
+        -- Because cursor it is at the top, it should not scroll the page or the jump
+        -- will be calculated relative to the new scroll positon
+        if line >= math.floor(visibleLines / 2) then
+          vscode.call('editorScroll', { args = { by = 'line', to = 'down', value = jumpStep, revealCursor = true }})
+        end
+        vscode.call('cursorMove', { args = { to = 'down', value = jumpStep }})
+      end
+
+      -- Below is an alternative move for 'cursorMove'
+      -- It does not play nice with `editor.smoothScrolling` when reaching the bottom.
+      -- Jump is less precise.
+
+      -- Use 'down' movement when the current line is equal or more than the remaining visible lines to the bottom.
+      -- Using 'viewPortCenter' prevents the cursor from reaching the bottom.
+      -- if line >= (eof - visibleLines) then
+      --   -- Ease when reaching the bottom
+      --   vscode.call('cursorMove', { args = { to = 'down', value = jumpStep }})
+      -- else
+      --   vscode.call('cursorMove', { args = { to = 'viewPortCenter', value = jumpStep }})
+      -- end
     end
 
     vim.keymap.set('v', '<S-down>', downScrollCallback, {
