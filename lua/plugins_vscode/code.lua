@@ -1,3 +1,5 @@
+---@module 'lazy.nvim'
+
 -- vim plugins
 
 local is_vscode = vim.g.vscode == 1
