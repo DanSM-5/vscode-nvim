@@ -97,6 +97,107 @@ end
 --   }
 -- }
 
+---Apply a git command directly on vscode
+---@param opts { command: string; ref: string; line?: integer }
+---@return boolean If the command succeeded
+local apply_command_vscode = function (opts)
+  opts = opts or {}
+
+  -- vscode hunk lines are 1-based indexed
+  -- local line = vim.fn.line('.')
+
+  -- Try to get the overlaping line in the hunk from diffInformation
+
+  ---@type boolean
+  local success = require('vscode').eval([[
+    let line = null;
+
+    try {
+      // If we provided a line, use that
+      if (args?.line) {
+        line = args.line;
+      } else {
+        // Get current line from vscode
+        line = vscode.window.activeTextEditor?.selection?.active?.line ||
+          vscode.window.activeTextEditor?.selection?.start?.line;
+
+        if (line == null) {
+          return false;
+        }
+
+        // Hunks are 1-based index, so increate by 1
+        line = line + 1;
+      }
+
+      // Ref for comparing against query
+      // Empty string for unstaged hunks
+      // or 'HEAD' for all hunks.
+      const ref = args?.ref == null ? '' : args.ref;
+      const editor = vscode.window.activeTextEditor;
+
+      // Get changes from editor
+      const changes = editor.diffInformation.find(di => {
+        const query = JSON.parse(di.original.query);
+        return query.ref === ref;
+      })?.changes ||
+        editor.diffInformation[0].changes ||
+        editor.diffInformation[1].changes;
+
+      // Find hunk under the cursor (if any)
+      const hunk = changes.find(h => {
+        return h.modified.startLineNumber <= line && h.modified.endLineNumberExclusive >= line;
+      });
+
+      logger.info('Found hunk:', hunk);
+
+      if (!hunk || !editor) {
+        logger.info('Unable to process command.')
+        return false;
+      }
+
+      // logger.info('selection: ', selection);
+      // logger.info('args', args);
+
+      // Create new selection
+      const modified = hunk.modified;
+      const range = new vscode.Range(
+        new vscode.Position(modified.startLineNumber - 1, 0),
+        new vscode.Position(modified.endLineNumberExclusive - 1, 0)
+      );
+      const selection = new vscode.Selection(range.start, range.end);
+
+      // Save current to restore after command
+      const prevSelection = editor.selection;
+
+      // Set selection and call command
+      editor.selection = selection;
+      vscode.commands.executeCommand(args.command);
+      editor.selection = prevSelection;
+
+      // Return true if nothing throw an error
+      return true
+    } catch (e) {
+      // If anything fails, consider it as false
+      return false
+    }
+  ]], {
+      args = {
+        line = opts.line,
+        command = opts.command,
+        ref = opts.ref,
+      }
+    })
+
+  return success
+
+  -- return {
+  --   newStart = vsc_hunk.modified.startLineNumber,
+  --   newRange = vsc_hunk.modified.endLineNumberExclusive - vsc_hunk.modified.startLineNumber,
+  --   baseStart = vsc_hunk.original.startLineNumber,
+  --   baseRange = vsc_hunk.original.endLineNumberExclusive - vsc_hunk.original.startLineNumber,
+  -- }
+end
+
 ---Get the unstaged hunk from vscode
 ---This is identified as the one with query without ref
 ---@return VsCodeHunk? Hunk if available
@@ -276,77 +377,91 @@ end
 -- of a feature of some diff view.
 
 local stage_hunk_under_cursor_vscode = function ()
-  local vscode_hunk = get_unstaged_hunk_under_cursor_js()
-  if vscode_hunk then
-    require('vscode')
-      .action('git.stageSelectedRanges', {
-        range = { vscode_hunk.modified.startLineNumber - 1, vscode_hunk.modified.endLineNumberExclusive - 1 },
-        restore_selection = true,
-      })
-    return
-  end
+  apply_command_vscode({
+    command = 'git.stageSelectedRanges',
+    ref = '',
+  })
 
+  -- local vscode_hunk = get_unstaged_hunk_under_cursor_js()
+  -- if vscode_hunk then
+  --   require('vscode')
+  --     .action('git.stageSelectedRanges', {
+  --       range = { vscode_hunk.modified.startLineNumber - 1, vscode_hunk.modified.endLineNumberExclusive - 1 },
+  --       restore_selection = true,
+  --     })
+  --   return
+  -- end
 
-  local hunk = get_hunk_under_cursor_cli()
-  if not hunk then
-    return
-  end
+  -- local hunk = get_hunk_under_cursor_cli()
+  -- if not hunk then
+  --   return
+  -- end
 
   -- NOTE: Left this here for later
   -- Ref: https://vi.stackexchange.com/questions/20066/is-it-possible-to-perform-a-visual-block-selection-programmatically-using-line-a
   -- vim.cmd.normal(hunk.newStart..'G|V'..(hunk.newStart + hunk.newRange)..'G|')
 
-  require('vscode')
-    .action('git.stageSelectedRanges', {
-      range = { hunk.newStart - 1, hunk.newStart - 1 + hunk.newRange },
-      restore_selection = true,
-    })
+  -- require('vscode')
+  --   .action('git.stageSelectedRanges', {
+  --     range = { hunk.newStart - 1, hunk.newStart - 1 + hunk.newRange },
+  --     restore_selection = true,
+  --   })
 end
 
 local unstage_hunk_under_cursor_vscode = function ()
-  local vscode_hunk = get_hunk_under_cursor_js()
-  if vscode_hunk then
-    require('vscode')
-      .action('git.unstageSelectedRanges', {
-        range = { vscode_hunk.modified.startLineNumber - 1, vscode_hunk.modified.endLineNumberExclusive - 1 },
-        restore_selection = true,
-      })
-    return
-  end
+  apply_command_vscode({
+    command = 'git.unstageSelectedRanges',
+    ref = 'HEAD',
+  })
 
-  local hunk = get_hunk_under_cursor_cli(true)
-  if not hunk then
-    return
-  end
+  -- local vscode_hunk = get_hunk_under_cursor_js()
+  -- if vscode_hunk then
+  --   require('vscode')
+  --     .action('git.unstageSelectedRanges', {
+  --       range = { vscode_hunk.modified.startLineNumber - 1, vscode_hunk.modified.endLineNumberExclusive - 1 },
+  --       restore_selection = true,
+  --     })
+  --   return
+  -- end
 
-  require('vscode')
-    .action('git.unstageSelectedRanges', {
-      range = { hunk.newStart - 1, hunk.newStart - 1 + hunk.newRange },
-      restore_selection = true,
-    })
+  -- local hunk = get_hunk_under_cursor_cli(true)
+  -- if not hunk then
+  --   return
+  -- end
+
+  -- require('vscode')
+  --   .action('git.unstageSelectedRanges', {
+  --     range = { hunk.newStart - 1, hunk.newStart - 1 + hunk.newRange },
+  --     restore_selection = true,
+  --   })
 end
 
 local revert_hunk_under_cursor_vscode = function ()
-  local vscode_hunk = get_unstaged_hunk_under_cursor_js()
-  if vscode_hunk then
-    require('vscode')
-      .action('git.revertSelectedRanges', {
-        range = { vscode_hunk.modified.startLineNumber - 1, vscode_hunk.modified.endLineNumberExclusive - 1 },
-        restore_selection = true,
-      })
-    return
-  end
+  apply_command_vscode({
+    command = 'git.revertSelectedRanges',
+    ref = '',
+  })
 
-  local hunk = get_hunk_under_cursor_cli()
-  if not hunk then
-    return
-  end
+  -- local vscode_hunk = get_unstaged_hunk_under_cursor_js()
+  -- if vscode_hunk then
+  --   require('vscode')
+  --     .action('git.revertSelectedRanges', {
+  --       range = { vscode_hunk.modified.startLineNumber - 1, vscode_hunk.modified.endLineNumberExclusive - 1 },
+  --       restore_selection = true,
+  --     })
+  --   return
+  -- end
 
-  require('vscode')
-    .action('git.revertSelectedRanges', {
-      range = { hunk.newStart - 1, hunk.newStart - 1 + hunk.newRange },
-      restore_selection = true,
-    })
+  -- local hunk = get_hunk_under_cursor_cli()
+  -- if not hunk then
+  --   return
+  -- end
+
+  -- require('vscode')
+  --   .action('git.revertSelectedRanges', {
+  --     range = { hunk.newStart - 1, hunk.newStart - 1 + hunk.newRange },
+  --     restore_selection = true,
+  --   })
 end
 
 ---Generates a random string
