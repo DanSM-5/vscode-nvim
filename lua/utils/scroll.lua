@@ -126,11 +126,13 @@ local registerScroll = function (opts)
   opts = opts or {}
 
   require('vscode').eval([[
-    // if (globalThis?._vscode_scroll) {
-    //   return;
-    // }
+    if (globalThis._vscode_scroll) return
 
     const jumpStep = args?.jumpStep ?? 8;
+
+    // Uncomment below and wrap scroll_up/scroll_down functions
+    // to decrease the speed if the scroll.
+
     // const delay = args?.delay ?? 30; // 40;
 
     // const throttleFn = (fn, time) => {
@@ -149,72 +151,78 @@ local registerScroll = function (opts)
     //   };
     // };
 
+    const scroll_down = () => {
+      const scroll = globalThis._vscode_scroll;
+      if (!scroll) return
+
+      const current = scroll.get_curr_line();
+      const eof = scroll.get_total_lines();
+
+      if (current === eof) {
+        return;
+      }
+
+      const { doubleJump, halfJump } = scroll;
+
+      if (current <= doubleJump) {
+        vscode.commands.executeCommand('cursorMove', {
+          to: 'down', value: scroll.halfJump,
+        });
+      } else if (current >= (eof - doubleJump)) {
+        vscode.commands.executeCommand('editorScroll', {
+          to: 'down', by: 'line', value: scroll.halfJump, revealCursor: true,
+        });
+        vscode.commands.executeCommand('cursorMove', {
+          to: 'down', value: scroll.halfJump,
+        });
+      } else {
+        vscode.commands.executeCommand('editorScroll', {
+          to: 'down', by: 'line', value: scroll.jumpStep, revealCursor: true,
+        });
+        vscode.commands.executeCommand('cursorMove', {
+          to: 'down', value: scroll.jumpStep,
+        });
+      }
+    };
+
+    const scroll_up = () => {
+      const scroll = globalThis._vscode_scroll;
+      if (!scroll) return
+
+      const current = scroll.get_curr_line();
+
+      if (current === 1) {
+        return;
+      }
+
+      const eof = scroll.get_total_lines();
+      const { doubleJump, halfJump } = scroll;
+
+      if ((current <= doubleJump) || (current >= (eof - doubleJump))) {
+        vscode.commands.executeCommand('editorScroll', {
+          to: 'up', by: 'line', value: scroll.halfJump, revealCursor: true,
+        });
+        vscode.commands.executeCommand('cursorMove', {
+          to: 'up', value: scroll.halfJump,
+        });
+      } else {
+        vscode.commands.executeCommand('editorScroll', {
+          to: 'up', by: 'line', value: scroll.jumpStep, revealCursor: true,
+        });
+        vscode.commands.executeCommand('cursorMove', {
+          to: 'up', value: scroll.jumpStep,
+        });
+      }
+    };
+
     globalThis._vscode_scroll = {
       jumpStep,
       halfJump: Math.floor(jumpStep / 2),
       doubleJump: jumpStep * 2,
-      scroll_down: () => {
-        const scroll = globalThis._vscode_scroll;
-        if (!scroll) return
-
-        const current = scroll.get_curr_line();
-        const eof = scroll.get_total_lines();
-
-        if (current === eof) {
-          return;
-        }
-
-        const { doubleJump, halfJump } = scroll;
-
-        if (current <= doubleJump) {
-          vscode.commands.executeCommand('cursorMove', {
-            to: 'down', value: scroll.halfJump,
-          });
-        } else if (current >= (eof - doubleJump)) {
-          vscode.commands.executeCommand('editorScroll', {
-            to: 'down', by: 'line', value: scroll.halfJump, revealCursor: true,
-          });
-          vscode.commands.executeCommand('cursorMove', {
-            to: 'down', value: scroll.halfJump,
-          });
-        } else {
-          vscode.commands.executeCommand('editorScroll', {
-            to: 'down', by: 'line', value: scroll.jumpStep, revealCursor: true,
-          });
-          vscode.commands.executeCommand('cursorMove', {
-            to: 'down', value: scroll.jumpStep,
-          });
-        }
-      },
-      scroll_up: () => {
-        const scroll = globalThis._vscode_scroll;
-        if (!scroll) return
-
-        const current = scroll.get_curr_line();
-
-        if (current === 1) {
-          return;
-        }
-
-        const eof = scroll.get_total_lines();
-        const { doubleJump, halfJump } = scroll;
-
-        if ((current <= doubleJump) || (current >= (eof - doubleJump))) {
-          vscode.commands.executeCommand('editorScroll', {
-            to: 'up', by: 'line', value: scroll.halfJump, revealCursor: true,
-          });
-          vscode.commands.executeCommand('cursorMove', {
-            to: 'up', value: scroll.halfJump,
-          });
-        } else {
-          vscode.commands.executeCommand('editorScroll', {
-            to: 'up', by: 'line', value: scroll.jumpStep, revealCursor: true,
-          });
-          vscode.commands.executeCommand('cursorMove', {
-            to: 'up', value: scroll.jumpStep,
-          });
-        }
-      },
+      scroll_down,
+      scroll_up,
+      // scroll_down: throttleFn(scroll_down, delay),
+      // scroll_up: throttleFn(scroll_up, delay),
       get_curr_line: () => {
         const line = vscode.window.activeTextEditor?.selection?.active?.line ||
           vscode.window.activeTextEditor?.selection?.start?.line;
