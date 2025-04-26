@@ -5,17 +5,6 @@ local nx = { 'n', 'x' }
 
 return {
   set_default = function()
-    -- Indent text object
-    -- :h indent-object
-    vim.keymap.set('x', 'ii', '<Plug>(indent-object_linewise-none)', {
-      remap = true,
-      desc = '[Indent-Object] Select inner indent'
-    })
-    vim.keymap.set('o', 'ii', '<Plug>(indent-object_blockwise-none)', {
-      remap = true,
-      desc = '[Indent-Object] O-Pending inner indent'
-    })
-
     -- Vim commentary emulation
     vim.keymap.set('x', 'gc', '<Plug>VSCodeCommentary', {
       desc = '[VSCommentary]: Start comment action with word objects',
@@ -44,81 +33,10 @@ return {
     -- vim.keymap.set('v', '<C-S-Up>', ":m '<-2<cr>gv=gv",
     --   { desc = 'Move line under the cursor up', silent = true })
 
-    -- ]<End> or ]<Home> move current line to the end or the begin of current buffer
-    vim.keymap.set('n', ']<End>', 'ddGp``', { desc = 'Move line to end of the buffer', noremap = true, silent = true })
-    vim.keymap.set(
-      'n',
-      ']<Home>',
-      'ddggP``',
-      { desc = 'Move line to start of the buffer', noremap = true, silent = true }
-    )
-    vim.keymap.set('v', ']<End>', 'dGp``', { desc = 'Move line to end of the buffer', noremap = true, silent = true })
-    vim.keymap.set(
-      'v',
-      ']<Home>',
-      'dggP``',
-      { desc = 'Move line to start of the buffer', noremap = true, silent = true }
-    )
-
-    -- Select blocks after indenting
-    vim.keymap.set('x', '<', '<gv', { desc = 'Reselect visual block after reducing indenting', noremap = true })
-    vim.keymap.set('x', '>', '>gv|', { desc = 'Reselect visual block after increasing indenting', noremap = true })
-
-    -- Use tab for indenting in visual mode
-    vim.keymap.set('x', '<S-Tab>', '<gv', { desc = 'Decrease indentation of selected block', noremap = true })
-    vim.keymap.set('x', '<Tab>', '>gv|', { desc = 'Increase indentation of selected block', noremap = true })
-    vim.keymap.set('n', '>', '>>_', { desc = 'Increase indentation of line', noremap = true })
-    vim.keymap.set('n', '<', '<<_', { desc = 'Decrease indentation of line', noremap = true })
-
-    -- smart up and down
-    vim.keymap.set('n', '<down>', 'gj', { desc = 'Move down in wrapped lines', silent = true, remap = true })
-    vim.keymap.set('n', '<up>', 'gk', { desc = 'Move up in wrapped lines', silent = true, remap = true })
-    -- nnoremap <expr> k (v:count == 0 ? 'gk' : 'k')
-    -- nnoremap <expr> j (v:count == 0 ? 'gj' : 'j')
-
     -- Fast saving
-    vim.keymap.set('n', '<C-s>', ':<C-u>w<CR>', { desc = 'Save buffer with ctrl-s', noremap = true })
-    vim.keymap.set('v', '<C-s>', ':<C-u>w<CR>', { desc = 'Save buffer with ctrl-s', noremap = true })
-    vim.keymap.set('c', '<C-s>', '<C-u>w<CR>', { desc = 'Save buffer with ctrl-s', noremap = true })
-
-    -- SystemCopy keybindings
-    vim.keymap.set('n', 'zy', '<Plug>SystemCopy', {
-      desc = '[SystemCopy] Copy motion',
-    })
-    vim.keymap.set('x', 'zy', '<Plug>SystemCopy', {
-      desc = '[SystemCopy] Copy motion',
-    })
-    vim.keymap.set('n', 'zY', '<Plug>SystemCopyLine', {
-      desc = '[SystemCopy] Copy line under cursor',
-    })
-    vim.keymap.set('n', 'zp', '<Plug>SystemPaste', {
-      desc = '[SystemCopy] Paste motion',
-    })
-    vim.keymap.set('x', 'zp', '<Plug>SystemPaste', {
-      desc = '[SystemCopy] Paste motion',
-    })
-    vim.keymap.set('n', 'zP', '<Plug>SystemPasteLine', {
-      desc = '[SystemCopy] Paste line below',
-    })
-
-    -- @deprecated in favor of native vscode editorScroll command
-    -- VimSmoothie maps
-    -- vim.keymap.set('v', '<S-down>', '<cmd>call smoothie#do("\\<C-D>")<CR>', {
-    --   desc = '[VimSmoothie] Move down (ctrl-d)',
-    --   noremap = true,
-    -- })
-    -- vim.keymap.set('n', '<S-down>', '<cmd>call smoothie#do("\\<C-D>")<CR>', {
-    --   desc = '[VimSmoothie] Move down (ctrl-d)',
-    --   noremap = true,
-    -- })
-    -- vim.keymap.set('v', '<S-up>', '<cmd>call smoothie#do("\\<C-U>")<CR>', {
-    --   desc = '[VimSmoothie] Move up (ctrl-d)',
-    --   noremap = true,
-    -- })
-    -- vim.keymap.set('n', '<S-up>', '<cmd>call smoothie#do("\\<C-U>")<CR>', {
-    --   desc = '[VimSmoothie] Move up (ctrl-d)',
-    --   noremap = true,
-    -- })
+    -- vim.keymap.set('n', '<C-s>', ':<C-u>w<CR>', { desc = 'Save buffer with ctrl-s', noremap = true })
+    -- vim.keymap.set('v', '<C-s>', ':<C-u>w<CR>', { desc = 'Save buffer with ctrl-s', noremap = true })
+    -- vim.keymap.set('c', '<C-s>', '<C-u>w<CR>', { desc = 'Save buffer with ctrl-s', noremap = true })
 
     local upScrollCallback = function ()
       require('utils.scroll').scroll_up()
@@ -147,90 +65,6 @@ return {
       noremap = true,
     })
 
-    -- Map clipboard functions
-    vim.keymap.set('x', '<Leader>y', ':<C-u>call clipboard#yank()<cr>', {
-      desc = 'Yank selection to system clipboard',
-      silent = true,
-      noremap = true,
-    })
-    vim.keymap.set('n', '<Leader>p', 'clipboard#paste("p")', {
-      desc = 'Paste content of system clipboard after the cursor',
-      expr = true,
-      noremap = true,
-    })
-    vim.keymap.set('n', '<Leader>P', 'clipboard#paste("P")', {
-      desc = 'Paste content of system clipboard after the cursor',
-      expr = true,
-      noremap = true,
-    })
-    vim.keymap.set('x', '<Leader>p', 'clipboard#paste("p")', {
-      desc = 'Paste content of system clipboard after the cursor',
-      expr = true,
-      noremap = true,
-    })
-    vim.keymap.set('x', '<Leader>P', 'clipboard#paste("P")', {
-      desc = 'Paste content of system clipboard after the cursor',
-      expr = true,
-      noremap = true,
-    })
-
-    -- Clean trailing whitespace in file
-    vim.keymap.set('n', '<Leader>cc', ':%s/\\s\\+$//e<cr>', {
-      desc = 'Clear trailing whitespace in file',
-      noremap = true,
-      silent = true,
-    })
-    -- Clean carriage returns '^M'
-    vim.keymap.set('n', '<Leader>cr', ':%s/\\r$//g<cr>', {
-      desc = 'Clear carriage return characters (^M)',
-      noremap = true,
-      silent = true,
-    })
-
-    -- vim-asterisk
-    vim.keymap.set({ 'n', 'v', 'o' }, '*', '<Plug>(asterisk-*)', {
-      desc = '[Asterisk] Select word under the cursor *',
-    })
-    vim.keymap.set({ 'n', 'v', 'o' }, '#', '<Plug>(asterisk-#)', {
-      desc = '[Asterisk] Select word under the cursor #',
-    })
-    vim.keymap.set({ 'n', 'v', 'o' }, 'g*', '<Plug>(asterisk-g*)', {
-      desc = '[Asterisk] Select word under the cursor g*',
-    })
-    vim.keymap.set({ 'n', 'v', 'o' }, 'g#', '<Plug>(asterisk-g#)', {
-      desc = '[Asterisk] Select word under the cursor g#',
-    })
-    vim.keymap.set({ 'n', 'v', 'o' }, 'z*', '<Plug>(asterisk-z*)', {
-      desc = '[Asterisk] Select word under the cursor * (preserve position)',
-    })
-    vim.keymap.set({ 'n', 'v', 'o' }, 'gz*', '<Plug>(asterisk-gz*)', {
-      desc = '[Asterisk] Select word under the cursor # (preserve position)',
-    })
-    vim.keymap.set({ 'n', 'v', 'o' }, 'z#', '<Plug>(asterisk-z#)', {
-      desc = '[Asterisk] Select word under the cursor g* (preserve position)',
-    })
-    vim.keymap.set({ 'n', 'v', 'o' }, 'gz#', '<Plug>(asterisk-gz#)', {
-      desc = '[Asterisk] Select word under the cursor g# (preserve position)',
-    })
-
-    -- Set 'stay' behavior by default
-    -- map *  <Plug>(asterisk-z*)
-    -- map #  <Plug>(asterisk-z#)
-    -- map g* <Plug>(asterisk-gz*)
-    -- map g# <Plug>(asterisk-gz#)
-
-    -- -- Down
-    -- nnoremap <C-d> <C-d>zz
-    -- -- Up
-    -- nnoremap <C-u> <C-u>zz
-    -- -- Forwards
-    -- nnoremap <C-f> <C-f>zz
-    -- -- Backwards
-    -- nnoremap <C-b> <C-b>zz
-    -- nnoremap <PageUp> <PageUp>zz
-    -- nnoremap <PageDown> <PageDown>zz
-    -- nnoremap <S-Up> <S-Up>zz
-    -- nnoremap <S-Down> <S-Down>zz
 
     -- Vscode actions -- LSP like bindings
 
@@ -434,12 +268,6 @@ return {
       vscode.action('workbench.action.previousEditorInGroup')
     end, { desc = '[VSCode] Move to previous buffer', noremap = true })
 
-    -- Clean carriage returns '^M'
-    vim.keymap.set('n', '<leader>cr', ':%s/\r$//g<cr>', {
-      desc = 'Clean carriage returns',
-      noremap = true,
-      silent = true,
-    })
 
     -- Show Symbols
     local select_symbol = function()
@@ -532,29 +360,6 @@ return {
       vscode.action('workbench.actions.view.problems')
     end, { desc = '[VSCode] Show problems and warnings', noremap = true })
 
-    -- " Delete marks in line under cursor
-    vim.keymap.set('n', '<leader>`d', function ()
-      require('utils.funcs').delete_marks_curr_line()
-    end, {
-      desc = 'Remove marks on current line',
-      noremap = true,
-    })
-
-    -- " Reselect previous yank
-    -- " This obscures default gV that prevents reselection of :vmenu commands
-    vim.keymap.set('n', 'gV', '`[v`]', { noremap = true, desc = 'Reselect last yank area' })
-
-    -- " Search in visual selected area
-    vim.keymap.set('x', 'g/', '<esc>/\\%V', { noremap = true, desc = 'Search in visual selected area' })
-
-    vim.keymap.set('n', 'yd', function()
-      require('utils.funcs').regmove('+', '"')
-    end, { noremap = true, desc = 'Move content from unnamed register to clipboard' })
-    vim.keymap.set('n', 'yD', function()
-      require('utils.funcs').regmove('"', '+')
-    end, { noremap = true, desc = 'Move clipboard content to unnamed register' })
-
-    vim.keymap.set('n', '<leader>vp', 'ciw<C-r>0<esc>', { desc = 'Paste text replacing word under the cursor', noremap = true })
 
     vim.keymap.set('n', '<leader>ve', function ()
       vscode.action('workbench.view.explorer')
@@ -575,10 +380,8 @@ return {
 
   set_repeatable = function()
     local repeat_motion = require('utils.repeat_motion')
-    repeat_motion.set_motion_keys()
     local repeat_pair = repeat_motion.repeat_pair
     local repeat_action = repeat_motion.create_repeatable_func
-    local create_dot_map = repeat_motion.repeat_dot_map
 
     -- Hunk stage
     vim.keymap.set('n', '<leader>hs', repeat_action(function ()
@@ -816,26 +619,6 @@ return {
     -- vim.keymap.set('n', ']{', next_open_bracket, { desc = '[Bracket]: Go to next open bracket', silent = true, noremap = true })
     -- vim.keymap.set('n', '[{', prev_open_bracket, { desc = '[Bracket]: Go to previous open bracket', silent = true, noremap = true })
 
-    local next_matching_bracket, prev_matching_bracket = create_repeatable_pair(
-      function ()
-        ---@diagnostic disable-next-line Diagnostic have the wrong function signature for searchpair
-        vim.fn.searchpair('{', '', '}')
-      end, function ()
-        ---@diagnostic disable-next-line Diagnostic have the wrong function signature for searchpair
-        vim.fn.searchpair('{', '', '}', 'b')
-      end
-    )
-    local next_bracket_pair, prev_bracket_pair = create_repeatable_pair(
-      function ()
-        vim.fn.search('[{}]')
-      end, function ()
-        vim.fn.search('[{}]', 'b')
-      end
-    )
-    vim.keymap.set('n', ']}', next_bracket_pair, { desc = '[Bracket]: Go to next bracket pair', silent = true, noremap = true })
-    vim.keymap.set('n', '[}', prev_bracket_pair, { desc = '[Bracket]: Go to previous bracket pair', silent = true, noremap = true })
-    vim.keymap.set('n', ']{', next_matching_bracket, { desc = '[Bracket]: Go to next matching bracket', silent = true, noremap = true })
-    vim.keymap.set('n', '[{', prev_matching_bracket, { desc = '[Bracket]: Go to previous matching bracket', silent = true, noremap = true })
 
     local duplicate_and_comment = repeat_action(function ()
       vim.cmd([[:t.]])
@@ -869,12 +652,6 @@ return {
       noremap = true,
     })
 
-    -- Dot repeatable maps
-    create_dot_map('nnoremap <A-y> :<C-U>t.<cr>')
-    create_dot_map('nnoremap <A-e> :<C-U>t-1<cr>')
-    -- Better to stick with shift+alt+up/down
-    -- create_dot_map('inoremap <A-y> <esc>:<C-U>t-1<cr>a')
-    -- create_dot_map('inoremap <A-e> <esc>:<C-U>t-1<cr>a')
   end,
 }
 
