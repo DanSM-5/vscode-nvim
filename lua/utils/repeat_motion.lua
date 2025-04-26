@@ -34,11 +34,8 @@ local get_repeat_module = function ()
 end
 
 ---@class RepeatMotion
----@field repeat_direction fun(options: RepeatOptions): fun(opts: { forward: boolean }|table): nil
 ---@field repeat_action function|nil DO NOT USE DIRECTLY
----@field repeat_dot_map fun(map_string: string): nil
----@field repeat_pair fun(options: RepeatPair): nil
----@field set_motion_keys fun(opts: MotionKeys|nil): nil
+---@field repeat_dot_map fun(map_string: string): nil Creates dot repeatable motions using vim-repeat and repeatable.vim
 local repeat_motion = {}
 -- Not listed to preserve generics
 -- -@field create_repeatable_pair fun(forward: TForward, backward: TBackward): TForward, TBackward
@@ -47,7 +44,7 @@ local repeat_motion = {}
 ---Creates repeatable function using nvim-treesitter-textobjects
 ---It accepts an object that uses a `forward` for directionality
 ---@param options RepeatOptions
----@return fun(opts: { forward: boolean }|table): nil
+---@return fun(opts: { forward: boolean }|table): nil Repeatable function that accepts a direction
 repeat_motion.repeat_direction = function(options)
   local func = get_repeat_module()
     .make_repeatable_move(options.fn)
@@ -94,8 +91,8 @@ end
 ---@generic TBackward
 ---@param forward TForward
 ---@param backward TBackward
----@return TForward
----@return TBackward
+---@return TForward Repeatable forward function
+---@return TBackward Repeatable backward function
 repeat_motion.create_repeatable_pair = function (forward, backward)
   local rep_forward, rep_backward = get_repeat_module()
     .make_repeatable_move_pair(forward, backward)
@@ -106,7 +103,7 @@ end
 ---Create a pair of maps. Square brackers are used by default '[' ']'
 ---Maps are repeatable through the motion keys set by `set_motion_keys`
 ---Depends of nvim-treesitter-textobjects
----@param options RepeatPair
+---@param options RepeatPair Parameters for repeat keymaps
 repeat_motion.repeat_pair = function(options)
   local prefix_forward = options.prefix_forward or ']'
   local prefix_backward = options.prefix_backward or '['
@@ -150,7 +147,7 @@ end
 ---Sets the keymaps to use as motions. By default uses ',' and ';' for similar behavior of t, T, f and F.
 ---Other maps can be used such as '<' and '>'
 ---Depends of nvim-treesitter-textobjects
----@param opts MotionKeys|nil
+---@param opts MotionKeys|nil Keys to make repeatable for directionality
 repeat_motion.set_motion_keys = function (opts)
   local options = vim.tbl_deep_extend('force', { move_forward = ';', move_backward = ',' }, opts or {})
   local repeatable_move = get_repeat_module()
