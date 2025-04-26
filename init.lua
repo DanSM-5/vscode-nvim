@@ -42,6 +42,7 @@ vim.g.maplocalleader = ' '
 require('vimstart')
 require('platform_setup')
 require('config.lazy')
+require('shared.load')
 
 -- If loading in regular nvim
 if not vim.g.vscode then
@@ -53,5 +54,5 @@ if not vim.g.vscode then
 end
 
 -- Requires running in actual vscode
-require('vscode_config')
+require('config.vscode_config')
 
