@@ -1,5 +1,7 @@
 ---@module 'types.vscode'
 
+-- TODO: Support namespaces in vscode
+
 -- require('vscode').eval('return vscode.languages.getDiagnostics(vscode.window.activeTextEditor.document.uri)')
 
 ---@class VsCodeDiagnostic
