@@ -15,9 +15,9 @@ end
 vim.lsp.enable(lsp_servers)
 
 local repeat_motion = require('utils.repeat_motion')
-repeat_motion.set_motion_keys()
 local create_repeatable_pair = repeat_motion.create_repeatable_pair
 local repeat_pair = repeat_motion.repeat_pair
+local create_dot_map = repeat_motion.repeat_dot_map
 
 vim.keymap.set('t', '<leader><esc>', '<c-\\><c-n>', {
   noremap = true,
@@ -87,19 +87,6 @@ vim.keymap.set('n', 'zz', '<Cmd>call smoothie#do("zz")<CR>', {
   desc = '[Smoothie] Scroll down',
 })
 
--- Clean trailing whitespace in file
-vim.keymap.set('n', '<Leader>cc', ':%s/\\s\\+$//e<cr>', {
-  desc = 'Clear trailing whitespace in file',
-  noremap = true,
-  silent = true,
-})
--- Clean carriage returns '^M'
-vim.keymap.set('n', '<Leader>cr', ':%s/\\r$//g<cr>', {
-  desc = 'Clear carriage return characters (^M)',
-  noremap = true,
-  silent = true,
-})
-
 -- Move between buffers with tab
 vim.keymap.set('n', '<tab>', ':bn<cr>', { silent = true, noremap = true, desc = '[Buffer] Next buffer' })
 vim.keymap.set('n', '<s-tab>', ':bN<cr>', { silent = true, noremap = true, desc = '[Buffer] Previous buffer' })
@@ -116,45 +103,7 @@ vim.keymap.set('n', '<leader>gg', '<cmd>Git<cr>', {
   noremap = true,
   desc = '[Fugitive] Open fugitive',
 })
--- Select blocks after indenting
-vim.keymap.set('x', '<', '<gv', {
-  noremap = true,
-  desc = '[Indent] Reselect indent on decrease',
-})
-vim.keymap.set('x', '>', '>gv|', {
-  noremap = true,
-  desc = '[Indent] Reselect indent on increase',
-})
 
--- Use tab for indenting in visual mode
-vim.keymap.set('x', '<Tab>', '>gv|', {
-  noremap = true,
-  desc = '[Indent] Increase indent',
-})
-vim.keymap.set('x', '<S-Tab>', '<gv', {
-  noremap = true,
-  desc = '[Indent] Decrease indent',
-})
-vim.keymap.set('n', '>', '>>_', {
-  noremap = true,
-  desc = '[Indent] Increase indent',
-})
-vim.keymap.set('n', '<', '<<_', {
-  noremap = true,
-  desc = '[Indent] Decrease indent',
-})
-
--- smart up and down
-vim.keymap.set('n', '<down>', 'gj', {
-  remap = true,
-  silent = true,
-  desc = '[Nav] Smart down',
-})
-vim.keymap.set('n', '<up>', 'gk', {
-  remap = true,
-  silent = true,
-  desc = '[Nav] Smart up',
-})
 
 -- Configure tab
 local function SetTab(space)
@@ -169,7 +118,13 @@ local function SetTab(space)
 end
 
 vim.g.SetTab = SetTab
-vim.api.nvim_create_user_command('SetTab', SetTab, {})
+vim.api.nvim_create_user_command('SetTab', function (opts)
+  SetTab(opts.fargs[1])
+  if opts.bang then
+    vim.cmd.retab()
+  end
+end, { desc = '[Tab] Set indentation options on buffer', bang = true, nargs = '?', bar = true })
+
 vim.api.nvim_create_autocmd('VimEnter', {
   desc = 'Run after all plugins are loaded and nvim is ready',
   pattern = { '*' },
@@ -178,89 +133,6 @@ vim.api.nvim_create_autocmd('VimEnter', {
   end,
 })
 
--- SystemCopy keybindings
-vim.keymap.set('n', 'zy', '<Plug>SystemCopy', {
-  desc = '[SystemCopy] Copy motion',
-})
-vim.keymap.set('x', 'zy', '<Plug>SystemCopy', {
-  desc = '[SystemCopy] Copy motion',
-})
-vim.keymap.set('n', 'zY', '<Plug>SystemCopyLine', {
-  desc = '[SystemCopy] Copy line under cursor',
-})
-vim.keymap.set('n', 'zp', '<Plug>SystemPaste', {
-  desc = '[SystemCopy] Paste motion',
-})
-vim.keymap.set('x', 'zp', '<Plug>SystemPaste', {
-  desc = '[SystemCopy] Paste motion',
-})
-vim.keymap.set('n', 'zP', '<Plug>SystemPasteLine', {
-  desc = '[SystemCopy] Paste line below',
-})
-
--- Map clipboard functions
-vim.keymap.set('x', '<Leader>y', ':<C-u>call clipboard#yank()<cr>', {
-  desc = 'Yank selection to system clipboard',
-  silent = true,
-  noremap = true,
-})
-vim.keymap.set('n', '<Leader>p', 'clipboard#paste("p")', {
-  desc = 'Paste content of system clipboard after the cursor',
-  expr = true,
-  noremap = true,
-})
-vim.keymap.set('n', '<Leader>P', 'clipboard#paste("P")', {
-  desc = 'Paste content of system clipboard after the cursor',
-  expr = true,
-  noremap = true,
-})
-vim.keymap.set('x', '<Leader>p', 'clipboard#paste("p")', {
-  desc = 'Paste content of system clipboard after the cursor',
-  expr = true,
-  noremap = true,
-})
-vim.keymap.set('x', '<Leader>P', 'clipboard#paste("P")', {
-  desc = 'Paste content of system clipboard after the cursor',
-  expr = true,
-  noremap = true,
-})
-
--- Indent text object
--- :h indent-object
-vim.keymap.set('x', 'ii', '<Plug>(indent-object_linewise-none)', {
-  remap = true,
-  desc = '[Indent-Object] Select inner indent'
-})
-vim.keymap.set('o', 'ii', '<Plug>(indent-object_blockwise-none)', {
-  remap = true,
-  desc = '[Indent-Object] O-Pending inner indent'
-})
-
--- vim-asterisk
-vim.keymap.set({ 'n', 'v', 'o' }, '*', '<Plug>(asterisk-*)', {
-  desc = '[Asterisk] Select word under the cursor *',
-})
-vim.keymap.set({ 'n', 'v', 'o' }, '#', '<Plug>(asterisk-#)', {
-  desc = '[Asterisk] Select word under the cursor #',
-})
-vim.keymap.set({ 'n', 'v', 'o' }, 'g*', '<Plug>(asterisk-g*)', {
-  desc = '[Asterisk] Select word under the cursor g*',
-})
-vim.keymap.set({ 'n', 'v', 'o' }, 'g#', '<Plug>(asterisk-g#)', {
-  desc = '[Asterisk] Select word under the cursor g#',
-})
-vim.keymap.set({ 'n', 'v', 'o' }, 'z*', '<Plug>(asterisk-z*)', {
-  desc = '[Asterisk] Select word under the cursor * (preserve position)',
-})
-vim.keymap.set({ 'n', 'v', 'o' }, 'gz*', '<Plug>(asterisk-gz*)', {
-  desc = '[Asterisk] Select word under the cursor # (preserve position)',
-})
-vim.keymap.set({ 'n', 'v', 'o' }, 'z#', '<Plug>(asterisk-z#)', {
-  desc = '[Asterisk] Select word under the cursor g* (preserve position)',
-})
-vim.keymap.set({ 'n', 'v', 'o' }, 'gz#', '<Plug>(asterisk-gz#)', {
-  desc = '[Asterisk] Select word under the cursor g# (preserve position)',
-})
 
 vim.keymap.set('n', '<C-d>', '<C-d>zz', { noremap = true, desc = '[Vim] Improve scroll down' })
 vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true, desc = '[Vim] Improve scroll up' })
@@ -383,25 +255,19 @@ vim.keymap.set('n', '[h', function()
   diagnostic_prev({ severity = vim.diagnostic.severity.HINT })
 end, { desc = '[Diagnostic] Go to previous hint', silent = true, noremap = true })
 
--- " windows navigation
+-- windows navigation
 vim.keymap.set('n', '<A-k>', '<c-w><c-k>', { noremap = true, desc = '[Window] Move to up window' })
 vim.keymap.set('n', '<A-j>', '<c-w><c-j>', { noremap = true, desc = '[Window] Move to down window' })
 vim.keymap.set('n', '<A-h>', '<c-w><c-h>', { noremap = true, desc = '[Window] Move to right window' })
 vim.keymap.set('n', '<A-l>', '<c-w><c-l>', { noremap = true, desc = '[Window] Move to left window' })
 
--- " Duplicate line above and below without moving cursor
-vim.keymap.set('n', '<A-y>', '<cmd>t.<cr>', { noremap = true, desc = '[Vim] Copy line to below' })
-vim.keymap.set('n', '<A-e>', '<cmd>t-1<cr>', { noremap = true, desc = '[Vim] Copy line to above' })
-vim.keymap.set('i', '<A-y>', '<cmd>t.<cr>', { noremap = true, desc = '[Vim] Copy line to below' })
-vim.keymap.set('i', '<A-e>', '<cmd>t-1<cr>', { noremap = true, desc = '[Vim] Copy line to above' })
+-- Duplicate line above and below without moving cursor
+create_dot_map('inoremap <A-y> <esc>:<C-U>t-1<cr>a')
+create_dot_map('inoremap <A-e> <esc>:<C-U>t-1<cr>a')
 
--- Move content between clipboard and unnamed register
-vim.keymap.set('n', 'yd', function ()
-  require('utils.funcs').regmove('+', '"')
-end, { noremap = true, desc = 'Move content from unnamed register to clipboard' })
-vim.keymap.set('n', 'yD', function()
-  require('utils.funcs').regmove('"', '+')
-end, { noremap = true, desc = 'Move clipboard content to unnamed register' })
+-- Comment and copy
+create_dot_map('nmap yc <cmd>t.<cr>kgccj')
+create_dot_map('nmap yC <cmd>t.<cr>gcck')
 
 -- Cd to current project or active buffer directory
 vim.keymap.set('n', '<leader>cd', function()
@@ -432,7 +298,7 @@ end
 -- Enable fold method using indent
 -- Ref: https://www.reddit.com/r/neovim/comments/10q2mjq/comment/j6nmuw8
 -- also consider plugin: https://github.com/kevinhwang91/nvim-ufo
-vim.cmd([[execute 'set fillchars=fold:\ ,foldopen:,foldsep:\ ,foldclose:']])
+vim.cmd([[execute 'set fillchars=fold:\ ,foldopen:,foldsep:\ ,foldclose:,diff:╱']])
 vim.opt.foldmethod = 'indent'
 vim.opt.foldenable = false
 vim.opt.foldlevel = 99
@@ -469,7 +335,8 @@ vim.opt.hidden = true
 vim.opt.mouse = 'a'
 
 vim.opt.completeopt = 'menuone,noinsert,popup,fuzzy'
-vim.opt.diffopt = 'internal,filler,closeoff,indent-heuristic,linematch:120,algorithm:histogram'
+-- vim.opt.diffopt = 'internal,filler,closeoff,indent-heuristic,linematch:120,algorithm:histogram'
+vim.opt.diffopt = 'internal,filler,closeoff,indent-heuristic,algorithm:histogram'
 vim.opt.signcolumn = 'auto:2'
 
 -- Set wrap on lines
