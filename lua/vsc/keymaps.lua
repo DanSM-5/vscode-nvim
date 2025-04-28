@@ -6,18 +6,18 @@ local nx = { 'n', 'x' }
 return {
   set_default = function()
     -- Vim commentary emulation
-    vim.keymap.set('x', 'gc', '<Plug>VSCodeCommentary', {
-      desc = '[VSCommentary]: Start comment action with word objects',
-    })
-    vim.keymap.set('n', 'gc', '<Plug>VSCodeCommentary', {
-      desc = '[VSCommentary]: Start comment action with word objects',
-    })
+    -- vim.keymap.set('x', 'gc', '<Plug>VSCodeCommentary', {
+    --   desc = '[VSCommentary]: Start comment action with word objects',
+    -- })
+    -- vim.keymap.set('n', 'gc', '<Plug>VSCodeCommentary', {
+    --   desc = '[VSCommentary]: Start comment action with word objects',
+    -- })
     vim.keymap.set('o', 'gc', '<Plug>VSCodeCommentary', {
       desc = '[VSCommentary]: Start comment action with word objects',
     })
-    vim.keymap.set('n', 'gcc', '<Plug>VSCodeCommentaryLine', {
-      desc = '[VSCommentary]: Toggle comment line under the cursor',
-    })
+    -- vim.keymap.set('n', 'gcc', '<Plug>VSCodeCommentaryLine', {
+    --   desc = '[VSCommentary]: Toggle comment line under the cursor',
+    -- })
 
     -- Ctrl+Shift+Up/Down to move up and down
     -- vim.keymap.set('n', '<C-S-Down>', ':m .+1<cr>==',
