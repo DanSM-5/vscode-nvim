@@ -407,8 +407,8 @@ return {
       vscode.call('git.unstageSelectedRanges')
     end), { desc = '[VSCode] Unstage hunk', noremap = true })
     vim.keymap.set('n', '<leader>hU', repeat_action(function()
-      -- vscode.action('git.unstageAll') -- All changes in repo
-      vscode.action('git.unstage') -- Only current file
+      vscode.action('git.unstageAll') -- All changes in repo
+      -- vscode.action('git.unstage') -- Only current file
     end), { desc = '[VSCode] Unstage all changes', noremap = true })
 
     -- Hunk reset
