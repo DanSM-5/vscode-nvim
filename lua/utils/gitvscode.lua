@@ -97,8 +97,94 @@ end
 --   }
 -- }
 
+
+---Register namespace that holds required functions in vscode
+local registerGit = function ()
+
+  require('vscode').eval([[
+    if (globalThis._vscode_git) return;
+
+    globalThis._vscode_git = {
+      get_line: () => {
+        const line = vscode.window.activeTextEditor?.selection?.active?.line ||
+          vscode.window.activeTextEditor?.selection?.start?.line;
+
+        // Lines in vscode are 0-based index, so increate by 1
+        if (line != null) { return line + 1; }
+      },
+      apply_command: (opts) => {
+        try {
+          const { command } = opts;
+
+          // Need command
+          if (!command) { return false; }
+
+          const line = opts?.line == null ? globalThis._vscode_git.get_line() : opts.line;
+
+          if (line == null) {
+            return false;
+          }
+
+          // Ref for comparing against query
+          // Empty string for unstaged hunks
+          // or 'HEAD' for all hunks.
+          const ref = opts?.ref == null ? '' : opts.ref;
+          const editor = vscode.window.activeTextEditor;
+
+          // Get changes from editor
+          const changes = editor.diffInformation.find(di => {
+            const query = JSON.parse(di.original.query);
+            return query.ref === ref;
+          })?.changes ||
+            editor.diffInformation[0].changes ||
+            editor.diffInformation[1].changes;
+
+          // Find hunk under the cursor (if any)
+          const hunk = changes.find(h => {
+            return h.modified.startLineNumber <= line && h.modified.endLineNumberExclusive >= line;
+          });
+
+          if (!hunk || !editor) {
+            logger.info(`Unable to process ${command}. Hunk or editor missing`);
+            return false;
+          }
+
+          logger.info('Found hunk:', hunk);
+
+          // logger.info('selection: ', selection);
+          // logger.info('opts', opts);
+
+          // Create new selection
+          const modified = hunk.modified;
+          const range = new vscode.Range(
+            new vscode.Position(modified.startLineNumber - 1, 0),
+            new vscode.Position(modified.endLineNumberExclusive - 1, 0)
+          );
+          const selection = new vscode.Selection(range.start, range.end);
+
+          // Save current to restore after command
+          const prevSelection = editor.selection;
+
+          // Set selection and call command
+          editor.selection = selection;
+          vscode.commands.executeCommand(command);
+
+          // Recover selection
+          editor.selection = prevSelection;
+
+          // Return true if nothing throw an error
+          return true;
+        } catch (e) {
+          // If anything fails, consider it as false
+          return false;
+        }
+      },
+    };
+  ]])
+end
+
 ---Apply a git command directly on vscode
----@param opts { command: string; ref: string; line?: integer }
+---@param opts { command: 'git.stageSelectedRanges'|'git.unstageSelectedRanges'|'git.revertSelectedRanges'; ref?: ''|'HEAD'; line?: integer }
 ---@return boolean If the command succeeded
 local apply_command_vscode = function (opts)
   opts = opts or {}
@@ -110,76 +196,7 @@ local apply_command_vscode = function (opts)
 
   ---@type boolean
   local success = require('vscode').eval([[
-    let line = null;
-
-    try {
-      // If we provided a line, use that
-      if (args?.line) {
-        line = args.line;
-      } else {
-        // Get current line from vscode
-        line = vscode.window.activeTextEditor?.selection?.active?.line ||
-          vscode.window.activeTextEditor?.selection?.start?.line;
-
-        if (line == null) {
-          return false;
-        }
-
-        // Hunks are 1-based index, so increate by 1
-        line = line + 1;
-      }
-
-      // Ref for comparing against query
-      // Empty string for unstaged hunks
-      // or 'HEAD' for all hunks.
-      const ref = args?.ref == null ? '' : args.ref;
-      const editor = vscode.window.activeTextEditor;
-
-      // Get changes from editor
-      const changes = editor.diffInformation.find(di => {
-        const query = JSON.parse(di.original.query);
-        return query.ref === ref;
-      })?.changes ||
-        editor.diffInformation[0].changes ||
-        editor.diffInformation[1].changes;
-
-      // Find hunk under the cursor (if any)
-      const hunk = changes.find(h => {
-        return h.modified.startLineNumber <= line && h.modified.endLineNumberExclusive >= line;
-      });
-
-      logger.info('Found hunk:', hunk);
-
-      if (!hunk || !editor) {
-        logger.info('Unable to process command.')
-        return false;
-      }
-
-      // logger.info('selection: ', selection);
-      // logger.info('args', args);
-
-      // Create new selection
-      const modified = hunk.modified;
-      const range = new vscode.Range(
-        new vscode.Position(modified.startLineNumber - 1, 0),
-        new vscode.Position(modified.endLineNumberExclusive - 1, 0)
-      );
-      const selection = new vscode.Selection(range.start, range.end);
-
-      // Save current to restore after command
-      const prevSelection = editor.selection;
-
-      // Set selection and call command
-      editor.selection = selection;
-      vscode.commands.executeCommand(args.command);
-      editor.selection = prevSelection;
-
-      // Return true if nothing throw an error
-      return true
-    } catch (e) {
-      // If anything fails, consider it as false
-      return false
-    }
+    globalThis?._vscode_git?.apply_command?.(args);
   ]], {
       args = {
         line = opts.line,
@@ -559,6 +576,8 @@ local revert_hunk_under_cursor = function ()
     revert_hunk_under_cursor_vscode()
   end
 end
+
+registerGit()
 
 return {
   is_cursor_in_hunk = is_cursor_in_hunk,
