@@ -126,7 +126,7 @@ local registerScroll = function (opts)
   opts = opts or {}
 
   require('vscode').eval([[
-    if (globalThis._vscode_scroll) return
+    if (globalThis._vscode_scroll) return;
 
     const jumpStep = args?.jumpStep ?? 8;
 
