@@ -1,5 +1,5 @@
 
--- -- Mapping to remove marks on the line uner the cursor
+-- -- Mapping to remove marks on the line under the cursor
 local delete_marks_curr_line = function()
   local bufnr = vim.api.nvim_get_current_buf()
   local cur_line = vim.fn.line('.')
@@ -13,7 +13,7 @@ local delete_marks_curr_line = function()
     end
   end
   local bufname = vim.api.nvim_buf_get_name(bufnr)
-  --                                          [bufnum, lnum, col, off]
+
   ---@type { file: string; mark: string; pos: [number, number, number, number] }[]
   local all_marks_global = vim.fn.getmarklist()
   for _, mark in ipairs(all_marks_global) do
@@ -34,7 +34,7 @@ local function regmove(destination, source)
 end
 
 local git_path = function ()
-  -- " Directory holding the current file
+  -- Directory holding the current file
   local file_dir = vim.fn.trim(vim.fn.expand('%:p:h'))
 
   local gitcmd = 'cd '..vim.fn.shellescape(file_dir)..' && git rev-parse --show-toplevel'
