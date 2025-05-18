@@ -7,7 +7,7 @@ vim.opt.scrolloff = 5
 vim.g.markdown_folding = 1
 
 local lsp_servers = {}
-for _, file in ipairs(vim.api.nvim_get_runtime_file('lsp/*', true)) do
+for _, file in ipairs(vim.api.nvim_get_runtime_file('after/lsp/*', true)) do
   local name = vim.fn.fnamemodify(file, ':t:r')
   table.insert(lsp_servers, name)
 end
@@ -186,7 +186,9 @@ if vim.diagnostic.jump then
   diagnostic_jump_prev = vim.diagnostic.jump
 else
   -- Deprecated in favor of `vim.diagnostic.jump` in Neovim 0.11.0
+  ---@diagnostic disable-next-line deprecated
   diagnostic_jump_next = vim.diagnostic.goto_next
+  ---@diagnostic disable-next-line deprecated
   diagnostic_jump_prev = vim.diagnostic.goto_prev
 end
 
