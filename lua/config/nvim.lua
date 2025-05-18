@@ -142,6 +142,46 @@ vim.api.nvim_create_autocmd('VimEnter', {
 vim.keymap.set('n', '<C-d>', '<C-d>zz', { noremap = true, desc = '[Vim] Improve scroll down' })
 vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true, desc = '[Vim] Improve scroll up' })
 
+
+-- Fold jump next/prev
+repeat_pair({
+  keys = 'z',
+  mode = nxo,
+  desc_forward = '[Fold] Move to next fold',
+  desc_backward = '[Fold] Move to previous fold',
+  on_forward = function ()
+    vim.api.nvim_feedkeys(vim.v.count1..'zj', 'xn', true)
+  end,
+  on_backward = function ()
+    vim.api.nvim_feedkeys(vim.v.count1..'zk', 'xn', true)
+  end,
+})
+
+
+-- Spelling next/prev
+---@param forward boolean Direction of the keymap
+local spell_direction = function (forward)
+  -- `]s`/`[s` only work if `spell` is enabled
+  local spell = vim.wo.spell
+  vim.wo.spell = true
+  local direction = (forward and ']' or '[') .. 's'
+  vim.api.nvim_feedkeys(vim.v.count1..direction, 'xn', true)
+  vim.wo.spell = spell
+end
+repeat_pair({
+  keys = 's',
+  mode = nxo,
+  desc_forward = '[Spell] Move to next spelling mistake',
+  desc_backward = '[Spell] Move to previous spelling mistake',
+  on_forward = function ()
+    spell_direction(true)
+  end,
+  on_backward = function ()
+    spell_direction(false)
+  end,
+})
+
+
 -- Move to next/previous hunk
 local move_hunk = function (forward)
   if vim.wo.diff then -- If we're in a diff
