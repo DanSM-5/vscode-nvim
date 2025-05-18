@@ -57,7 +57,7 @@ require('lazy').setup({
       ['<localleader>l'] = {
         function (plugin)
           require('lazy.util').float_term({
-            'git', 'log', '--oneline', '--decorate', '--graph',
+            'git', 'log', '--oneline', '--decorate', '--graph', '--all',
           }, { cwd = plugin.dir })
         end,
         desc = '[Lazy.nvim] Open plugin log',
