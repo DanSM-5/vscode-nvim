@@ -142,6 +142,36 @@ vim.api.nvim_create_autocmd('VimEnter', {
 vim.keymap.set('n', '<C-d>', '<C-d>zz', { noremap = true, desc = '[Vim] Improve scroll down' })
 vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true, desc = '[Vim] Improve scroll up' })
 
+-- Move to next/previous hunk
+local move_hunk = function (forward)
+  if vim.wo.diff then -- If we're in a diff
+    local direction_key = forward and ']' or '['
+    vim.cmd.normal({ vim.v.count1 .. direction_key .. 'c', bang = true })
+  else
+    local exists, gitsigns = pcall(require, 'gitsigns')
+    if not exists then
+      vim.notify('GitSings not found', vim.log.levels.WARN)
+      return
+    end
+
+    local direction = forward and 'next' or 'prev'
+    gitsigns.nav_hunk(direction)
+  end
+end
+
+repeat_pair({
+  keys = 'c',
+  mode = nxo,
+  desc_forward = '[GitSings] Move to next hunk',
+  desc_backward = '[GitSings] Move to previous hunk',
+  on_forward = function ()
+    move_hunk(true)
+  end,
+  on_backward = function ()
+    move_hunk(false)
+  end,
+})
+
 -- Window resize vsplit
 -- vim.keymap.set('n', '<A-,>', '<C-w>5<', { noremap = true, desc = '[Window] Resize vertical split smaller' })
 -- vim.keymap.set('n', '<A-.>', '<C-w>5>', { noremap = true, desc = '[Window] Resize vertical split wider' })
