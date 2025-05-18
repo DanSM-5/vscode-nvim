@@ -1,6 +1,11 @@
 -- Set colorscheme
 vim.cmd.colorscheme('slate')
 
+-- Color scheme overrides
+-- MatchParen ctermfg=16 ctermbg=220 guifg=#000000 guibg=#ffd700
+vim.api.nvim_set_hl(0, 'MatchParen', { force = true, ctermfg = 16, ctermbg = 220, fg = '#5f87d7', sp = '#5f87d7', underline = true })
+
+
 -- Disable vim-smoothie remaps
 vim.g.smoothie_no_default_mappings = 1
 vim.opt.scrolloff = 5
@@ -377,6 +382,18 @@ vim.opt.fileformats = 'unix,dos,mac'
 vim.opt.textwidth = 120
 vim.opt.linebreak = true
 vim.opt.autoread = true
+
+-- "n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20,t:block-blinkon500-blinkoff500-TermCursor",
+-- Cursor opts
+vim.opt.guicursor = {
+  'n-v-c:block',
+  'i-ci-ve:ver25',
+  'r-cr:hor20',
+  'o:hor50',
+  'a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor',
+  'sm:block-blinkwait175-blinkoff150-blinkon175',
+  't:block-blinkon500-blinkoff500-TermCursor',
+}
 
 local undo_dir = vim.fn.expand('~/.cache/vscode-nvim/undodir')
 if vim.fn.isdirectory(undo_dir) then
