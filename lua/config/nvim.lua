@@ -335,7 +335,13 @@ end
 -- Enable fold method using indent
 -- Ref: https://www.reddit.com/r/neovim/comments/10q2mjq/comment/j6nmuw8
 -- also consider plugin: https://github.com/kevinhwang91/nvim-ufo
-vim.cmd([[execute 'set fillchars=fold:\ ,foldopen:,foldsep:\ ,foldclose:,diff:╱']])
+vim.opt.fillchars = {
+  fold = ' ',
+  foldopen = '',
+  foldsep = ' ',
+  foldclose = '',
+  diff = '╱',
+}
 vim.opt.foldmethod = 'indent'
 vim.opt.foldenable = false
 vim.opt.foldlevel = 99
