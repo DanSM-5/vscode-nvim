@@ -20,6 +20,46 @@ local configure = function (client, buffer)
   vim.lsp.completion.enable(true, client.id, buffer, { autotrigger = true })
   ---]]
 
+  ---[[ Map to allow add new line while complete visible
+  vim.keymap.set({ 'i', 's' }, '<nl>', function ()
+    if vim.fn.pumvisible() == 1 then
+      return '<c-e><nl>'
+    else
+      return '<nl>'
+    end
+  end, { desc = '[completion] move to next line', expr = true, silent = true })
+  ---]]
+
+  ---[[ Code that adds jumps between placeholders in snippets
+  vim.keymap.set({ 'i', 's' }, '<tab>', function()
+    if vim.snippet.active({ direction = 1 }) then
+      return '<cmd>lua vim.snippet.jump(1)<cr>'
+    else
+      return '<tab>'
+    end
+  end, { desc = '[snippet] Next placeholder', expr = true, silent = true })
+
+  vim.keymap.set({ 'i', 's' }, '<c-l>', function()
+    if vim.snippet.active({ direction = 1 }) then
+      vim.snippet.jump(1)
+    end
+  end, { desc = '[snippet] Next placeholder', silent = true })
+
+  vim.keymap.set({ 'i', 's' }, '<s-tab>', function()
+    if vim.snippet.active({ direction = -1 }) then
+      return '<cmd>lua vim.snippet.jump(-1)<cr>'
+    else
+      return '<s-tab>'
+    end
+  end, { desc = '[snippet] Prev placeholder', expr = true, silent = true })
+
+  vim.keymap.set({ 'i', 's' }, '<c-h>', function()
+    if vim.snippet.active({ direction = -1 }) then
+      vim.snippet.jump(-1)
+    end
+  end, { desc = '[snippet] Prev placeholder', silent = true })
+  ---]]
+
   ---[[Code required to add documentation popup for an item
   local _, cancel_prev = nil, function() end
   vim.api.nvim_create_autocmd('CompleteChanged', {
