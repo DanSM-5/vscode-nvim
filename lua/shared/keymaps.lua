@@ -213,9 +213,9 @@ local next_matching_bracket, prev_matching_bracket = create_repeatable_pair(
 )
 local next_bracket_pair, prev_bracket_pair = create_repeatable_pair(
   function()
-    vim.fn.search('[{}]')
+    vim.fn.search('[\\[\\]{}()<>]', 'w')
   end, function()
-    vim.fn.search('[{}]', 'b')
+    vim.fn.search('[\\[\\]{}()<>]', 'wb')
   end
 )
 vim.keymap.set('n', ']}', next_bracket_pair,
