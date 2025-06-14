@@ -50,7 +50,7 @@ end, {
 })
 
 -- Mappings to help navigation
-vim.keymap.set('n', '<c-p>', '<cmd>GFiles<cr>', {
+vim.keymap.set('n', '<c-p>', '<cmd>Files<cr>', {
   noremap = true,
   desc = '[Fzf] Git files',
 })
@@ -135,6 +135,7 @@ vim.api.nvim_create_autocmd('VimEnter', {
   pattern = { '*' },
   callback = function()
     SetTab()
+    require('config.netrw').setup()
   end,
 })
 
