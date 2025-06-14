@@ -18,6 +18,9 @@ local configure = function (client, buffer)
 
   ---[[ Code that starts the auto completion
   vim.lsp.completion.enable(true, client.id, buffer, { autotrigger = true })
+  vim.keymap.set({ 'i', 's' }, '<c-b>', function ()
+    vim.lsp.completion.get()
+  end, { buffer = buffer, silent = true, noremap = true, desc = '[completion] start completing' })
   ---]]
 
   ---[[ Map to allow add new line while complete visible
