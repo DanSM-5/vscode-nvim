@@ -11,6 +11,8 @@ vim.g.smoothie_no_default_mappings = 1
 vim.opt.scrolloff = 5
 vim.g.markdown_folding = 1
 
+local nxo = { 'n', 'x', 'o' }
+
 local lsp_servers = {}
 for _, file in ipairs(vim.api.nvim_get_runtime_file('after/lsp/*', true)) do
   local name = vim.fn.fnamemodify(file, ':t:r')
@@ -538,15 +540,21 @@ vim.diagnostic.config({
     [vim.diagnostic.severity.WARN] = signs.Warn,
     [vim.diagnostic.severity.HINT] = signs.Hint,
     [vim.diagnostic.severity.INFO] = signs.Info,
-  } }
-})
+  } },
 
--- Start diagnostics (virtual text) enabled
-vim.diagnostic.config({
+  -- Start diagnostics (virtual text) enabled
   virtual_text = true,
   jump = {
     float = true,
   },
+
+  float = {
+    border = 'rounded',
+    source = true,
+    header = 'Diagnostics',
+    -- prefix = '💥 ',
+  },
+
   -- update_in_insert = true,
 })
 
