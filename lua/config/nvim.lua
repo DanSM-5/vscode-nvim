@@ -106,7 +106,24 @@ vim.keymap.set('n', '[<tab>', function ()
 end, { silent = true, noremap = true, desc = '[Tab] Move to Previous tab' })
 
 -- Call vim fugitive
-vim.keymap.set('n', '<leader>gg', '<cmd>Git<cr>', {
+vim.keymap.set('n', '<leader>gg', function ()
+  local fugitive_window = nil
+
+  for _, winnr in ipairs(vim.fn.range(1, vim.fn.winnr('$'))) do
+    local bufnr = vim.fn.winbufnr(winnr)
+    local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
+    if filetype == 'fugitive' then
+      fugitive_window = winnr
+    end
+  end
+
+  if fugitive_window == nil then
+    vim.cmd.Git()
+  else
+    vim.cmd(fugitive_window .. 'wincmd w')
+    vim.cmd.quit()
+  end
+end, {
   noremap = true,
   desc = '[Fugitive] Open fugitive',
 })
