@@ -72,7 +72,7 @@ local fzf_buffers = function(query, fullscreen)
         return
       end
 
-      -- pcall(vim.fn.delete, remove_list)
+      pcall(vim.fn.delete, remove_list)
 
       for _, buffer in ipairs(buffers) do
         local bufnr = tonumber(buffer)
