@@ -1,5 +1,5 @@
 -- Get this script file path
-local __file = vim.fn.substitute(debug.getinfo(1, "S").source:match("@(.*)$"), '\\', '/', 'g')
+local __file = vim.fn.substitute(debug.getinfo(1, 'S').source:match('@(.*)$'), '\\', '/', 'g')
 
 local short_path = function(path)
   local shorted = vim.fn.system('for %A in ("' .. path .. '") do @echo %~sA')
@@ -51,15 +51,23 @@ local fzf_buffers = function(query, fullscreen)
     placeholder = '{1}',
     options = {
       '--cycle',
-      '--no-multi', '--ansi',
+      '--no-multi',
+      '--ansi',
       '--input-border=rounded',
-      '--bind', 'ctrl-l:change-preview-window(down|hidden|)',
-      '--bind', 'ctrl-/:change-preview-window(down|hidden|)',
-      '--bind', 'alt-up:preview-page-up,alt-down:preview-page-down',
-      '--bind', 'shift-up:preview-up,shift-down:preview-down',
-      '--bind', 'ctrl-^:toggle-preview,ctrl-s:toggle-sort',
-      '--bind', 'alt-c:clear-query,alt-f:first,alt-l:last,alt-a:select-all,alt-d:deselect-all',
-      '--bind', 'ctrl-q:execute-silent(' .. remove_command .. ')+exclude+bell',
+      '--bind',
+      'ctrl-l:change-preview-window(down|hidden|)',
+      '--bind',
+      'ctrl-/:change-preview-window(down|hidden|)',
+      '--bind',
+      'alt-up:preview-page-up,alt-down:preview-page-down',
+      '--bind',
+      'shift-up:preview-up,shift-down:preview-down',
+      '--bind',
+      'ctrl-^:toggle-preview,ctrl-s:toggle-sort',
+      '--bind',
+      'alt-c:clear-query,alt-f:first,alt-l:last,alt-a:select-all,alt-d:deselect-all',
+      '--bind',
+      'ctrl-q:execute-silent(' .. remove_command .. ')+exclude+bell',
     },
     exit = function()
       ---@diagnostic disable-next-line
@@ -80,7 +88,7 @@ local fzf_buffers = function(query, fullscreen)
           vim.cmd('bd! ' .. buffer)
         end
       end
-    end
+    end,
   })
 
   vim.fn['fzf#vim#buffers'](query or '', spec, fullscreen and 1 or 0)
@@ -88,16 +96,62 @@ end
 
 local register = function()
   vim.api.nvim_create_user_command('Buffers', function(opts)
-      fzf_buffers(opts.fargs[1], opts.bang)
-    end,
-    {
-      desc = '[fzf] Buffers with the ability to close selected buffers with ctrl+q',
-      bang = true,
-      complete = 'buffer',
-      bar = true,
-      nargs =
-      '?'
-    })
+    fzf_buffers(opts.fargs[1], opts.bang)
+  end, {
+    desc = '[fzf] Buffers with the ability to close selected buffers with ctrl+q',
+    bang = true,
+    complete = 'buffer',
+    bar = true,
+    nargs = '?',
+  })
+
+  -- Configure terminal buffers
+  vim.api.nvim_create_user_command('Term', function(opts)
+    if opts.bang then
+      vim.cmd.tabnew()
+    end
+    vim.cmd.terminal()
+  end, {
+    bang = true,
+    bar = true,
+    desc = '[Terminal] Open terminal',
+  })
+  vim.api.nvim_create_user_command('Vterm', function(_)
+    vim.cmd.vsplit()
+    vim.cmd.terminal()
+  end, {
+    bang = true,
+    bar = true,
+    desc = '[Terminal] Open terminal',
+  })
+  vim.api.nvim_create_user_command('Sterm', function(_)
+    vim.cmd.split()
+    vim.cmd.terminal()
+  end, {
+    bang = true,
+    bar = true,
+    desc = '[Terminal] Open terminal',
+  })
+
+  vim.api.nvim_create_user_command('GitFZF', function(opts)
+    local args = vim.fn.join(opts.fargs)
+    local bang = opts.bang and 1 or 0
+    local path = ''
+    if vim.fn.empty(args) == 1 then
+      path = require('utils.funcs').git_path()
+    else
+      path = args
+    end
+
+    vim.fn['fzf#vim#files'](path, vim.fn['fzf#vim#with_preview'](), bang)
+  end, {
+    bang = true,
+    bar = true,
+    complete = 'dir',
+    nargs = '?',
+    force = true,
+    desc = '[Git] Open fzf in top git repo or active buffer directory',
+  })
 end
 
 return {
