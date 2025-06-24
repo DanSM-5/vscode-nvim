@@ -16,7 +16,7 @@ local configure = function (client, buffer)
   -- })
   ---]]
 
-  ---[[ Code that starts the auto completion
+  ---[[ Code that starts the completion manually
   vim.lsp.completion.enable(true, client.id, buffer, { autotrigger = true })
   vim.keymap.set({ 'i', 's' }, '<c-b>', function ()
     vim.lsp.completion.get()

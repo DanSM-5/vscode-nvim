@@ -12,8 +12,7 @@ local set_lsp_keys = function(client, bufnr)
       vim.tbl_contains(exclude_filetypes, vim.bo[buf].buftype)
       or vim.tbl_contains(exclude_filetypes, vim.bo[buf].filetype)
   then
-    vim.notify('[lsp][filetype] Not allowed: '..vim.bo[buf].filetype, vim.log.levels.DEBUG)
-    vim.notify('[lsp][buftype] Not allowed: '..vim.bo[buf].buftype, vim.log.levels.DEBUG)
+    vim.notify(string.format('[lsp] buffer %s not allowed to attach keymaps', buf))
     return
   end
 
@@ -38,10 +37,6 @@ local set_lsp_keys = function(client, bufnr)
 
     vim.keymap.set(mode, key, func, opts)
   end
-
-  set_map('i', '<c-b>', function ()
-    vim.lsp.completion.get()
-  end, '[Lsp] Start completion')
 
   set_map('n', '<space>td', function()
     vim.diagnostic.enable(not vim.diagnostic.is_enabled())
