@@ -1,3 +1,5 @@
+local nxo = { 'n', 'x', 'o' }
+
 -- Search in visual selected area
 vim.keymap.set('x', '/', '<esc>/\\%V', { desc = '[Nvim] Search in selected area', noremap = true })
 vim.keymap.set('n', 'g/', '<esc>/\\%V', { desc = '[Nvim] Search in last selected area', noremap = true })
@@ -12,24 +14,6 @@ vim.keymap.set('o', 'ii', '<Plug>(indent-object_blockwise-none)', {
   remap = true,
   desc = '[Indent-Object] O-Pending inner indent'
 })
-
--- move current line to the end or the begin of current buffer
-vim.keymap.set('v', ']<End>', 'dGp``', { desc = 'Move line to end of the buffer', noremap = true, silent = true })
-vim.keymap.set('v', '[<End>', 'dGP``',
-  { desc = 'Move line to the second last line in the buffer', noremap = true, silent = true })
-
-vim.keymap.set(
-  'v',
-  ']<Home>',
-  'dggp``',
-  { desc = 'Move line to second line in the buffer', noremap = true, silent = true }
-)
-vim.keymap.set(
-  'v',
-  '[<Home>',
-  'dggP``',
-  { desc = 'Move line to start of the buffer', noremap = true, silent = true }
-)
 
 -- Reselect visual blocks after indenting
 vim.keymap.set('x', '<', '<gv', {
@@ -117,28 +101,28 @@ vim.keymap.set('n', '<leader>cr', ':%s/\\r$//g<cr>', {
 
 
 -- vim-asterisk
-vim.keymap.set({ 'n', 'v', 'o' }, '*', '<Plug>(asterisk-*)', {
+vim.keymap.set(nxo, '*', '<Plug>(asterisk-*)', {
   desc = '[Asterisk] Select word under the cursor *',
 })
-vim.keymap.set({ 'n', 'v', 'o' }, '#', '<Plug>(asterisk-#)', {
+vim.keymap.set(nxo, '#', '<Plug>(asterisk-#)', {
   desc = '[Asterisk] Select word under the cursor #',
 })
-vim.keymap.set({ 'n', 'v', 'o' }, 'g*', '<Plug>(asterisk-g*)', {
+vim.keymap.set(nxo, 'g*', '<Plug>(asterisk-g*)', {
   desc = '[Asterisk] Select word under the cursor g*',
 })
-vim.keymap.set({ 'n', 'v', 'o' }, 'g#', '<Plug>(asterisk-g#)', {
+vim.keymap.set(nxo, 'g#', '<Plug>(asterisk-g#)', {
   desc = '[Asterisk] Select word under the cursor g#',
 })
-vim.keymap.set({ 'n', 'v', 'o' }, 'z*', '<Plug>(asterisk-z*)', {
+vim.keymap.set(nxo, 'z*', '<Plug>(asterisk-z*)', {
   desc = '[Asterisk] Select word under the cursor * (preserve position)',
 })
-vim.keymap.set({ 'n', 'v', 'o' }, 'gz*', '<Plug>(asterisk-gz*)', {
+vim.keymap.set(nxo, 'gz*', '<Plug>(asterisk-gz*)', {
   desc = '[Asterisk] Select word under the cursor # (preserve position)',
 })
-vim.keymap.set({ 'n', 'v', 'o' }, 'z#', '<Plug>(asterisk-z#)', {
+vim.keymap.set(nxo, 'z#', '<Plug>(asterisk-z#)', {
   desc = '[Asterisk] Select word under the cursor g* (preserve position)',
 })
-vim.keymap.set({ 'n', 'v', 'o' }, 'gz#', '<Plug>(asterisk-gz#)', {
+vim.keymap.set(nxo, 'gz#', '<Plug>(asterisk-gz#)', {
   desc = '[Asterisk] Select word under the cursor g# (preserve position)',
 })
 
@@ -246,7 +230,7 @@ end, function ()
   vim.cmd.normal([[ddggp``]])
 end)
 
--- move current line to the end or the begin of current buffer (continuation)
+-- move current line to the end or the begin of current buffer
 vim.keymap.set('n', ']<End>', move_line_end, { desc = 'Move line to end of the buffer', noremap = true, silent = true })
 vim.keymap.set('n', '[<End>', move_line_almost_end,
   { desc = 'Move line to the second last line in the buffer', noremap = true, silent = true })
