@@ -19,7 +19,8 @@ local set_lsp_keys = function(client, bufnr)
     return
   end
 
-  vim.notify('[lsp][attached] Client: '..client.name..' id: '..client.id, vim.log.levels.DEBUG)
+  -- For debugging
+  -- vim.notify('[lsp][attached] Client: '..client.name..' id: '..client.id, vim.log.levels.DEBUG)
 
   -- Enable completion triggered by <C-x><C-o>
   -- Should now be set by default. Set anyways.
