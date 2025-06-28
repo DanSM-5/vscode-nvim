@@ -532,6 +532,21 @@ local register = function()
     on_backward = empty_line_prev,
   })
 
+
+  -- Jump to next conflict
+  local jumpconflict_next = function()
+    vim.cmd.normal(vim.keycode('<Plug>JumpconflictContextNext'))
+  end
+  local jumpconflict_prev = function()
+    vim.cmd.normal(vim.keycode('<Plug>JumpconflictContextPrevious'))
+  end
+  repeat_pair({
+    keys = 'n',
+    desc_forward = '[JumpConflict] Move to next conflict marker',
+    desc_backward = '[JumpConflict] Move to previous conflict marker',
+    on_forward = jumpconflict_next,
+    on_backward = jumpconflict_prev,
+  })
 end
 
 return {
