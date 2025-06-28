@@ -23,7 +23,7 @@ return {
     snippet = {
       enable = true,
       sources = {
-        vim.fn.stdpath('data') .. '/lazy/friendly-snippets/package.json'
+        vim.fn.substitute(vim.fn.stdpath('data'), '\\', '/', 'g') .. '/lazy/friendly-snippets/package.json'
       },
       matchStrategy = 'fuzzy',
     },
