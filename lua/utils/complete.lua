@@ -1,13 +1,21 @@
 ---Configure lsp completion
 ---@param client vim.lsp.Client Client id
 ---@param buffer integer Butter to attach completion to
-local configure = function(client, buffer)
+---@param opts? { triggerCharacters?: string[]; } Options to configure completion
+local configure = function(client, buffer, opts)
   if not client:supports_method('textDocument/completion') then
     return
   end
 
+  opts = opts or {}
+
   ---[[Code required to activate autocompletion and trigger it on each keypress
-  client.server_capabilities.completionProvider.triggerCharacters = vim.split('abcdefghijklmnopqrstuvwxyz.', '')
+
+  if opts.triggerCharacters then
+    client.server_capabilities.completionProvider.triggerCharacters = opts.triggerCharacters
+  else
+    client.server_capabilities.completionProvider.triggerCharacters = vim.split('abcdefghijklmnopqrstuvwxyz.', '')
+  end
 
   -- NOTE: The below autocommand makes completion to start more often
   -- but it become very spamy
