@@ -1,5 +1,8 @@
 local exclude_filetypes = {
   'help',
+  'fzf',
+  'fugitive',
+  'qf',
 }
 
 ---Setup keymaps for lsp
