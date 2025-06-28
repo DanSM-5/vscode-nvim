@@ -1,4 +1,7 @@
-local configure = function (client, buffer)
+---Configure lsp completion
+---@param client vim.lsp.Client Client id
+---@param buffer integer Butter to attach completion to
+local configure = function(client, buffer)
   if not client:supports_method('textDocument/completion') then
     return
   end
@@ -16,21 +19,24 @@ local configure = function (client, buffer)
   -- })
   ---]]
 
-  ---[[ Code that starts the completion manually
+  ---[[ Code that starts the completion
   vim.lsp.completion.enable(true, client.id, buffer, { autotrigger = true })
-  vim.keymap.set({ 'i', 's' }, '<c-b>', function ()
+  ---]]
+
+  ---[[ Manual trigger
+  vim.keymap.set({ 'i', 's' }, '<c-b>', function()
     vim.lsp.completion.get()
   end, { buffer = buffer, silent = true, noremap = true, desc = '[completion] start completing' })
   ---]]
 
   ---[[ Map to allow add new line while complete visible
-  vim.keymap.set({ 'i', 's' }, '<nl>', function ()
+  vim.keymap.set({ 'i', 's' }, '<nl>', function()
     if vim.fn.pumvisible() == 1 then
       return '<c-e><nl>'
     else
       return '<nl>'
     end
-  end, { desc = '[completion] move to next line', expr = true, silent = true })
+  end, { desc = '[completion] move to next line', expr = true, silent = true, buffer = buffer })
   ---]]
 
   ---[[ Code that adds jumps between placeholders in snippets
@@ -40,13 +46,13 @@ local configure = function (client, buffer)
     else
       return '<tab>'
     end
-  end, { desc = '[snippet] Next placeholder', expr = true, silent = true })
+  end, { desc = '[snippet] Next placeholder', expr = true, silent = true, buffer = buffer })
 
   vim.keymap.set({ 'i', 's' }, '<c-l>', function()
     if vim.snippet.active({ direction = 1 }) then
       vim.snippet.jump(1)
     end
-  end, { desc = '[snippet] Next placeholder', silent = true })
+  end, { desc = '[snippet] Next placeholder', silent = true, buffer = buffer })
 
   vim.keymap.set({ 'i', 's' }, '<s-tab>', function()
     if vim.snippet.active({ direction = -1 }) then
@@ -54,7 +60,7 @@ local configure = function (client, buffer)
     else
       return '<s-tab>'
     end
-  end, { desc = '[snippet] Prev placeholder', expr = true, silent = true })
+  end, { desc = '[snippet] Prev placeholder', expr = true, silent = true, buffer = buffer })
 
   vim.keymap.set({ 'i', 's' }, '<c-h>', function()
     if vim.snippet.active({ direction = -1 }) then
@@ -74,7 +80,8 @@ local configure = function (client, buffer)
       if nil == completionItem then
         return
       end
-      _, cancel_prev = vim.lsp.buf_request(buffer,
+      _, cancel_prev = vim.lsp.buf_request(
+        buffer,
         vim.lsp.protocol.Methods.completionItem_resolve,
         completionItem,
         function(err, item, ctx)
@@ -87,8 +94,9 @@ local configure = function (client, buffer)
             vim.treesitter.start(win.bufnr, 'markdown')
             vim.wo[win.winid].conceallevel = 3
           end
-        end)
-    end
+        end
+      )
+    end,
   })
   ---]]
 end
