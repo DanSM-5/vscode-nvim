@@ -1,8 +1,11 @@
+---@module 'lazy'
+
 local fzf_path = vim.fn.expand('~/user-scripts/fzf')
 local has_fzf = (vim.uv or vim.loop).fs_stat(fzf_path)
 
 ---@type LazyPluginSpec[]
 return {
+  { 'rafamadriz/friendly-snippets' },
   {
     'psliwka/vim-smoothie',
     event = 'VeryLazy',
