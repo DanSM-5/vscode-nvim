@@ -5,6 +5,17 @@ local register = function()
   local repeat_pair = repeat_motion.repeat_pair
   local create_dot_map = repeat_motion.repeat_dot_map
 
+
+  vim.keymap.set('x', '<A-up>', ":m '<-2<CR>gv=gv", { silent = true, noremap = true, desc = '[Vim] Move selected lines up' })
+  vim.keymap.set('x', '<A-down>', ":m '>+1<CR>gv=gv", { silent = true, noremap = true, desc = '[Vim] Move selected lines down' })
+
+  vim.keymap.set('n', '<A-up>', ':<C-u>m .-2<CR>==', { silent = true, noremap = true, desc = '[Vim] Move line up' })
+  vim.keymap.set('n', '<A-down>', ':<C-u>m .+1<CR>==', { silent = true, noremap = true, desc = '[Vim] Move line down' })
+
+  vim.keymap.set('i', '<A-up>', '<Esc>:m .-2<CR>==gi', { silent = true, noremap = true, desc = '[Vim] Move line up' })
+  vim.keymap.set('i', '<A-down>', '<Esc>:m .+1<CR>==gi', { silent = true, noremap = true, desc = '[Vim] Move line down' })
+
+
   vim.keymap.set('n', '<C-d>', '<C-d>zz', { noremap = true, desc = '[Vim] Improve scroll down' })
   vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true, desc = '[Vim] Improve scroll up' })
 
