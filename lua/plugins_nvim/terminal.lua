@@ -6,6 +6,7 @@ local has_fzf = (vim.uv or vim.loop).fs_stat(fzf_path)
 ---@type LazyPluginSpec[]
 return {
   { 'rafamadriz/friendly-snippets' },
+  { 'lukas-reineke/cmp-rg' },
   {
     'psliwka/vim-smoothie',
     event = 'VeryLazy',
