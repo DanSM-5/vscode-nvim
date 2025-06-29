@@ -13,7 +13,9 @@ local root_markers = {
 return {
   on_attach = function(client, bufnr)
     require('utils.lsp_maps').set_lsp_keys(client, bufnr)
-    require('utils.complete').configure(client, bufnr)
+    require('utils.complete').configure(client, bufnr, {
+      triggerCharacters = vim.split('abcdefghijklmnopqrstuvwxyz-@.', '')
+    })
 
     -- For disabling autocomplete if not in blink
     -- local ok, blink = pcall(require, 'blink.cmp')
