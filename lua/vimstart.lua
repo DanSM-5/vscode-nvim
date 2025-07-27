@@ -71,7 +71,8 @@ if vim.fn.has('nvim-0.11.0') == 1 then
   vim.keymap.del('n', 'gra')
   vim.keymap.del('x', 'gra')
   vim.keymap.del('n', 'gri')
-  vim.keymap.del('n', 'gO')
+  vim.keymap.del('n', 'grt')
+  -- vim.keymap.del('n', 'gO')
 end
 
 -- Enable diagnostics. From nvim-11 is false by default.
