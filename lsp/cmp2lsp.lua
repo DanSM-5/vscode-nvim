@@ -8,7 +8,8 @@ return {
     -- for the above, 'buffer' will only show if 'path' and 'lsp' produce no results
     sources = {
       {
-        { name = 'rg', keyword_length = 3 } -- entry
+        -- item kind see `cmp.lsp.CompletionItemKind`
+        { name = 'rg', keyword_length = 3, kind = 1 } -- entry
       }, -- group 1
     },
   },

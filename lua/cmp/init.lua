@@ -122,6 +122,10 @@ cmp.lsp.CompletionItemKind = {
   Operator = 24,
   TypeParameter = 25,
 }
+for _, k in ipairs(vim.tbl_keys(cmp.lsp.CompletionItemKind)) do
+  local v = cmp.lsp.CompletionItemKind[k]
+  cmp.lsp.CompletionItemKind[v] = k
+end
 
 cmp.lsp.MarkupKind = { PlainText = 'plaintext', Markdown = 'markdown' }
 

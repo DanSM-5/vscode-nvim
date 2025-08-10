@@ -48,6 +48,12 @@ module.sort_sources = function(config)
         return
       end
 
+      if type(item) == 'table' then
+        source.cmp2lsp = {}
+        source.cmp2lsp.keyword_length = item.keyword_length or 0
+        source.cmp2lsp.kind = item.kind or 1
+      end
+
       table.insert(sorted, source)
     end
 
