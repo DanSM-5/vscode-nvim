@@ -52,7 +52,7 @@ vim.api.nvim_create_user_command('BSearch', function (args)
     return
   end
 
-  require('utils.browser_search').search_browser(
+  search.search_browser(
     table.concat(args.fargs, ' ')
   )
 end, {
