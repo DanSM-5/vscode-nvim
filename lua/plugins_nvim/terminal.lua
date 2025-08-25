@@ -2,6 +2,16 @@
 
 local fzf_path = vim.fn.expand('~/user-scripts/fzf')
 local has_fzf = (vim.uv or vim.loop).fs_stat(fzf_path)
+---@type LazyPluginSpec
+local fzf_spec = has_fzf and {
+  event = 'VeryLazy',
+  dir = fzf_path,
+  name = 'fzf',
+} or {
+  'junegunn/fzf',
+  event = 'VeryLazy',
+  name = 'fzf',
+}
 
 ---@type LazyPluginSpec[]
 return {
@@ -79,15 +89,16 @@ return {
       })
     end,
   },
-  {
-    event = 'VeryLazy',
-    dir = fzf_path,
-    name = 'fzf',
-  },
+  fzf_spec,
   {
     'junegunn/fzf.vim',
     event = 'VeryLazy',
-    cond = has_fzf,
+  },
+  {
+    "folke/ts-comments.nvim",
+    opts = {},
+    event = "VeryLazy",
+    enabled = vim.fn.has("nvim-0.10.0") == 1,
   },
   -- Blink.cmp minimal config
   -- Currently preferring builtin completion
