@@ -20,7 +20,7 @@ local ref_jump = function(forward, client_id)
   -- it will have the cached references if repeating the motion
   require('utils.repeat_motion').repeat_direction({
     fn = function(opts)
-      require('utils.refjump').reference_jump(opts, references, client_id, function(refs)
+      require('lib.refjump').reference_jump(opts, references, client_id, function(refs)
         references = refs
       end)
     end,
