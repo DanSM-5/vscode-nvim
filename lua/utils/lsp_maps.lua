@@ -5,6 +5,28 @@ local exclude_filetypes = {
   'qf',
 }
 
+local nxo = { 'n', 'x', 'o' }
+
+---Get the function for on_forward and on_backward
+---@param forward boolean If to move forward or backward
+---@param client_id integer Id of the lsp client
+local ref_jump = function(forward, client_id)
+  ---References cache
+  ---@type RefjumpReference[]?
+  local references
+
+  -- NOTE: It is important to make only this part repeatable and not the whole keymap
+  -- so that references will be a brand new reference variable but
+  -- it will have the cached references if repeating the motion
+  require('utils.repeat_motion').repeat_direction({
+    fn = function(opts)
+      require('utils.refjump').reference_jump(opts, references, client_id, function(refs)
+        references = refs
+      end)
+    end,
+  })({ forward = forward })
+end
+
 ---Setup keymaps for lsp
 ---@param client vim.lsp.Client
 ---@param bufnr number
@@ -109,6 +131,15 @@ local set_lsp_keys = function(client, bufnr)
   set_map('n', 'gO', function()
     vim.lsp.buf.document_symbol({})
   end, '[Lsp] Open document symbols')
+
+  if client:supports_method('textDocument/documentHighlight', buf) then
+    set_map(nxo, ']r', function()
+      ref_jump(true, client.id)
+    end, '[Reference] Next reference')
+    set_map(nxo, '[r', function()
+      ref_jump(false, client.id)
+    end, '[Reference] Next reference')
+  end
 end
 
 return {
