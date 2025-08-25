@@ -82,6 +82,22 @@ return {
             return true
           end,
         },
+
+        fold = {
+          attach = function(buf, lang)
+            vim.opt_local.foldmethod = 'expr'
+            vim.opt_local.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+            -- Does not work on startup
+            -- vim.opt_local.foldexpr = 'nvim_treesitter#foldexpr()'
+          end,
+          detach = function(buf)
+            vim.opt_local.foldmethod = vim.go.foldmethod
+            vim.opt_local.foldexpr = vim.go.foldexpr
+          end,
+          is_supported = function(lang)
+            return true
+          end,
+        },
       })
 
       ---@diagnostic disable-next-line: missing-fields
@@ -91,6 +107,7 @@ return {
         auto_install = true,
         highlight = { enable = not is_vscode },
         indent = { enable = not is_vscode },
+        fold = { enable = not is_vscode },
         sync_install = true,
         ensure_installed = {},
         ignore_install = {},
