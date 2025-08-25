@@ -108,7 +108,7 @@ local set_lsp_keys = function(client, bufnr)
   set_map('n', '<space>f', function()
     vim.lsp.buf.format({ async = false })
 
-    -- If we ever need it but hope we don't ??
+    -- If we ever need it but hope we don't 🫠
     if vim.env.VIM_DONT_RETAB ~= nil then
       return
     end
