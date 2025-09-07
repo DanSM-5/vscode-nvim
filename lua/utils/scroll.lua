@@ -11,8 +11,8 @@ local throttle = require('utils.throttle').throttle
 -- How many lines to move each key press
 local jumpStep = 8
 -- throttle delay
-local delay = 30 -- or 40
-
+local delay = 50 -- or 40
+-- helpers
 -- local halfJump = math.floor(jumpStep / 2)
 -- local doubleJump = jumpStep * 2
 
@@ -131,7 +131,7 @@ local registerScroll = function (opts)
     const jumpStep = args?.jumpStep ?? 8;
 
     // Uncomment below and wrap scroll_up/scroll_down functions
-    // to decrease the speed if the scroll.
+    // to decrease the speed of the scroll.
 
     // const delay = args?.delay ?? 30; // 40;
 
@@ -150,6 +150,16 @@ local registerScroll = function (opts)
     //     }, time);
     //   };
     // };
+
+    const get_scroll_info = () => {
+      const scroll = globalThis._vscode_scroll;
+      if (!scroll) return
+
+      const current = scroll.get_curr_line();
+      const eof = scroll.get_total_lines();
+      const range = vscode.window.activeTextEditor.visibleRanges[0];
+      return { current, eof, range };
+    };
 
     const scroll_down = () => {
       const scroll = globalThis._vscode_scroll;
@@ -232,6 +242,7 @@ local registerScroll = function (opts)
       get_total_lines: () => {
         return vscode.window.activeTextEditor?.document?.lineCount;
       },
+      get_scroll_info,
     }
   ]], {
     args = {
@@ -241,17 +252,25 @@ local registerScroll = function (opts)
   })
 end
 
-registerScroll({ jumpStep = jumpStep })
+-- registerScroll({ jumpStep = jumpStep })
 
 local scroll_down = throttle(delay, function ()
+  local ctrl_d = vim.api.nvim_replace_termcodes('<C-d>', true, true, true)
+  vim.fn.feedkeys(ctrl_d, 'normal')
   require('vscode').eval([[
-    globalThis?._vscode_scroll?.scroll_down?.();
+    vscode.commands.executeCommand('editorScroll', {
+      to: 'down', by: 'halfPage',
+    });
   ]])
 end)
 
 local scroll_up = throttle(delay, function ()
+  local ctrl_u = vim.api.nvim_replace_termcodes('<C-u>', true, true, true)
+  vim.fn.feedkeys(ctrl_u, 'normal')
   require('vscode').eval([[
-    globalThis?._vscode_scroll?.scroll_up?.();
+    vscode.commands.executeCommand('editorScroll', {
+      to: 'up', by: 'halfPage',
+    });
   ]])
 end)
 

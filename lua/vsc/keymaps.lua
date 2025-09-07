@@ -45,22 +45,11 @@ return {
       require('utils.scroll').scroll_down()
     end
 
-    -- NOTE: maping `visual` mode to be able to start scrollin
-    -- however vscode breaks from visual mode.
-    -- It cannot be used to do visual selection.
-    vim.keymap.set('v', '<S-down>', downScrollCallback, {
+    vim.keymap.set({'n', 'v'}, '<S-down>', downScrollCallback, {
       desc = '[VSCode] Scroll down (shift-d)',
       noremap = true,
     })
-    vim.keymap.set('n', '<S-down>', downScrollCallback, {
-      desc = '[VSCode] Scroll down (shift-d)',
-      noremap = true,
-    })
-    vim.keymap.set('v', '<S-up>', upScrollCallback, {
-      desc = '[VSCode] Scroll up (shift-d)',
-      noremap = true,
-    })
-    vim.keymap.set('n', '<S-up>', upScrollCallback, {
+    vim.keymap.set({ 'n', 'v' }, '<S-up>', upScrollCallback, {
       desc = '[VSCode] Scroll up (shift-d)',
       noremap = true,
     })
