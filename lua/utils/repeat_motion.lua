@@ -159,14 +159,14 @@ repeat_motion.set_motion_keys = function (opts)
   vim.keymap.set(nxo, options.move_backward, repeatable_move.repeat_last_move_previous)
 
   -- vim way: ; goes to the direction you were moving.
-  -- vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move)
-  -- vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_opposite)
+  -- vim.keymap.set(nxo, ";", ts_repeat_move.repeat_last_move)
+  -- vim.keymap.set(nxo, ",", ts_repeat_move.repeat_last_move_opposite)
 
   -- Optionally, make builtin f, F, t, T also repeatable with ; and ,
-  vim.keymap.set({ 'n', 'x', 'o' }, 'f', repeatable_move.builtin_f_expr, { expr = true })
-  vim.keymap.set({ 'n', 'x', 'o' }, 'F', repeatable_move.builtin_F_expr, { expr = true })
-  vim.keymap.set({ 'n', 'x', 'o' }, 't', repeatable_move.builtin_t_expr, { expr = true })
-  vim.keymap.set({ 'n', 'x', 'o' }, 'T', repeatable_move.builtin_T_expr, { expr = true })
+  vim.keymap.set(nxo, 'f', repeatable_move.builtin_f_expr, { expr = true })
+  vim.keymap.set(nxo, 'F', repeatable_move.builtin_F_expr, { expr = true })
+  vim.keymap.set(nxo, 't', repeatable_move.builtin_t_expr, { expr = true })
+  vim.keymap.set(nxo, 'T', repeatable_move.builtin_T_expr, { expr = true })
 end
 
 return repeat_motion
