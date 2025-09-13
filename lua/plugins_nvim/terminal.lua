@@ -15,6 +15,17 @@ local fzf_spec = has_fzf and {
 
 ---@type LazyPluginSpec[]
 return {
+  -- {
+  --   'nvim-treesitter/nvim-treesitter-context',
+  --   event = 'VeryLazy',
+  --   dependencies = {
+  --     'nvim-treesitter/nvim-treesitter',
+  --   },
+  --   ---@type TSContext.UserConfig
+  --   opts = {
+  --     enable = true,
+  --   },
+  -- },
   { 'rafamadriz/friendly-snippets' },
   -- { 'lukas-reineke/cmp-rg' },
   {
