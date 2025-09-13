@@ -6,14 +6,26 @@ local register = function()
   local create_dot_map = repeat_motion.repeat_dot_map
 
 
-  vim.keymap.set('x', '<A-up>', ":m '<-2<CR>gv=gv", { silent = true, noremap = true, desc = '[Vim] Move selected lines up' })
-  vim.keymap.set('x', '<A-down>', ":m '>+1<CR>gv=gv", { silent = true, noremap = true, desc = '[Vim] Move selected lines down' })
+  vim.keymap.set('x', '<A-up>', function ()
+    return ":m '<-" .. (vim.v.count1 + 1) .. '<CR>gv=gv'
+  end, { silent = true, noremap = true, desc = '[Vim] Move selected lines up', expr = true })
+  vim.keymap.set('x', '<A-down>', function ()
+    return ":m '>+" .. vim.v.count1 .. '<CR>gv=gv'
+  end, { silent = true, noremap = true, desc = '[Vim] Move selected lines down', expr = true })
 
-  vim.keymap.set('n', '<A-up>', ':<C-u>m .-2<CR>==', { silent = true, noremap = true, desc = '[Vim] Move line up' })
-  vim.keymap.set('n', '<A-down>', ':<C-u>m .+1<CR>==', { silent = true, noremap = true, desc = '[Vim] Move line down' })
+  vim.keymap.set('n', '<A-up>', function ()
+    return ':<C-u>m .-' .. (vim.v.count1 + 1) .. '<CR>=='
+  end, { silent = true, noremap = true, desc = '[Vim] Move line up', expr = true })
+  vim.keymap.set('n', '<A-down>', function ()
+    return ':<C-u>m .+' .. vim.v.count1 .. '<CR>=='
+  end, { silent = true, noremap = true, desc = '[Vim] Move line down', expr = true })
 
-  vim.keymap.set('i', '<A-up>', '<Esc>:m .-2<CR>==gi', { silent = true, noremap = true, desc = '[Vim] Move line up' })
-  vim.keymap.set('i', '<A-down>', '<Esc>:m .+1<CR>==gi', { silent = true, noremap = true, desc = '[Vim] Move line down' })
+  vim.keymap.set('i', '<A-up>', function ()
+    return '<Esc>:m .-' .. (vim.v.count1 + 1) .. '<CR>==gi'
+  end, { silent = true, noremap = true, desc = '[Vim] Move line up', expr = true })
+  vim.keymap.set('i', '<A-down>', function ()
+    return '<Esc>:m .+' .. vim.v.count1 .. '<CR>==gi'
+  end, { silent = true, noremap = true, desc = '[Vim] Move line down', expr = true })
 
 
   vim.keymap.set('n', '<C-d>', '<C-d>zz', { noremap = true, desc = '[Vim] Improve scroll down' })
