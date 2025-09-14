@@ -5,9 +5,10 @@ return {
     local fold_text = require('lib.treesitter.fold_text')
     local diagnostics = require('lib.treesitter.diagnostics')
 
+    local disable_vscode = vim.g.vscode ~= 1
     textobjects.setup({ enable = true, disable = false })
-    fold_ui.setup({ enable = true, disable = false })
-    fold_text.setup({ enable = true, disable = false })
+    fold_ui.setup({ enable = disable_vscode, disable = false })
+    fold_text.setup({ enable = disable_vscode, disable = false })
     diagnostics.setup({ enable = true, disable = true })
 
     local manager = require('treesitter-modules.core.manager')
