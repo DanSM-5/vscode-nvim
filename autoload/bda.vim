@@ -82,10 +82,18 @@ endfunction
 function bda#kwbd(kwbdStage)
   if(a:kwbdStage == 1)
     if(&modified)
-      let answer = confirm("This buffer has been modified.  Are you sure you want to delete it?", "&Yes\n&No", 2)
-      if(answer != 1)
+      let answer = confirm("This buffer has been modified. Do you want to save before closing?", "&Yes\n&No\n&Cancel", 2)
+
+      " Save buffer first
+      if (answer == 1)
+        write
+      " Cancel operation
+      elseif (answer == 3)
         return
       endif
+
+      " answer == 2, continue closing without saving
+    endif
     endif
     if(!buflisted(winbufnr(0)))
       bd!
