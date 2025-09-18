@@ -17,6 +17,9 @@ endif
 command! BCloseCurrent call bda#kwbd(1)
 command! -bang -bar BCloseOthers call bda#bdo(<bang>0)
 command! -bang -bar BCloseAllBuffers call bda#bda(<bang>0)
+command! Bd call bda#kwbd(1)
+command! -bang -bar Bdo call bda#bdo(<bang>0)
+command! -bang -bar Bda call bda#bda(<bang>0)
 
 nnoremap <silent> <Plug>BCloseCurrent :<C-u>BCloseCurrent<CR>
 nnoremap <silent> <Plug>BCloseOthers :<C-u>BCloseOthers<CR>
