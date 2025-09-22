@@ -522,15 +522,17 @@ end
 ---@param file string Filename to backup
 local backup_file = function (file)
   -- Save current changes
-  local vscode = require('vscode')
-  vscode.call('workbench.action.files.save')
+  -- local vscode = require('vscode')
+  -- vscode.call('workbench.action.files.save')
+  vim.cmd.write()
   local bac_file = vim.fn.fnamemodify(file, ':t')
   local tmp_dir = get_tmp_dir()
   local hash = randomString(10):gsub("[\\/:!?*%[%]%%\"\'><`^, ]", '_')
   -- /path/to/tmp/filename-with-ext.timestamp_10-char-hash.bac
   local back_name = tmp_dir .. '/' .. bac_file .. '.' .. os.time() .. '_' .. hash .. '.bac'
   vim.print('Backup at: '..back_name)
-  vim.cmd('write! '.. back_name)
+  vim.uv.fs_copyfile(file, back_name)
+  -- vim.cmd('write! '.. back_name)
 end
 
 ---Revert all changes in the file using the git cli
