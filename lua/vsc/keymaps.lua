@@ -609,6 +609,28 @@ return {
     -- vim.keymap.set('n', '[{', prev_open_bracket, { desc = '[Bracket]: Go to previous open bracket', silent = true, noremap = true })
 
 
+    -- Window resize split
+    local next_search_result = function()
+      for _ in pairs(vim.fn.range(1, vim.v.count1)) do
+        vscode.action('search.action.focusNextSearchResult')
+      end
+    end
+    local previous_search_result = function()
+      for _ in pairs(vim.fn.range(1, vim.v.count1)) do
+        vscode.action('search.action.focusPreviousSearchResult')
+      end
+    end
+
+    repeat_pair({
+      keys = 'q',
+      on_forward = next_search_result,
+      on_backward = previous_search_result,
+      desc_forward = '[VSCode] Go to next search result',
+      desc_backward = '[VSCode] Go to previous search result',
+    })
+
+
+    -- Duplicate comment keymap
     local duplicate_and_comment = repeat_action(function ()
       vim.cmd([[:t.]])
       vim.cmd.normal('k')
