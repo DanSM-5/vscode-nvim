@@ -609,7 +609,7 @@ return {
     -- vim.keymap.set('n', '[{', prev_open_bracket, { desc = '[Bracket]: Go to previous open bracket', silent = true, noremap = true })
 
 
-    -- Window resize split
+    -- Move to next find match
     local next_search_result = function()
       for _ in pairs(vim.fn.range(1, vim.v.count1)) do
         vscode.action('search.action.focusNextSearchResult')
@@ -627,6 +627,27 @@ return {
       on_backward = previous_search_result,
       desc_forward = '[VSCode] Go to next search result',
       desc_backward = '[VSCode] Go to previous search result',
+    })
+
+
+    -- Move to next error in files
+    local next_search_result = function()
+      for _ in pairs(vim.fn.range(1, vim.v.count1)) do
+        vscode.action('editor.action.marker.nextInFiles')
+      end
+    end
+    local previous_search_result = function()
+      for _ in pairs(vim.fn.range(1, vim.v.count1)) do
+        vscode.action('editor.action.marker.prevInFiles')
+      end
+    end
+
+    repeat_pair({
+      keys = 'l',
+      on_forward = next_search_result,
+      on_backward = previous_search_result,
+      desc_forward = '[VSCode] Go to next error in files',
+      desc_backward = '[VSCode] Go to previous error in files',
     })
 
 
