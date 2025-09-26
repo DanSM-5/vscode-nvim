@@ -55,6 +55,17 @@ return {
     })
 
 
+    -- Move to line displayed in context of sticky scroll
+    vim.keymap.set({ 'n' }, '<leader>cu', function()
+      vscode.call('editor.action.focusStickyScroll')
+      vscode.action('editor.action.goToFocusedStickyScrollLine')
+    end, { noremap = true, desc = '[VSCode] Go context up' })
+
+    vim.keymap.set('n', '<leader>ct', function ()
+      vscode.action('editor.action.toggleStickyScroll')
+    end, { noremap = true, desc = '[VSCode] Toggle sticky scrol' })
+
+
     -- Vscode actions -- LSP like bindings
 
     -- Go to implementation mappings
