@@ -38,8 +38,7 @@ local register = function()
 
   -- Mappings to help navigation
   vim.keymap.set('n', '<c-p>', function ()
-    local path = require('utils.funcs').git_path()
-    vim.cmd.Files(path)
+    vim.cmd.GitFZF()
   end, {
     noremap = true,
     desc = '[Fzf] Git files',
