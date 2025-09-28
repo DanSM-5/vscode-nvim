@@ -160,6 +160,12 @@ local register = function()
     vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
     vim.opt_local.modified = false
   end, { nargs = '+', complete = 'command' })
+
+  -- Override regular LF autocommand
+  ---Create LF command to use lf binary to select files
+  vim.api.nvim_create_user_command('LF', function(opts)
+    require('lib.lf').lf(opts.fargs[1], opts.bang)
+  end, { force = true, bar = true, nargs = '?', complete = 'dir', bang = true })
 end
 
 return {
