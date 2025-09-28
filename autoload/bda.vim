@@ -94,7 +94,6 @@ function bda#kwbd(kwbdStage)
 
       " answer == 2, continue closing without saving
     endif
-    endif
     if(!buflisted(winbufnr(0)))
       bd!
       return
