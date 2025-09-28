@@ -67,6 +67,24 @@ local register = function()
       vim.api.nvim_set_hl(0, 'Cursor', recover_cursor_color)
     end
   })
+
+
+  -- Allow to paste from registers in fzf buffer in normal mode
+  -- similar to ctrl-r in inser-mode
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = 'fzf',
+    group = vim.api.nvim_create_augroup('PasteFzfBuffer', { clear = true }),
+    callback = function (opts)
+      vim.keymap.set('n', '<leader>"', function()
+        vim.cmd('let @" = getreg(nr2char(getchar()))')
+        return 'p'
+      end, { buffer = opts.buf, desc = '[fzf] paste register on fzf buffer', noremap = true, expr = true })
+      vim.keymap.set('n', '<leader>c', function()
+        vim.cmd('let @" = getreg(nr2char(34))')
+        return 'p'
+      end, { buffer = opts.buf, desc = '[fzf] paste on fzf buffer', noremap = true, expr = true })
+    end,
+  })
 end
 
 return {

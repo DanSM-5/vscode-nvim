@@ -572,6 +572,82 @@ local register = function()
     on_forward = jumpconflict_next,
     on_backward = jumpconflict_prev,
   })
+
+
+  -- fzf
+  -- vim.keymap.set('n', '<leader>ff', '<cmd>Files<cr>', { silent = true, noremap = true, desc = '[fzf] open files'  })
+  -- Lines in buffers
+  vim.keymap.set('n', '<leader>fl', '<cmd>Lines<cr>', { silent = true, noremap = true, desc = '[fzf] go to line'  })
+  -- Lines in current buffer
+  vim.keymap.set('n', '<leader>fb', '<cmd>BLines<cr>', { silent = true,  noremap = true, desc = '[fzf] go to line in buffer'  })
+  -- git ls-files
+  vim.keymap.set('n', '<leader>fn', '<cmd>GFiles<cr>', { silent = true,  noremap = true, desc = '[fzf] go to file tracked by git'  })
+  -- git status
+  vim.keymap.set('n', '<leader>gs', '<cmd>GFiles?<cr>', { silent = true,  noremap = true, desc = '[fzf] list files with changes in git'  })
+  -- Themes (color schemes)
+  vim.keymap.set('n', '<leader>ft', '<cmd>Colors<cr>', { silent = true,  noremap = true, desc = '[fzf] list color schemes'  })
+  -- Open windows
+  vim.keymap.set('n', '<leader>fw', '<cmd>Windows<cr>', { silent = true,  noremap = true, desc = '[fzf] list opened windows' })
+  -- Previously Opened files
+  vim.keymap.set('n', '<leader>fh', '<cmd>History<cr>', { silent = true,  noremap = true, desc = '[fzf] list recently opened files' })
+  -- Previous search
+  vim.keymap.set('n', '<leader>f/', '<cmd>History/<cr>', { silent = true,  noremap = true, desc = '[fzf] list previous search queries' })
+  -- Command history
+  vim.keymap.set('n', '<leader>f;', '<cmd>History:<cr>', { silent = true,  noremap = true, desc = '[fzf] show command history' })
+  -- Commands
+  vim.keymap.set('n', '<leader>f:', '<cmd>Commands<cr>', { silent = true,  noremap = true, desc = '[fzf] list available commands' })
+  -- Maps
+  vim.keymap.set('n', '<leader>fm', '<cmd>Maps<cr>', { silent = true,  noremap = true, desc = '[fzf] list available keymaps' })
+  -- Jump list
+  vim.keymap.set('n', '<leader>fj', '<cmd>Jumps<cr>', { silent = true,  noremap = true, desc = '[fzf] show jump list' })
+  -- Changes across buffers
+  vim.keymap.set('n', '<leader>fc', '<cmd>Changes<cr>', { silent = true,  noremap = true, desc = '[fzf] show change list' })
+  -- Buffers
+  vim.keymap.set('n', '<leader>ff', '<cmd>Buffers<cr>', { silent = true,  noremap = true, desc = '[fzf] show open buffers' })
+
+  -- Search word under the cursor
+  vim.keymap.set('n', '<leader>fr', function()
+    vim.cmd.RG(vim.fn.expand('<cword>'))
+  end, { silent = true,  noremap = true, desc = '[fzf] search word under the cursor' })
+
+  vim.keymap.set('x', '<leader>fr', function()
+    local region = vim.fn.getregion(vim.fn.getpos('.'), vim.fn.getpos('v'))[1]
+    vim.cmd.RG(region)
+  end, { silent = true,  noremap = true, desc = '[fzf] search word under the cursor' })
+
+  -- Search word under the cursor into quickfix
+  vim.keymap.set('n', '<leader>fq', function()
+    local word = vim.fn.expand('<cword>')
+    local escaped = vim.fn.escape(word, '<>\\/()[]{}.*+^$?|"'.."'")
+    vim.cmd('let @/ = "'..escaped..'"')
+    vim.cmd('silent grep! '..escaped)
+  end, { silent = true,  noremap = true, desc = '[grep] search word under the cursor' })
+  vim.keymap.set('x', '<leader>fq', function()
+    local region = vim.fn.getregion(vim.fn.getpos('.'), vim.fn.getpos('v'))[1]
+    local escaped = vim.fn.escape(region, '<>\\/()[]{}.*+^$?|"'.."'")
+    vim.cmd.normal('z*') -- also consumes the visual mode
+    vim.cmd('silent grep! '..escaped)
+  end, { silent = true,  noremap = true, desc = '[grep] search word under the cursor' })
+
+  -- Set grep commands
+  -- vim.keymap.set('n', '<leader>lg', '<cmd>Lg<cr>', { silent = true,  noremap = true, desc = '[fzf] live grep on current buffer' })
+  vim.keymap.set('n', '<leader>lg', '<cmd>RG<cr>', { silent = true,  noremap = true, desc = '[fzf] live grep on current project' })
+  vim.keymap.set('n', '<leader>lG', '<c-u>:Rg<space>', { silent = true,  noremap = true, desc = '[fzf] start grep session ' })
+
+  -- Insert mode completion
+  vim.kenmap.set('i', '<c-x>n', '<plug>(fzf-complete-word)', {
+    noremap = true,
+    desc = '[fzf] fzf complete word',
+  })
+  vim.kenmap.set('i', '<c-x>f', '<plug>(fzf-complete-path)', {
+    noremap = true,
+    desc = '[fzf] fzf complete path',
+  })
+  vim.kenmap.set('i', '<c-x>l', '<plug>(fzf-complete-line)', {
+    noremap = true,
+    desc = '[fzf] fzf complete line',
+  })
+
 end
 
 return {
