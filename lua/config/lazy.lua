@@ -56,9 +56,11 @@ require('lazy').setup({
       -- An external dependency is the default for <leader>l... WTF!!!
       ['<localleader>l'] = {
         function (plugin)
-          require('lazy.util').float_term({
-            'git', 'log', '--oneline', '--decorate', '--graph', '--all',
-          }, { cwd = plugin.dir })
+          require('lib.git_preview').fshow(plugin.dir)
+
+          -- require('lazy.util').float_term({
+          --   'git', 'log', '--oneline', '--decorate', '--graph', '--all',
+          -- }, { cwd = plugin.dir })
         end,
         desc = '[Lazy.nvim] Open plugin log',
       },
