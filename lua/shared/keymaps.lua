@@ -12,8 +12,26 @@ vim.keymap.set('x', 'ii', '<Plug>(indent-object_linewise-none)', {
 })
 vim.keymap.set('o', 'ii', '<Plug>(indent-object_blockwise-none)', {
   remap = true,
-  desc = '[Indent-Object] O-Pending inner indent'
+  desc = '[Indent-Object] O-Pending inner indent (blockwise)'
 })
+-- vim.keymap.set('o', 'ii', '<Plug>(indent-object_linewise-none)', {
+--   remap = true,
+--   desc = '[Indent-Object] O-Pending inner indent'
+-- })
+
+vim.keymap.set('x', 'ia', '<Plug>(indent-object_linewise-both)', {
+  remap = true,
+  desc = '[Indent-Object] Select around indent'
+})
+vim.keymap.set('o', 'ia', '<Plug>(indent-object_blockwise-both)', {
+  remap = true,
+  desc = '[Indent-Object] O-Pending around indent (blockwise)'
+})
+-- vim.keymap.set('o', 'ia', '<Plug>(indent-object_linewise-both)', {
+--   remap = true,
+--   desc = '[Indent-Object] O-Pending around indent'
+-- })
+
 
 -- Reselect visual blocks after indenting
 vim.keymap.set('x', '<', '<gv', {
