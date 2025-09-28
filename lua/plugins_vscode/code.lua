@@ -39,7 +39,7 @@ return {
     cmd = { 'Repeatable' },
   },
   {
-    'echasnovski/mini.ai',
+    'nvim-mini/mini.ai',
     event = 'VeryLazy',
     config = function()
       local ai = require('mini.ai')
@@ -59,6 +59,7 @@ return {
   },
   {
     'nvim-mini/mini.indentscope',
+    event = 'VeryLazy',
     config = function ()
       local config = {
         -- Draw options
