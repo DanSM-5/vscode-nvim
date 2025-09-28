@@ -6,27 +6,27 @@ vim.keymap.set('n', 'g/', '<esc>/\\%V', { desc = '[Nvim] Search in last selected
 
 -- Indent text object
 -- :h indent-object
-vim.keymap.set('x', 'ii', '<Plug>(indent-object_linewise-none)', {
-  remap = true,
-  desc = '[Indent-Object] Select inner indent'
-})
-vim.keymap.set('o', 'ii', '<Plug>(indent-object_blockwise-none)', {
-  remap = true,
-  desc = '[Indent-Object] O-Pending inner indent (blockwise)'
-})
+-- vim.keymap.set('x', 'ii', '<Plug>(indent-object_linewise-none)', {
+--   remap = true,
+--   desc = '[Indent-Object] Select inner indent'
+-- })
+-- vim.keymap.set('o', 'ii', '<Plug>(indent-object_blockwise-none)', {
+--   remap = true,
+--   desc = '[Indent-Object] O-Pending inner indent (blockwise)'
+-- })
 -- vim.keymap.set('o', 'ii', '<Plug>(indent-object_linewise-none)', {
 --   remap = true,
 --   desc = '[Indent-Object] O-Pending inner indent'
 -- })
 
-vim.keymap.set('x', 'ia', '<Plug>(indent-object_linewise-both)', {
-  remap = true,
-  desc = '[Indent-Object] Select around indent'
-})
-vim.keymap.set('o', 'ia', '<Plug>(indent-object_blockwise-both)', {
-  remap = true,
-  desc = '[Indent-Object] O-Pending around indent (blockwise)'
-})
+-- vim.keymap.set('x', 'ia', '<Plug>(indent-object_linewise-both)', {
+--   remap = true,
+--   desc = '[Indent-Object] Select around indent'
+-- })
+-- vim.keymap.set('o', 'ia', '<Plug>(indent-object_blockwise-both)', {
+--   remap = true,
+--   desc = '[Indent-Object] O-Pending around indent (blockwise)'
+-- })
 -- vim.keymap.set('o', 'ia', '<Plug>(indent-object_linewise-both)', {
 --   remap = true,
 --   desc = '[Indent-Object] O-Pending around indent'
@@ -203,6 +203,7 @@ repeat_motion.set_motion_keys()
 
 local create_dot_map = repeat_motion.repeat_dot_map
 local create_repeatable_pair = repeat_motion.create_repeatable_pair
+local repeat_pair = repeat_motion.repeat_pair
 
 local next_matching_bracket, prev_matching_bracket = create_repeatable_pair(
   function()
@@ -264,3 +265,31 @@ vim.keymap.set(
   move_line_start,
   { desc = 'Move line to start of the buffer', noremap = true, silent = true }
 )
+
+---Move to the next indent scope using direction
+---@param direction boolean
+local move_scope = function (direction)
+  local ok, mini_indent = pcall(require, 'mini.indentscope')
+
+  if not ok then
+    vim.notify('mini_indent not found', vim.log.levels.WARN)
+    return
+  end
+
+  local dir = direction and 'bottom' or 'top'
+
+  mini_indent.operator(dir)
+end
+-- TODO: Consider if overriding this defaults is correct
+repeat_pair({
+  keys = 'i',
+  mode = nxo,
+  on_forward = function ()
+    move_scope(true)
+  end,
+  on_backward = function ()
+    move_scope(false)
+  end,
+  desc_forward = '[MiniIndent] Go to indent scope top',
+  desc_backward = '[MiniIndent] Go to indent scope bottom',
+})
