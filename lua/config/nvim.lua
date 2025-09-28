@@ -189,6 +189,11 @@ if vim.fn.executable('rg') then
   vim.opt.grepformat = '%f:%l:%c:%m'
 end
 
+-- Add cfilter plugin
+vim.loader.enable(false)
+vim.cmd('packadd! cfilter')
+vim.loader.enable(true)
+
 vim.api.nvim_create_autocmd('QuickFixCmdPost', {
   pattern = '*grep*',
   command = 'cwindow',
