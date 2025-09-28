@@ -35,16 +35,16 @@ end
 
 local git_path = function ()
   -- Directory holding the current file
-  local file_dir = vim.fn.trim(vim.fn.expand('%:p:h'))
+  local file_dir = vim.trim(vim.fn.expand('%:p:h'))
 
   local gitcmd = 'cd '..vim.fn.shellescape(file_dir)..' && git rev-parse --show-toplevel'
-  local gitpath = vim.fn.trim(vim.fn.system(gitcmd))
+  local gitpath = vim.trim(vim.fn.system(gitcmd))
 
   if vim.fn.isdirectory(gitpath) == 1 then
     return gitpath
   end
 
-  local buffpath = vim.fn.substitute(vim.fn.trim(vim.fn.expand('%:p:h')), '\\', '/', 'g')
+  local buffpath = vim.fn.substitute(vim.trim(vim.fn.expand('%:p:h')), '\\', '/', 'g')
 
   if vim.fn.isdirectory(buffpath) == 1 then
     return buffpath
