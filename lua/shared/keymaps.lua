@@ -192,6 +192,9 @@ vim.keymap.set('n', '<leader>vp', 'ciw<C-r>0<esc>',
   { desc = 'Paste text replacing word under the cursor', noremap = true })
 
 
+-- Move in jumplist
+vim.keymap.set('n', '<A-i>', '<C-i>', { noremap = true, desc = 'Jumplist newer' })
+vim.keymap.set('n', '<A-o>', '<C-o>', { noremap = true, desc = 'Jumplist older' })
 
 -- : Repeatable keymaps : *************************************************
 
