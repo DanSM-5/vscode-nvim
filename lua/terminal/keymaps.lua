@@ -635,15 +635,15 @@ local register = function()
   vim.keymap.set('n', '<leader>lG', '<c-u>:Rg<space>', { silent = true,  noremap = true, desc = '[fzf] start grep session ' })
 
   -- Insert mode completion
-  vim.kenmap.set('i', '<c-x>n', '<plug>(fzf-complete-word)', {
+  vim.keymap.set('i', '<c-x>n', '<plug>(fzf-complete-word)', {
     noremap = true,
     desc = '[fzf] fzf complete word',
   })
-  vim.kenmap.set('i', '<c-x>f', '<plug>(fzf-complete-path)', {
+  vim.keymap.set('i', '<c-x>f', '<plug>(fzf-complete-path)', {
     noremap = true,
     desc = '[fzf] fzf complete path',
   })
-  vim.kenmap.set('i', '<c-x>l', '<plug>(fzf-complete-line)', {
+  vim.keymap.set('i', '<c-x>l', '<plug>(fzf-complete-line)', {
     noremap = true,
     desc = '[fzf] fzf complete line',
   })
