@@ -3,7 +3,8 @@ vim.cmd.colorscheme('slate')
 
 -- Color scheme overrides
 -- MatchParen ctermfg=16 ctermbg=220 guifg=#000000 guibg=#ffd700
-vim.api.nvim_set_hl(0, 'MatchParen', { force = true, ctermfg = 16, ctermbg = 220, fg = '#5f87d7', sp = '#5f87d7', underline = true })
+vim.api.nvim_set_hl(0, 'MatchParen',
+  { force = true, ctermfg = 16, ctermbg = 220, fg = '#5f87d7', sp = '#5f87d7', underline = true })
 
 -- Disable vim-smoothie remaps
 vim.g.smoothie_no_default_mappings = 1
@@ -39,7 +40,7 @@ local function SetTab(space)
 end
 
 vim.g.SetTab = SetTab
-vim.api.nvim_create_user_command('SetTab', function (opts)
+vim.api.nvim_create_user_command('SetTab', function(opts)
   SetTab(opts.fargs[1])
   if opts.bang then
     vim.cmd.retab()
@@ -185,7 +186,8 @@ else
 end
 
 if vim.fn.executable('rg') then
-  vim.opt.grepprg = 'rg --vimgrep --no-heading --smart-case --no-ignore --engine=pcre2 --hidden -g "!plugged" -g "!.git" -g "!node_modules"'
+  vim.opt.grepprg =
+  'rg --vimgrep --no-heading --smart-case --no-ignore --engine=pcre2 --hidden -g "!plugged" -g "!.git" -g "!node_modules"'
   vim.opt.grepformat = '%f:%l:%c:%m'
 end
 
@@ -210,16 +212,16 @@ vim.keymap.set(
 vim.keymap.set(
   'n',
   '<space>E',
-  function ()
+  function()
     local curr_config = vim.diagnostic.config()
     vim.diagnostic.config({ virtual_lines = { current_line = true }, virtual_text = false })
 
-    local unset = function ()
+    local unset = function()
       vim.diagnostic.config(curr_config)
       pcall(vim.keymap.del, 'n', '<esc>', { buffer = true })
     end
 
-    vim.keymap.set('n', '<esc>', function ()
+    vim.keymap.set('n', '<esc>', function()
       unset()
     end, { silent = true, buffer = true, desc = '[Diagnostic] Hide virtual lines' })
 
@@ -232,17 +234,19 @@ vim.keymap.set(
   { desc = '[Lsp] Open virtual lines', silent = true, noremap = true }
 )
 vim.keymap.set('n', '<space>l', vim.diagnostic.setloclist, { desc = 'LSP: Open diagnostic list', silent = true })
-vim.keymap.set('n', '<space>q', vim.diagnostic.setqflist , { desc = 'LSP: Open diagnostic list', silent = true })
+vim.keymap.set('n', '<space>q', vim.diagnostic.setqflist, { desc = 'LSP: Open diagnostic list', silent = true })
 
 -- Signs for diagnostics
 local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
 vim.diagnostic.config({
-  signs = { text = {
-    [vim.diagnostic.severity.ERROR] = signs.Error,
-    [vim.diagnostic.severity.WARN] = signs.Warn,
-    [vim.diagnostic.severity.HINT] = signs.Hint,
-    [vim.diagnostic.severity.INFO] = signs.Info,
-  } },
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = signs.Error,
+      [vim.diagnostic.severity.WARN] = signs.Warn,
+      [vim.diagnostic.severity.HINT] = signs.Hint,
+      [vim.diagnostic.severity.INFO] = signs.Info,
+    }
+  },
 
   -- Start diagnostics (virtual text) enabled
   virtual_text = true,
@@ -264,26 +268,63 @@ vim.diagnostic.config({
 vim.lsp.inlay_hint.enable(true)
 
 vim.api.nvim_set_hl(0, 'DiagnosticUnderlineError', {
-  sp = 'Red', undercurl = true,
+  sp = 'Red',
+  undercurl = true,
   force = true,
 })
 vim.api.nvim_set_hl(0, 'DiagnosticUnderlineWarn', {
-  sp = 'Orange', undercurl = true,
+  sp = 'Orange',
+  undercurl = true,
   force = true,
 })
 vim.api.nvim_set_hl(0, 'DiagnosticUnderlineOk', {
-  sp = 'LightGreen', undercurl = true,
+  sp = 'LightGreen',
+  undercurl = true,
   force = true,
 })
 vim.api.nvim_set_hl(0, 'DiagnosticUnderlineInfo', {
-  sp = 'LightBlue', undercurl = true,
+  sp = 'LightBlue',
+  undercurl = true,
   force = true,
 })
 vim.api.nvim_set_hl(0, 'DiagnosticUnderlineHint', {
-  sp = 'LightGrey', undercurl = true,
+  sp = 'LightGrey',
+  undercurl = true,
   force = true,
 })
 
+
+-- Global variables
+local fzf_base_options = { '--multi', '--ansi', '--bind', 'alt-c:clear-query', '--input-border=rounded' }
+local fzf_bind_options = {
+  '--bind', 'ctrl-l:change-preview-window(down|hidden|)',
+  '--bind', 'ctrl-/:change-preview-window(down|hidden|)',
+  '--bind', 'alt-up:preview-page-up,alt-down:preview-page-down',
+  '--bind', 'shift-up:preview-up,shift-down:preview-down',
+  '--bind', 'ctrl-^:toggle-preview',
+  '--bind', 'ctrl-s:toggle-sort',
+  '--cycle',
+  '--bind', 'alt-f:first',
+  '--bind', 'alt-l:last',
+  '--bind', 'alt-a:select-all',
+  '--bind', 'alt-d:deselect-all' }
+local fzf_preview_options = {
+  '--layout=reverse',
+  '--preview-window', '60%,wrap',
+  '--preview', 'bat -pp --color=always --style=numbers {}'
+}
+
+
+local function table_concat(t1, t2)
+  for _, v in pairs(t2) do t1[#t1 + 1] = v end
+end
+
+table_concat(fzf_bind_options, fzf_base_options)
+table_concat(fzf_preview_options, fzf_bind_options)
+
+vim.g.fzf_base_options = fzf_base_options
+vim.g.fzf_bind_options = fzf_bind_options
+vim.g.fzf_preview_options = fzf_preview_options
 
 require('terminal.autocmd').register()
 require('terminal.cmd').register()
