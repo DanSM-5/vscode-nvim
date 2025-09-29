@@ -23,7 +23,6 @@ vim.opt.ignorecase = true
 -- Ignore casing unless using uppercase characters
 vim.opt.smartcase = true
 
-
 --: Global variables {{{ :-------------------------------------------------
 -- Location for vimplug
 -- vim.g.plug_home = vim.g.config_dir .. '/plugged'
@@ -37,11 +36,11 @@ vim.g.smoothie_no_default_mappings = 1
 vim.g.system_copy_silent = 1
 --: }}} :------------------------------------------------------------------
 
-local OnVimEnter = function ()
+local OnVimEnter = function()
   -- Border highlight on floats
   vim.api.nvim_set_hl(0, 'FloatBorder', {
     ctermbg = 239,
-    ctermfg=144,
+    ctermfg = 144,
     bg = '#4a4a4a',
     fg = '#afaf87',
     force = true,
@@ -51,7 +50,7 @@ end
 vim.api.nvim_create_autocmd('VimEnter', {
   desc = 'Run after all plugins are loaded and nvim is ready',
   pattern = { '*' },
-  callback = OnVimEnter
+  callback = OnVimEnter,
 })
 
 -- Fix cursor shape on exit
@@ -59,7 +58,7 @@ vim.api.nvim_create_autocmd('VimEnter', {
 vim.api.nvim_create_autocmd('VimLeave', {
   group = vim.api.nvim_create_augroup('RestoreCursorShapeOnExit', { clear = true }),
   pattern = '*',
-  callback = function ()
+  callback = function()
     vim.opt.guicursor = 'a:ver100-blinkon100'
   end,
 })
@@ -74,6 +73,13 @@ if vim.fn.has('nvim-0.11.0') == 1 then
   vim.keymap.del('n', 'grt')
   -- vim.keymap.del('n', 'gO')
 end
+
+vim.g.scripts_dir = vim.fn.substitute(
+  vim.fn.exists('g:scripts_dir') and vim.g.scripts_dir or vim.fn.stdpath('config') .. '/bin',
+  '\\',
+  '/',
+  'g'
+)
 
 -- Enable diagnostics. From nvim-11 is false by default.
 vim.diagnostic.enable(true)
