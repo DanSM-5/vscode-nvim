@@ -6,6 +6,11 @@ vim.cmd.colorscheme('slate')
 vim.api.nvim_set_hl(0, 'MatchParen',
   { force = true, ctermfg = 16, ctermbg = 220, fg = '#5f87d7', sp = '#5f87d7', underline = true })
 
+-- Highlight when yanking text
+vim.api.nvim_set_hl(0, 'HighlightYankedText', {
+  link = 'IncSearch',
+})
+
 -- Disable vim-smoothie remaps
 vim.g.smoothie_no_default_mappings = 1
 vim.opt.scrolloff = 5

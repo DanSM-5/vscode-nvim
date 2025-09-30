@@ -143,7 +143,7 @@ end
 
 -- Clean search highlight (ctrl-l)
 vim.api.nvim_create_user_command('CleanSearch', function ()
-  vim.cmd(':nohlsearch')
+  vim.cmd.nohlsearch()
 end, { desc = 'Clean search highlight', bar = true })
 
 -- Clean all carriage return symbols
