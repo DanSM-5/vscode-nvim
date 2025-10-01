@@ -19,6 +19,10 @@ return {
   'bkad/CamelCaseMotion',
   -- 'tpope/vim-surround',
   {
+    'tpope/vim-fugitive',
+    event = 'VeryLazy',
+  },
+  {
     'kylechui/nvim-surround',
     event = 'VeryLazy',
     config = function()
