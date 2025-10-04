@@ -58,7 +58,7 @@ return {
         disable = false,
       },
       highlight = {
-        enable = true,
+        enable = disable_vscode,
         disable = false,
         -- setting this to true will run `:h syntax` and tree-sitter at the same time
         -- set this to `true` if you depend on 'syntax' being enabled

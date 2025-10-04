@@ -249,6 +249,14 @@ vim.api.nvim_create_user_command('TSModuleEnable', function(args)
   end
 
   local names = ts_modules_get_names()
+
+  if vim.g.vscode == 1 then
+    vim.ui.select(names, { kind = 'string', prompt = 'Select module:' }, function (mod, idx)
+      ts_modules_callback(mod, 'enable', args.bang)
+    end)
+    return
+  end
+
   require('utils.fzf').fzf({
     name = 'ts_modules',
     source = names,
@@ -277,6 +285,14 @@ vim.api.nvim_create_user_command('TSModuleDisable', function(args)
   end
 
   local names = ts_modules_get_names()
+
+  if vim.g.vscode == 1 then
+    vim.ui.select(names, { kind = 'string', prompt = 'Select module:' }, function (mod, idx)
+      ts_modules_callback(mod, 'disable', args.bang)
+    end)
+    return
+  end
+
   require('utils.fzf').fzf({
     name = 'ts_modules',
     source = names,
