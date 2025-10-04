@@ -5,7 +5,7 @@
 ---@param value string
 ---@return string[]
 local function get_matched(options, value)
-  local matched = vim.tbl_filter(function (option)
+  local matched = vim.tbl_filter(function(option)
     local _, matches = string.gsub(option, value, '')
     return matches > 0
   end, options)
@@ -17,7 +17,7 @@ end
 ---@param module string
 ---@param state 'enable'|'disable'|''|nil
 ---@param switch boolean|nil
-local ts_modules_callback = function (module, state, switch)
+local ts_modules_callback = function(module, state, switch)
   -- local module = args[1]
   -- local state = args[2]
 
@@ -32,7 +32,7 @@ local ts_modules_callback = function (module, state, switch)
 
   local manager = require('treesitter-modules.core.manager')
   local modules = manager.modules
-  local target_mod = require('utils.stdlib').find(function (mod)
+  local target_mod = require('utils.stdlib').find(function(mod)
     return mod.name() == module
   end, modules)
 
@@ -45,7 +45,7 @@ local ts_modules_callback = function (module, state, switch)
   local ctx = { buf = buf, language = lang }
   local set = manager.cache:get(buf)
 
-  local disable_module = function ()
+  local disable_module = function()
     if set:has(module) then
       set:remove(module)
       target_mod.detach(ctx)
@@ -54,7 +54,7 @@ local ts_modules_callback = function (module, state, switch)
       target_mod.disable = true
     end
   end
-  local enable_module = function ()
+  local enable_module = function()
     if not set:has(module) then
       set:add(module)
       target_mod.attach(ctx)
@@ -79,7 +79,7 @@ end
 
 ---Get module names
 ---@return string[]
-local ts_modules_get_names = function ()
+local ts_modules_get_names = function()
   local names = {}
   local ts_modules = require('treesitter-modules.core.manager').modules
 
@@ -93,7 +93,7 @@ end
 ---Complete function for module names
 ---@param current string
 ---@return string[]
-local ts_modules_complete_name = function (current)
+local ts_modules_complete_name = function(current)
   local names = ts_modules_get_names()
   if #current > 0 then
     return get_matched(names, current)
@@ -105,10 +105,10 @@ end
 ---Change status of module 'on' / 'off'
 ---@param module string
 ---@param state 'on'|'off'
-local ts_modules_switch = function (module, state)
+local ts_modules_switch = function(module, state)
   local manager = require('treesitter-modules.core.manager')
   local modules = manager.modules
-  local target_mod = require('utils.stdlib').find(function (mod)
+  local target_mod = require('utils.stdlib').find(function(mod)
     return mod.name() == module
   end, modules)
 
@@ -129,7 +129,7 @@ end
 ---@param cmd string Current command line including command
 ---@param cur_pos integer Cursor position in cmd
 ---@return string[]
-local ts_modules_complete_fn = function (current, cmd, cur_pos)
+local ts_modules_complete_fn = function(current, cmd, cur_pos)
   if #vim.split(cmd, ' ') > 2 then
     return {}
   end
@@ -137,17 +137,15 @@ local ts_modules_complete_fn = function (current, cmd, cur_pos)
   return ts_modules_complete_name(current)
 end
 
-
 ---
 
-
 -- Clean search highlight (ctrl-l)
-vim.api.nvim_create_user_command('CleanSearch', function ()
+vim.api.nvim_create_user_command('CleanSearch', function()
   vim.cmd.nohlsearch()
 end, { desc = 'Clean search highlight', bar = true })
 
 -- Clean all carriage return symbols
-vim.api.nvim_create_user_command('CleanCR', function ()
+vim.api.nvim_create_user_command('CleanCR', function()
   vim.cmd([[
     try
       silent exec '%s/\r$//g'
@@ -157,54 +155,52 @@ vim.api.nvim_create_user_command('CleanCR', function ()
 end, { desc = 'Clean carriage return characters', bar = true })
 
 -- Clean all trailing spaces
-vim.api.nvim_create_user_command('CleanTrailingSpaces', function ()
+vim.api.nvim_create_user_command('CleanTrailingSpaces', function()
   vim.cmd([[silent exec '%s/\s\+$//e']])
 end, { desc = 'Clean empty characters at the end of the line', bar = true })
 
 -- Repeatable move commands
-vim.api.nvim_create_user_command('TSTextobjectRepeatLastMove', function ()
+vim.api.nvim_create_user_command('TSTextobjectRepeatLastMove', function()
   require('utils.repeatable_move').repeat_last_move()
 end, { desc = '[Repeatable] Repeat last move', bar = true, bang = true })
-vim.api.nvim_create_user_command('TSTextobjectRepeatLastMoveOpposite', function ()
+vim.api.nvim_create_user_command('TSTextobjectRepeatLastMoveOpposite', function()
   require('utils.repeatable_move').repeat_last_move_opposite()
 end, { desc = '[Repeatable] Repeat last move opposite', bar = true, bang = true })
-vim.api.nvim_create_user_command('TSTextobjectRepeatLastMoveNext', function ()
+vim.api.nvim_create_user_command('TSTextobjectRepeatLastMoveNext', function()
   require('utils.repeatable_move').repeat_last_move_next()
 end, { desc = '[Repeatable] Repeat last move in forward direction', bar = true, bang = true })
-vim.api.nvim_create_user_command('TSTextobjectRepeatLastMovePrevious', function ()
+vim.api.nvim_create_user_command('TSTextobjectRepeatLastMovePrevious', function()
   require('utils.repeatable_move').repeat_last_move_previous()
 end, { desc = '[Repeatable] Repeat last move in backward direction', bar = true, bang = true })
 
 -- Maps normal, visual and o-pending at the same time
-vim.api.nvim_create_user_command('NXOnoremap', 'nnoremap <args><Bar>xnoremap <args><Bar>onoremap <args>', { nargs = 1, desc = '[Nvim] Map normal, visual and operation pending' })
+vim.api.nvim_create_user_command(
+  'NXOnoremap',
+  'nnoremap <args><Bar>xnoremap <args><Bar>onoremap <args>',
+  { nargs = 1, desc = '[Nvim] Map normal, visual and operation pending' }
+)
 -- Make search consistent
 vim.cmd.NXOnoremap([[<expr>n (v:searchforward ? 'n' : 'N').'zv']])
 vim.cmd.NXOnoremap([[<expr>N (v:searchforward ? 'N' : 'n').'zv']])
 
-
 -- Search in browser
-vim.api.nvim_create_user_command('BSearch', function (args)
+vim.api.nvim_create_user_command('BSearch', function(args)
   local first = args.fargs[1]
   local engine = string.gsub(first, '@', '')
   local search = require('utils.browser_search')
   if string.sub(first, 1, 1) == '@' and search.is_valid_engine(engine) then
-    search.search_browser(
-      table.concat({ unpack(args.fargs, 2) }, ' '),
-      engine
-    )
+    search.search_browser(table.concat({ unpack(args.fargs, 2) }, ' '), engine)
 
     return
   end
 
-  search.search_browser(
-    table.concat(args.fargs, ' ')
-  )
+  search.search_browser(table.concat(args.fargs, ' '))
 end, {
   desc = 'Search in browser',
   bang = true,
   -- bar = true,
   nargs = '+',
-  complete = function (current, cmd)
+  complete = function(current, cmd)
     -- Only complete first arg
     if #vim.split(cmd, ' ') > 2 then
       return
@@ -216,32 +212,37 @@ end, {
     end
 
     return engines
-  end
+  end,
 })
 
-
 -- Treesitter
-vim.api.nvim_create_user_command('TSModuleToggle', function (args)
+vim.api.nvim_create_user_command('TSModuleToggle', function(args)
   local module = args.fargs[1]
   local state = args.fargs[2]
   ts_modules_callback(module, state, args.bang)
-end, { desc = '[TSModules] Toggle module', bang = true, bar = true, complete = function (current, cmd, cur_pos)
-  vim.print({ current, cmd, cur_pos })
+end, {
+  desc = '[TSModules] Toggle module',
+  bang = true,
+  bar = true,
+  complete = function(current, cmd, cur_pos)
+    vim.print({ current, cmd, cur_pos })
 
-  local cmd_parts = vim.split(cmd, ' ')
+    local cmd_parts = vim.split(cmd, ' ')
 
-  if #cmd_parts >= 4 then
-    return
-  end
+    if #cmd_parts >= 4 then
+      return
+    end
 
-  if #cmd_parts == 3 then
-    return get_matched({ 'enable', 'disable' }, current)
-  end
+    if #cmd_parts == 3 then
+      return get_matched({ 'enable', 'disable' }, current)
+    end
 
-  return ts_modules_complete_name(current)
-end, nargs = '+' })
+    return ts_modules_complete_name(current)
+  end,
+  nargs = '+',
+})
 
-vim.api.nvim_create_user_command('TSModuleEnable', function (args)
+vim.api.nvim_create_user_command('TSModuleEnable', function(args)
   local module = args.fargs[1]
   if module ~= nil then
     return ts_modules_callback(module, 'enable', args.bang)
@@ -253,13 +254,13 @@ vim.api.nvim_create_user_command('TSModuleEnable', function (args)
     source = names,
     fullscreen = args.bang,
     fzf_opts = { '--no-multi', '--prompt', 'TSModule enable> ' },
-    sink = function (options)
+    sink = function(options)
       if #options < 2 then
         return
       end
       local selected = options[2]
       return ts_modules_callback(selected, 'enable')
-    end
+    end,
   })
 end, {
   desc = '[TSModules] Enable module',
@@ -269,7 +270,7 @@ end, {
   nargs = '?',
 })
 
-vim.api.nvim_create_user_command('TSModuleDisable', function (args)
+vim.api.nvim_create_user_command('TSModuleDisable', function(args)
   local module = args.fargs[1]
   if module ~= nil then
     return ts_modules_callback(module, 'disable', args.bang)
@@ -281,23 +282,23 @@ vim.api.nvim_create_user_command('TSModuleDisable', function (args)
     source = names,
     fullscreen = args.bang,
     fzf_opts = { '--no-multi', '--prompt', 'TSModule disable> ' },
-    sink = function (options)
+    sink = function(options)
       if #options < 2 then
         return
       end
       local selected = options[2]
       return ts_modules_callback(selected, 'disable')
-    end
+    end,
   })
 end, {
   desc = '[TSModules] Disable module',
   bang = true,
   bar = true,
   complete = ts_modules_complete_fn,
-  nargs = '?'
+  nargs = '?',
 })
 
-vim.api.nvim_create_user_command('TSModuleOn', function (args)
+vim.api.nvim_create_user_command('TSModuleOn', function(args)
   local module = args.fargs[1]
   ts_modules_switch(module, 'on')
 end, {
@@ -308,7 +309,7 @@ end, {
   nargs = 1,
 })
 
-vim.api.nvim_create_user_command('TSModuleOff', function (args)
+vim.api.nvim_create_user_command('TSModuleOff', function(args)
   local module = args.fargs[1]
   ts_modules_switch(module, 'off')
 end, {
@@ -317,4 +318,13 @@ end, {
   bar = true,
   complete = ts_modules_complete_fn,
   nargs = 1,
+})
+
+vim.api.nvim_create_user_command('Bcd', function(args)
+  local buf = type(args.fargs[1]) == 'number' and tonumber(args.fargs[1]) or 0
+  require('utils.funcs').buffer_cd(buf)
+end, {
+  bar = true,
+  bang = true,
+  nargs = '?',
 })

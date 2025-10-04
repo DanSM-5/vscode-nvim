@@ -1,4 +1,3 @@
-
 -- -- Mapping to remove marks on the line under the cursor
 local delete_marks_curr_line = function()
   local bufnr = vim.api.nvim_get_current_buf()
@@ -33,32 +32,60 @@ local function regmove(destination, source)
   vim.fn.setreg(destination, vim.fn.getreg(source))
 end
 
-local git_path = function ()
+---Tries to get the path of a git repository or
+---the path to the current file instead
+---
+---@param path? string Initial path to search for. If nil it will use the path of the cuff buffer
+---@return string?
+local git_path = function(path)
   -- Directory holding the current file
-  local file_dir = vim.trim(vim.fn.expand('%:p:h'))
+  local file_dir = vim.trim(path or vim.fn.expand('%:p:h')):gsub('\\', '/')
 
-  local gitcmd = 'cd '..vim.fn.shellescape(file_dir)..' && git rev-parse --show-toplevel'
+  local gitcmd = string.format('git -C %s rev-parse --show-toplevel', vim.fn.shellescape(file_dir))
   local gitpath = vim.trim(vim.fn.system(gitcmd))
 
   if vim.fn.isdirectory(gitpath) == 1 then
     return gitpath
   end
 
-  local buffpath = vim.fn.substitute(vim.trim(vim.fn.expand('%:p:h')), '\\', '/', 'g')
+  local expanded = vim.fn.expand('%:p:h')
+
+  if vim.fn.has('win32') then
+    -- Get file, it will return matches if in vscode-remote extension
+    local match, matches = expanded:gsub('%%2B', '.'):gsub('vscode%-remote://wsl%.', '')
+    if matches > 0 then
+      -- in vscode, add prefix
+      expanded = '//wsl.localhost/' .. match
+    end
+  end
+
+  local buffpath = vim.fn.substitute(vim.trim(expanded), '\\', '/', 'g')
 
   if vim.fn.isdirectory(buffpath) == 1 then
     return buffpath
   end
 end
 
-local buffer_cd = function()
-  local buffer_path = git_path()
-  if buffer_path ~= nil and vim.fn.empty(buffer_path) ~= 1 then
-    vim.cmd('cd '..buffer_path)
-    vim.notify('Changed to: ' .. buffer_path, vim.log.levels.INFO)
-  else
-    vim.notify('Unable to cd into: ' .. buffer_path, vim.log.levels.WARN)
+---Cd to the repository containing buf
+---or to the directory containing buf
+---@param buf integer? buffer to reference when attempt cd into
+local buffer_cd = function(buf)
+  local buffer = buf or 0
+
+  ---@type string|nil
+  local buffer_path = require('utils.gitvscode').get_file(buffer)
+  if buffer_path ~= nil then
+    buffer_path = vim.fn.fnamemodify(buffer_path, ':h')
   end
+  buffer_path = git_path(buffer_path)
+
+  if buffer_path ~= nil then
+    vim.cmd.cd(buffer_path)
+    vim.notify(string.format('Changed to: %s', buffer_path), vim.log.levels.INFO)
+    return
+  end
+
+  vim.notify('Unable to cd into current buffer', vim.log.levels.WARN)
 end
 
 return {

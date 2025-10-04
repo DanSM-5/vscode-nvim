@@ -104,6 +104,12 @@ vim.keymap.set('x', '<leader>P', 'clipboard#paste("P")', {
 })
 
 
+-- Cd to current project or active buffer directory
+vim.keymap.set('n', '<leader>cd', function()
+  vim.cmd.Bcd()
+end, { noremap = true, desc = 'Change root directory of repo or file directory' })
+
+
 -- Clean trailing whitespace in file
 vim.keymap.set('n', '<leader>cc', ':%s/\\s\\+$//e<cr>', {
   desc = 'Clear trailing whitespace in file',

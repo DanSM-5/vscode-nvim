@@ -108,11 +108,6 @@ local register = function()
     desc = '[Fugitive] Open fugitive',
   })
 
-  -- Cd to current project or active buffer directory
-  vim.keymap.set('n', '<leader>cd', function()
-    require('utils.funcs').buffer_cd()
-  end, { noremap = true, desc = '[Vim] Change root directory' })
-
   -- Quick buffer overview to change buffer
   vim.keymap.set('n', '<leader>gb', ':ls<cr>:b<space>', {
     desc = 'List open buffers and set command mode for quick navigation',

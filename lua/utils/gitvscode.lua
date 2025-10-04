@@ -296,8 +296,8 @@ end
 -- VSCode documentation
 -- https://vscode-api.js.org/classes/vscode.Diagnostic.html
 
--- //wsl.localhost/UbuntuDev/home/eduardo/projects/nbcu_main_mw
--- vscode-remote://wsl%2Bubuntudev/home/eduardo/projects/nbcu_main_mw
+-- //wsl.localhost/UbuntuDev/home/eduardo/projects/project
+-- vscode-remote://wsl%2Bubuntudev/home/eduardo/projects/project
 
 -- git vscode extension
 -- https://github.com/microsoft/vscode/blob/main/extensions/git/src/commands.ts#L1724
@@ -355,19 +355,25 @@ local get_hunks = function (staged, dir)
 end
 
 ---Get the current file absolute path
+---@param bur integer? bufnr to get its path
 ---@return string Path to the current file
-local get_file = function ()
+local get_file = function (buf)
+  local path = vim.api.nvim_buf_get_name(buf or 0)
+
   if vim.fn.has('win32') then
     -- Get file, it will return matches if in vscode-remote extension
-    local file, matches = vim.fn.expand('%:p'):gsub('%%2B', '.'):gsub('vscode%-remote://wsl%.', '')
+    local file, matches = path:gsub('%%2B', '.'):gsub('vscode%-remote://wsl%.', '')
     if matches > 0 then
       -- in vscode, add prefix
       file = '//wsl.localhost/' .. file
     end
+
+    file = vim.trim(file:gsub('\\', '/'))
+
     return file
-  else
-    return vim.fn.expand('%:p')
   end
+
+  return path
 end
 
 ---Get the current hunk under the cursor
