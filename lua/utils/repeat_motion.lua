@@ -24,9 +24,42 @@ local get_repeat_module = function ()
   --   return require('utils.repeatable_move')
   -- end
 
-  local ts_ok, repeatable_move = pcall(require, 'nvim-treesitter.textobjects.repeatable_move')
+  local ts_ok, repeatable_move = pcall(require, 'nvim-treesitter-textobjects.repeatable_move')
 
   if ts_ok then
+    -- Inject missing function
+    if repeatable_move.make_repeatable_move_pair == nil then
+      repeatable_move.make_repeatable_move_pair = function(forward_move_fn, backward_move_fn)
+        local general_repeatable_move_fn = function(opts, ...)
+          if opts.forward then
+            forward_move_fn(...)
+          else
+            backward_move_fn(...)
+          end
+        end
+
+        local repeatable_forward_move_fn = function(...)
+          repeatable_move.last_move = {
+            func = general_repeatable_move_fn,
+            opts = { forward = true },
+            additional_args = { ... }
+          }
+          forward_move_fn(...)
+        end
+
+        local repeatable_backward_move_fn = function(...)
+          repeatable_move.last_move = {
+            func = general_repeatable_move_fn,
+            opts = { forward = false },
+            additional_args = { ... }
+          }
+          backward_move_fn(...)
+        end
+
+        return repeatable_forward_move_fn, repeatable_backward_move_fn
+      end
+    end
+
     return repeatable_move
   end
 
