@@ -53,10 +53,12 @@ local configure = function(client, buffer, opts)
 
   ---[[ Code that adds jumps between placeholders in snippets
   vim.keymap.set({ 'i', 's' }, '<tab>', function()
-    if vim.snippet.active({ direction = 1 }) then
-      return '<cmd>lua vim.snippet.jump(1)<cr>'
+    if vim.fn.pumvisible() == 1 then
+      return '<c-n>' -- go to next option
+    elseif vim.snippet.active({ direction = 1 }) then
+      return '<cmd>lua vim.snippet.jump(1)<cr>' -- move to next placeholder
     else
-      return '<tab>'
+      return '<tab>' -- default tab
     end
   end, { desc = '[snippet] Next placeholder', expr = true, silent = true, buffer = buffer })
 
@@ -67,10 +69,12 @@ local configure = function(client, buffer, opts)
   end, { desc = '[snippet] Next placeholder', silent = true, buffer = buffer })
 
   vim.keymap.set({ 'i', 's' }, '<s-tab>', function()
-    if vim.snippet.active({ direction = -1 }) then
-      return '<cmd>lua vim.snippet.jump(-1)<cr>'
+    if vim.fn.pumvisible() == 1 then
+      return '<c-p>' -- go to previous option
+    elseif vim.snippet.active({ direction = -1 }) then
+      return '<cmd>lua vim.snippet.jump(-1)<cr>' -- move to previous placeholder
     else
-      return '<s-tab>'
+      return '<s-tab>' -- default s-tab
     end
   end, { desc = '[snippet] Prev placeholder', expr = true, silent = true, buffer = buffer })
 
