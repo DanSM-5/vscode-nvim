@@ -335,6 +335,23 @@ return {
       vscode.action('workbench.action.findInFiles')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
 
+    -- Find-it-faster helpers
+    vim.keymap.set('n', '<leader>ff', function ()
+      vscode.action('find-it-faster.findFiles')
+    end, { desc = '[VSCode] Search word under the cursor', noremap = true })
+    vim.keymap.set('n', '<leader>fg', function ()
+      vscode.action('find-it-faster.findWithinFiles')
+    end, { desc = '[VSCode] Search word under the cursor', noremap = true })
+    vim.keymap.set('n', '<leader>fF', function ()
+      vscode.action('find-it-faster.findFilesWithType')
+    end, { desc = '[VSCode] Search word under the cursor', noremap = true })
+    vim.keymap.set('n', '<leader>fG', function ()
+      vscode.action('find-it-faster.findWithinFilesWithType')
+    end, { desc = '[VSCode] Search word under the cursor', noremap = true })
+    vim.keymap.set('n', '<leader>fn', function ()
+      vscode.action('find-it-faster.resumeSearch')
+    end, { desc = '[VSCode] Search word under the cursor', noremap = true })
+
     -- Move cursor to position on screen
     vim.keymap.set('n', 'zz', function ()
       vscode.action('revealLine', { args = { at = 'center', lineNumber = vim.api.nvim_win_get_cursor(0)[1] } })
@@ -379,6 +396,18 @@ return {
       desc = '[VSCode] Open signature helpt',
     })
 
+
+    -- Git management
+    vim.keymap.set('n', '<leader>gg', function ()
+      vscode.call('runCommands', {
+        args = {
+          commands = { 'workbench.view.scm', 'workbench.scm.focus' }
+        }
+      })
+    end, {
+      noremap = true,
+      desc = '[VSCode] Open signature helpt',
+    })
   end,
 
   set_repeatable = function()
