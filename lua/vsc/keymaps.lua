@@ -40,14 +40,14 @@ return {
     -- vim.keymap.set('v', '<C-s>', ':<C-u>w<CR>', { desc = 'Save buffer with ctrl-s', noremap = true })
     -- vim.keymap.set('c', '<C-s>', '<C-u>w<CR>', { desc = 'Save buffer with ctrl-s', noremap = true })
 
-    local upScrollCallback = function ()
+    local upScrollCallback = function()
       require('utils.scroll').scroll_up()
     end
-    local downScrollCallback = function ()
+    local downScrollCallback = function()
       require('utils.scroll').scroll_down()
     end
 
-    vim.keymap.set({'n', 'v'}, '<S-down>', downScrollCallback, {
+    vim.keymap.set({ 'n', 'v' }, '<S-down>', downScrollCallback, {
       desc = '[VSCode] Scroll down (shift-d)',
       noremap = true,
     })
@@ -59,11 +59,17 @@ return {
 
     -- Move to line displayed in context of sticky scroll
     vim.keymap.set({ 'n' }, '<leader>cu', function()
-      vscode.call('editor.action.focusStickyScroll')
-      vscode.action('editor.action.goToFocusedStickyScrollLine')
+      vscode.action('runCommands', {
+        args = {
+          commands = {
+            'editor.action.focusStickyScroll',
+            'editor.action.goToFocusedStickyScrollLine',
+          }
+        }
+      })
     end, { noremap = true, desc = '[VSCode] Go context up' })
 
-    vim.keymap.set('n', '<leader>ct', function ()
+    vim.keymap.set('n', '<leader>ct', function()
       vscode.action('editor.action.toggleStickyScroll')
     end, { noremap = true, desc = '[VSCode] Toggle sticky scrol' })
 
@@ -119,6 +125,7 @@ return {
       desc = '[VSCode] Reveal definition in vertical split',
       noremap = true,
     })
+
 
     -- Format document
     vim.keymap.set('n', '<space>f', function()
@@ -284,26 +291,33 @@ return {
       desc = '[VSCode] Show symbols',
       noremap = true,
     })
-    vim.keymap.set({ 'n', 'x' }, '<leader>sc', function()
+    -- Show calls
+    vim.keymap.set({ 'n', 'x' }, '<space>cs', function()
       vscode.action('editor.showCallHierarchy')
     end, {
       desc = '[VSCode] Show call hierarchy',
       noremap = true,
     })
-    vim.keymap.set('n', '<space>sw', function ()
+    vim.keymap.set('n', '<space>ci', function ()
+      vscode.action('editor.showIncomingCalls')
+    end, { desc = '[VSCode]: Incoming Calls', noremap = true })
+    vim.keymap.set('n', '<space>co', function ()
+      vscode.action('editor.showOutgoingCalls')
+    end, { desc = '[VSCode]: Outgoing Calls', noremap = true })
+    vim.keymap.set('n', '<space>sw', function()
       vscode.action('workbench.action.showAllSymbols')
     end, {
       desc = '[VSCode] Show workspace symbols',
       noremap = true,
     })
 
-    vim.keymap.set('n', '<space>df', function ()
+    vim.keymap.set('n', '<space>df', function()
       vscode.action('editor.action.peekDefinition')
     end, {
       noremap = true,
       desc = '[VSCode] Peek symbol definition'
     })
-    vim.keymap.set('n', '<space>dF', function ()
+    vim.keymap.set('n', '<space>dF', function()
       -- vscode.action('editor.action.peekDeclaration')
       vscode.action('editor.action.peekTypeDefinition')
     end, {
@@ -311,7 +325,7 @@ return {
       desc = '[VSCode] Peek symbol declaration'
     })
 
-    vim.keymap.set('n', '<space>D', function ()
+    vim.keymap.set('n', '<space>D', function()
       vscode.action('editor.action.goToTypeDefinition')
     end, {
       noremap = true,
@@ -324,64 +338,64 @@ return {
     -- vim.keymap.set('n', '<c-o><c-o>', '<c-o>', { desc = 'Regular <c-o> or jumplist backwards', noremap = true })
     -- vim.keymap.set('n', '<c-o><esc>', '<esc>', { desc = 'Placeholder to cancel O-pending mode', noremap = true })
 
-    vim.keymap.set('n', '<leader>fr', function ()
+    vim.keymap.set('n', '<leader>fr', function()
       vscode.action('workbench.action.findInFiles', {
         args = {
           query = vim.fn.expand('<cword>') or ''
         }
       })
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
-    vim.keymap.set('v', '<leader>fr', function ()
+    vim.keymap.set('v', '<leader>fr', function()
       vscode.action('workbench.action.findInFiles')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
 
     -- Find-it-faster helpers
-    vim.keymap.set('n', '<leader>ff', function ()
+    vim.keymap.set('n', '<leader>ff', function()
       vscode.action('find-it-faster.findFiles')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
-    vim.keymap.set('n', '<leader>fg', function ()
+    vim.keymap.set('n', '<leader>fg', function()
       vscode.action('find-it-faster.findWithinFiles')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
-    vim.keymap.set('n', '<leader>fF', function ()
+    vim.keymap.set('n', '<leader>fF', function()
       vscode.action('find-it-faster.findFilesWithType')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
-    vim.keymap.set('n', '<leader>fG', function ()
+    vim.keymap.set('n', '<leader>fG', function()
       vscode.action('find-it-faster.findWithinFilesWithType')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
-    vim.keymap.set('n', '<leader>fn', function ()
+    vim.keymap.set('n', '<leader>fn', function()
       vscode.action('find-it-faster.resumeSearch')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
 
     -- Move cursor to position on screen
-    vim.keymap.set('n', 'zz', function ()
+    vim.keymap.set('n', 'zz', function()
       vscode.action('revealLine', { args = { at = 'center', lineNumber = vim.api.nvim_win_get_cursor(0)[1] } })
     end, { desc = '[VSCode] Move cursor to the center of the screen', noremap = true })
-    vim.keymap.set('n', 'zt', function ()
+    vim.keymap.set('n', 'zt', function()
       vscode.action('revealLine', { args = { at = 'top', lineNumber = vim.api.nvim_win_get_cursor(0)[1] } })
     end, { desc = '[VSCode] Move cursor to the top of the screen', noremap = true })
-    vim.keymap.set('n', 'zb', function ()
+    vim.keymap.set('n', 'zb', function()
       vscode.action('revealLine', { args = { at = 'bottom', lineNumber = vim.api.nvim_win_get_cursor(0)[1] } })
     end, { desc = '[VSCode] Move cursor to the bottom of the screen', noremap = true })
 
     -- Hunk diff
-    vim.keymap.set('n', '<leader>hd', function ()
+    vim.keymap.set('n', '<leader>hd', function()
       vscode.action('git.openChange')
     end, { desc = '[VSCode] Diff hunk', noremap = true })
 
     -- Errors in vscode show with hover rather than a
     -- separate action, so map this one as well
-    vim.keymap.set({ 'n', 'x' }, '<space>e', function ()
+    vim.keymap.set({ 'n', 'x' }, '<space>e', function()
       vscode.action('editor.action.showHover')
     end, { desc = '[VSCode] Show error window', noremap = true })
-    vim.keymap.set({ 'n' }, '<space>q', function ()
+    vim.keymap.set({ 'n' }, '<space>q', function()
       vscode.action('workbench.actions.view.problems')
     end, { desc = '[VSCode] Show problems and warnings', noremap = true })
-    vim.keymap.set({ 'n' }, '<space>l', function ()
+    vim.keymap.set({ 'n' }, '<space>l', function()
       vscode.action('workbench.actions.view.problems')
     end, { desc = '[VSCode] Show problems and warnings', noremap = true })
 
 
-    vim.keymap.set('n', '<leader>ve', function ()
+    vim.keymap.set('n', '<leader>ve', function()
       vscode.action('workbench.view.explorer')
     end, {
       noremap = true,
@@ -389,7 +403,7 @@ return {
     })
 
     -- Signature help
-    vim.keymap.set('n', '<C-k>', function ()
+    vim.keymap.set('n', '<C-k>', function()
       vscode.call('editor.action.triggerParameterHints')
     end, {
       noremap = true,
@@ -398,11 +412,11 @@ return {
 
 
     -- Git management
-    vim.keymap.set('n', '<leader>gg', function ()
+    vim.keymap.set('n', '<leader>gg', function()
       vscode.call('runCommands', {
         args = {
           commands = { 'workbench.view.scm', 'workbench.scm.focus' }
-        }
+        },
       })
     end, {
       noremap = true,
@@ -416,7 +430,7 @@ return {
     local repeat_action = repeat_motion.create_repeatable_func
 
     -- Hunk stage
-    vim.keymap.set('n', '<leader>hs', repeat_action(function ()
+    vim.keymap.set('n', '<leader>hs', repeat_action(function()
       require('utils.gitvscode').stage_hunk_under_cursor()
     end), { desc = '[VSCode] Stage hunk', noremap = true })
     vim.keymap.set('v', '<leader>hs', repeat_action(function()
@@ -426,7 +440,7 @@ return {
         restore_selection = true,
       })
     end), { desc = '[VSCode] Stage hunk', noremap = true })
-    vim.keymap.set('n', '<leader>hS', repeat_action(function ()
+    vim.keymap.set('n', '<leader>hS', repeat_action(function()
       vscode.action('git.stage')
     end), { desc = '[VSCode] Stage buffer', noremap = true })
 
@@ -455,16 +469,16 @@ return {
     end), { desc = '[VSCode] Revert buffer', noremap = true })
 
     -- Hunk preview next
-    local hunkPreviewNext = function ()
+    local hunkPreviewNext = function()
       vscode.action('editor.action.dirtydiff.next')
     end
     -- Hunk preview prev
-    local hunkPreviewPrev = function ()
+    local hunkPreviewPrev = function()
       vscode.action('editor.action.dirtydiff.previous')
     end
 
     repeat_pair({
-      keys = {'p', 'P'},
+      keys = { 'p', 'P' },
       desc_forward = '[VSCode] Preview next hunk',
       desc_backward = '[VSCode] Preview previous hunk',
       on_forward = hunkPreviewNext,
@@ -674,12 +688,12 @@ return {
 
 
     -- Move to next error in files
-    local next_search_result = function()
+    local next_diagnostic_result = function()
       for _ in pairs(vim.fn.range(1, vim.v.count1)) do
         vscode.action('editor.action.marker.nextInFiles')
       end
     end
-    local previous_search_result = function()
+    local previous_diagnostic_result = function()
       for _ in pairs(vim.fn.range(1, vim.v.count1)) do
         vscode.action('editor.action.marker.prevInFiles')
       end
@@ -687,32 +701,32 @@ return {
 
     repeat_pair({
       keys = 'l',
-      on_forward = next_search_result,
-      on_backward = previous_search_result,
+      on_forward = next_diagnostic_result,
+      on_backward = previous_diagnostic_result,
       desc_forward = '[VSCode] Go to next error in files',
       desc_backward = '[VSCode] Go to previous error in files',
     })
 
 
     -- Duplicate comment keymap
-    local duplicate_and_comment = repeat_action(function ()
+    local duplicate_and_comment = repeat_action(function()
       vim.cmd([[:t.]])
       vim.cmd.normal('k')
       -- vscode.call('editor.action.commentLine')
       local line = vim.fn.line('.') - 1 -- 0-indexed
       vscode.action('editor.action.commentLine', {
         range = { line, line },
-        callback = function ()
+        callback = function()
           vim.cmd.normal('j')
         end,
       })
     end)
-    local duplicate_and_comment_up = repeat_action(function ()
+    local duplicate_and_comment_up = repeat_action(function()
       vim.cmd([[:t.]])
       local line = vim.fn.line('.') - 1 -- 0-indexed
       vscode.action('editor.action.commentLine', {
         range = { line, line },
-        callback = function ()
+        callback = function()
           vim.cmd.normal('k')
         end
       })
@@ -726,7 +740,6 @@ return {
       desc = '[Comment] Duplicate line, comment new',
       noremap = true,
     })
-
   end,
 
   -- Currently not in use.
@@ -825,4 +838,3 @@ return {
     end, { desc = '[TS] Previous start/end', noremap = true })
   end
 }
-
