@@ -238,26 +238,27 @@ return {
     --     endfor
     -- endfunction
 
-    vim.keymap.set(nx, '<A-j>', function()
-      vscode.action('workbench.action.navigateDown')
-    end, {
-      desc = '[VSCode] Navigate to down window',
-    })
-    vim.keymap.set(nx, '<A-k>', function()
-      vscode.action('workbench.action.navigateUp')
-    end, {
-      desc = '[VSCode] Navigate to up window',
-    })
-    vim.keymap.set(nx, '<A-h>', function()
-      vscode.action('workbench.action.navigateLeft')
-    end, {
-      desc = '[VSCode] Navigate to left window',
-    })
-    vim.keymap.set(nx, '<A-l>', function()
-      vscode.action('workbench.action.navigateRight')
-    end, {
-      desc = '[VSCode] Navigate to right window',
-    })
+    -- Moved to vscode config
+    -- vim.keymap.set(nx, '<A-j>', function()
+    --   vscode.action('workbench.action.navigateDown')
+    -- end, {
+    --   desc = '[VSCode] Navigate to down window',
+    -- })
+    -- vim.keymap.set(nx, '<A-k>', function()
+    --   vscode.action('workbench.action.navigateUp')
+    -- end, {
+    --   desc = '[VSCode] Navigate to up window',
+    -- })
+    -- vim.keymap.set(nx, '<A-h>', function()
+    --   vscode.action('workbench.action.navigateLeft')
+    -- end, {
+    --   desc = '[VSCode] Navigate to left window',
+    -- })
+    -- vim.keymap.set(nx, '<A-l>', function()
+    --   vscode.action('workbench.action.navigateRight')
+    -- end, {
+    --   desc = '[VSCode] Navigate to right window',
+    -- })
 
     -- Move next buffer
     vim.keymap.set('n', '<Tab>', function()
