@@ -1,6 +1,8 @@
+local stylua_present = vim.fn.executable('stylua') == 1
+
 ---@type vim.lsp.Config
 return {
-  cmd = function(dispatchers)
+  cmd = stylua_present and function(dispatchers)
     local cmd = {
       'stylua',
       '--lsp',
@@ -18,7 +20,7 @@ return {
     end
 
     return vim.lsp.rpc.start(cmd, dispatchers)
-  end,
+  end or {},
   -- cmd = { 'stylua', '--lsp' },
   filetypes = { 'lua' },
   root_markers = { '.stylua.toml', 'stylua.toml', '.editorconfig' },
