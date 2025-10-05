@@ -2,6 +2,8 @@
 
 local vscode = require('vscode')
 local nx = { 'n', 'x' }
+local xo = { 'x', 'o' }
+local nxo = { 'n', 'x', 'o' }
 
 return {
   set_default = function()
@@ -696,5 +698,101 @@ return {
     })
 
   end,
+
+  -- Currently not in use.
+  -- Kept as fallback if modules fail in vscode mode
+  treesiter = function()
+    -- keymaps "Select"
+    vim.keymap.set(xo, 'agb', function()
+      require('nvim-treesitter-textobjects.select').select_textobject('@block.outer', 'textobjects')
+    end, { desc = '[TS] Select a block', noremap = true })
+    vim.keymap.set(xo, 'igb', function()
+      require('nvim-treesitter-textobjects.select').select_textobject('@block.inner', 'textobjects')
+    end, { desc = '[TS] Select inner function', noremap = true })
+    vim.keymap.set(xo, 'af', function()
+      require('nvim-treesitter-textobjects.select').select_textobject('@function.outer', 'textobjects')
+    end, { desc = '[TS] Select a function', noremap = true })
+    vim.keymap.set(xo, 'if', function()
+      require('nvim-treesitter-textobjects.select').select_textobject('@function.inner', 'textobjects')
+    end, { desc = '[TS] Select inner function', noremap = true })
+    vim.keymap.set(xo, 'ac', function()
+      require('nvim-treesitter-textobjects.select').select_textobject('@class.outer', 'textobjects')
+    end, { desc = '[TS] Select a class', noremap = true })
+    vim.keymap.set(xo, 'ic', function()
+      require('nvim-treesitter-textobjects.select').select_textobject('@class.inner', 'textobjects')
+    end, { desc = '[TS] Select inner part of a class region', noremap = true })
+    vim.keymap.set(xo, 'as', function()
+      -- You can also use captures from other query groups like `locals.scm`
+      require('nvim-treesitter-textobjects.select').select_textobject('@local.scope', 'locals')
+    end, { desc = '[TS] Select language scope', noremap = true })
+
+
+    -- keymaps "Move"
+    -- goto next start
+    vim.keymap.set(nxo, ']m', function()
+      require('nvim-treesitter-textobjects.move').goto_next_start('@function.outer', 'textobjects')
+    end, { desc = '[TS] Next function start', noremap = true })
+    vim.keymap.set(nxo, ']]', function()
+      require('nvim-treesitter-textobjects.move').goto_next_start('@class.outer', 'textobjects')
+    end, { desc = '[TS] Next class start', noremap = true })
+    vim.keymap.set(nxo, ']k', function()
+      require('nvim-treesitter-textobjects.move').goto_next_start('@block.*', 'textobjects')
+    end, { desc = '[TS] Next block start', noremap = true })
+    vim.keymap.set(nxo, ']C', function()
+      require('nvim-treesitter-textobjects.move').goto_next_start('@comment.outer', 'textobjects')
+    end, { desc = '[TS] Next comment start', noremap = true })
+    vim.keymap.set(nxo, ']f', function()
+      require('nvim-treesitter-textobjects.move').goto_next_start('@local.scope', 'locals')
+    end, { desc = '[TS] Next scope', noremap = true })
+
+    -- goto next end
+    vim.keymap.set(nxo, ']M', function()
+      require('nvim-treesitter-textobjects.move').goto_next_end('@function.outer', 'textobjects')
+    end, { desc = '[TS] Next function end', noremap = true })
+    vim.keymap.set(nxo, '][', function()
+      require('nvim-treesitter-textobjects.move').goto_next_end('@class.outer', 'textobjects')
+    end, { desc = '[TS] Next class end', noremap = true })
+    vim.keymap.set(nxo, ']K', function()
+      require('nvim-treesitter-textobjects.move').goto_next_end('@block.outer', 'textobjects')
+    end, { desc = '[TS] Next block end', noremap = true })
+
+    -- goto previous start
+    vim.keymap.set(nxo, '[m', function()
+      require('nvim-treesitter-textobjects.move').goto_previous_start('@function.outer', 'textobjects')
+    end, { desc = '[TS] Previous function start', noremap = true })
+    vim.keymap.set(nxo, '[[', function()
+      require('nvim-treesitter-textobjects.move').goto_previous_start('@class.outer', 'textobjects')
+    end, { desc = '[TS] Previous class start', noremap = true })
+    vim.keymap.set(nxo, '[k', function()
+      require('nvim-treesitter-textobjects.move').goto_previous_start('@block.*', 'textobjects')
+    end, { desc = '[TS] Previous block start', noremap = true })
+    vim.keymap.set(nxo, '[C', function()
+      require('nvim-treesitter-textobjects.move').goto_previous_start('@comment.outer', 'textobjects')
+    end, { desc = '[TS] Previous comment start', noremap = true })
+    vim.keymap.set(nxo, '[f', function()
+      require('nvim-treesitter-textobjects.move').goto_previous_start('@local.scope', 'locals')
+    end, { desc = '[TS] Previous scope', noremap = true })
+
+    -- goto previous end
+    vim.keymap.set(nxo, '[M', function()
+      require('nvim-treesitter-textobjects.move').goto_previous_end('@function.outer', 'textobjects')
+    end, { desc = '[TS] Previous function end', noremap = true })
+    vim.keymap.set(nxo, '[]', function()
+      require('nvim-treesitter-textobjects.move').goto_previous_end('@class.outer', 'textobjects')
+    end, { desc = '[TS] Previous class end', noremap = true })
+    vim.keymap.set(nxo, '[K', function()
+      require('nvim-treesitter-textobjects.move').goto_previous_end('@block.outer', 'textobjects')
+    end, { desc = '[TS] Previous block end', noremap = true })
+
+
+    -- Go to either the start or the end, whichever is closer.
+    -- Use if you want more granular movements
+    vim.keymap.set(nxo, ']x', function()
+      require('nvim-treesitter-textobjects.move').goto_next('@conditional.outer', 'textobjects')
+    end, { desc = '[TS] Next start/end', noremap = true })
+    vim.keymap.set(nxo, '[x', function()
+      require('nvim-treesitter-textobjects.move').goto_previous('@conditional.outer', 'textobjects')
+    end, { desc = '[TS] Previous start/end', noremap = true })
+  end
 }
 

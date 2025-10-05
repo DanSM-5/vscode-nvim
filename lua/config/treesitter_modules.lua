@@ -6,6 +6,7 @@ return {
     local diagnostics = require('lib.treesitter.diagnostics')
 
     local disable_vscode = vim.g.vscode ~= 1
+    -- textobjects.setup({ enable = disable_vscode, disable = false })
     textobjects.setup({ enable = true, disable = false })
     fold_ui.setup({ enable = disable_vscode, disable = false })
     fold_text.setup({ enable = disable_vscode, disable = false })
