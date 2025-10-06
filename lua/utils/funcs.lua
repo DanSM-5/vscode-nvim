@@ -50,13 +50,18 @@ local git_path = function(path)
 
   local expanded = vim.fn.expand('%:p:h')
 
-  if vim.fn.has('win32') then
+  if vim.fn.has('win32') == 1 then
     -- Get file, it will return matches if in vscode-remote extension
     local match, matches = expanded:gsub('%%2B', '.'):gsub('vscode%-remote://wsl%.', '')
     if matches > 0 then
       -- in vscode, add prefix
       expanded = '//wsl.localhost/' .. match
     end
+  elseif vim.fn.has('wsl') == 1 then
+    -- TODO: Pending for revision last regext segment
+    local match, _ = expanded:gsub('%%2B', '.'):gsub('vscode%-remote://wsl%.', ''):gsub('^[a-zA-Z]+/', '/')
+
+    expanded = match
   end
 
   local buffpath = vim.fn.substitute(vim.trim(expanded), '\\', '/', 'g')

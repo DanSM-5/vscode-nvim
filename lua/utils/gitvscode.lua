@@ -360,7 +360,7 @@ end
 local get_file = function (buf)
   local path = vim.api.nvim_buf_get_name(buf or 0)
 
-  if vim.fn.has('win32') then
+  if vim.fn.has('win32') == 1 then
     -- Get file, it will return matches if in vscode-remote extension
     local file, matches = path:gsub('%%2B', '.'):gsub('vscode%-remote://wsl%.', '')
     if matches > 0 then
@@ -369,6 +369,11 @@ local get_file = function (buf)
     end
 
     file = vim.trim(file:gsub('\\', '/'))
+
+    return file
+  elseif vim.fn.has('wsl') == 1 then
+    -- TODO: Pending for revision last regext segment
+    local file, _ = path:gsub('%%2B', '.'):gsub('vscode%-remote://wsl%.', ''):gsub('^[a-zA-Z]+/', '/')
 
     return file
   end
