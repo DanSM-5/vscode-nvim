@@ -4,6 +4,7 @@ return {
     local fold_ui = require('lib.treesitter.fold_ui')
     local fold_text = require('lib.treesitter.fold_text')
     local diagnostics = require('lib.treesitter.diagnostics')
+    local lsp_interop = require('lib.treesitter.lsp_interop')
 
     local disable_vscode = vim.g.vscode ~= 1
     -- textobjects.setup({ enable = disable_vscode, disable = false })
@@ -11,12 +12,28 @@ return {
     fold_ui.setup({ enable = disable_vscode, disable = false })
     fold_text.setup({ enable = disable_vscode, disable = false })
     diagnostics.setup({ enable = true, disable = true })
+    lsp_interop.setup({
+      enable = disable_vscode,
+      disable = false,
+      data = {
+        dot_repeatable = true,
+        keymap_modes = { 'n', 'x' },
+        keymaps_per_buf = {
+          ['<space>df'] = '@function.outer',
+          ['<space>dF'] = '@class.outer',
+        },
+        floating_preview_opts = {
+          border = 'rounded',
+        },
+      },
+    })
 
     local manager = require('treesitter-modules.core.manager')
     table.insert(manager.modules, textobjects)
     table.insert(manager.modules, fold_ui)
     table.insert(manager.modules, fold_text)
     table.insert(manager.modules, diagnostics)
+    table.insert(manager.modules, lsp_interop)
 
     require('treesitter-modules').setup({
       -- list of parser names, or 'all', that must be installed
