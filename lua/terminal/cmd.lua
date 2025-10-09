@@ -173,6 +173,35 @@ local register = function()
   vim.api.nvim_create_user_command('LF', function(opts)
     require('lib.lf').lf(opts.fargs[1], opts.bang)
   end, { force = true, bar = true, nargs = '?', complete = 'dir', bang = true })
+
+  vim.api.nvim_create_user_command('FunctionReferences', function(cmd_opts)
+    local Hierarchy = require('lib.hierarchy')
+    local depth = Hierarchy.depth
+    local direction = 'outcoming'
+    if cmd_opts.args and cmd_opts.args ~= '' then
+      local args = vim.split(cmd_opts.args, ' ')
+      direction = args[1] and args[1]:lower()
+      depth = tonumber(args[2]) or Hierarchy.depth
+    end
+
+    Hierarchy.find_recursive_calls(direction, depth)
+  end, {
+    nargs = '?',
+    desc = '[Hierarchy] Find function references recursively. Usage: FunctionReferences [incoming|outcoming] [depth]',
+    complete = function(param, cmd)
+      if #vim.split(cmd, ' ') > 2 then
+        return
+      end
+
+      local options = { 'incoming', 'outcoming' }
+      local matched = vim.tbl_filter(function(option)
+        local _, matches = string.gsub(option, '^' .. param, '')
+        return matches > 0
+      end, options)
+
+      return #matched > 0 and matched or options
+    end,
+  })
 end
 
 return {

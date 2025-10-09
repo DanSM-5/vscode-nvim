@@ -61,7 +61,7 @@ local set_lsp_keys = function(client, bufnr)
       opts.desc = desc
     end
 
-    vim.keymap.set(mode, key, func, opts)
+    pcall(vim.keymap.set, mode, key, func, opts)
   end
 
   set_map('n', '<space>td', function()
@@ -131,6 +131,17 @@ local set_lsp_keys = function(client, bufnr)
   set_map('n', 'gO', function()
     vim.lsp.buf.document_symbol({})
   end, '[Lsp] Open document symbols')
+
+  if client:supports_method('textDocument/prepareCallHierarchy') then
+    set_map({ 'n', 'x' }, '<space>cs', function ()
+      local hierarchy = require('lib.hierarchy')
+      hierarchy.find_recursive_calls('outcoming', hierarchy.depth, client)
+    end, '[Hierarchy] Open [outcoming] call hierarchy of function under cursor')
+    set_map({ 'n', 'x' }, '<space>cS', function ()
+      local hierarchy = require('lib.hierarchy')
+      hierarchy.find_recursive_calls('incoming', hierarchy.depth, client)
+    end, '[Hierarchy] Open [incoming] call hierarchy of function under cursor')
+  end
 
   if client:supports_method('textDocument/documentHighlight', buf) then
     set_map(nxo, ']r', function()
