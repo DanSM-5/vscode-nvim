@@ -1,10 +1,10 @@
----@class (exact) ts.mod.fold.Config: ts.mod.module.Config
+---@class (exact) ts.mod.fold_text.Config: ts.mod.module.Config
 
----@class ts.mod.Fold: ts.mod.Module
----@field private config ts.mod.fold.Config
+---@class ts.mod.fold_text: ts.mod.Module
+---@field private config ts.mod.fold_text.Config
 local Module = {}
 
----@type ts.mod.fold.Config
+---@type ts.mod.fold_text.Config
 Module.config = {
   enable = false,
   disable = false,
@@ -19,7 +19,7 @@ Module.methods = {}
 Module.expressions = {}
 
 ---called from state on setup
----@param config ts.mod.fold.Config
+---@param config ts.mod.fold_text.Config
 function Module.setup(config)
   Module.config = config
 end
