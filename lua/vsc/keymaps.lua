@@ -7,6 +7,26 @@ local nxo = { 'n', 'x', 'o' }
 
 return {
   set_default = function()
+
+    ---Move in the jumplist by count
+    ---@param forward boolean direction to move in jumplist
+    local jumplist = function(forward)
+      local count = vim.v.count1
+      local action = forward and 'workbench.action.navigateForward' or 'workbench.action.navigateBack'
+
+      for index = 1, count do
+        vscode.action(action)
+      end
+    end
+
+    vim.keymap.set('n', '<A-o>', function ()
+      jumplist(false)
+    end, { silent = true, noremap = true, desc = 'Jumplist older' })
+    vim.keymap.set('n', '<A-i>', function ()
+      jumplist(true)
+    end, { silent = true, noremap = true, desc = 'Jumplist older' })
+
+
     -- Vim commentary emulation
     -- vim.keymap.set('x', 'gc', '<Plug>VSCodeCommentary', {
     --   desc = '[VSCommentary]: Start comment action with word objects',
