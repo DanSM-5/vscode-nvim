@@ -6,12 +6,8 @@ local register = function()
   local create_dot_map = repeat_motion.repeat_dot_map
 
   -- Move in jumplist
-  vim.keymap.set('n', '<A-i>', function ()
-    return vim.v.count1 .. '<C-i>'
-  end, { desc = 'Jumplist newer', expr = true })
-  vim.keymap.set('n', '<A-o>', function ()
-    return vim.v.count1 .. '<C-o>'
-  end, { desc = 'Jumplist older', expr = true })
+  vim.keymap.set('n', '<A-i>', '<C-i>', { desc = 'Jumplist newer' })
+  vim.keymap.set('n', '<A-o>', '<C-o>', { desc = 'Jumplist older' })
 
   vim.keymap.set('x', '<A-up>', function ()
     return ":m '<-" .. (vim.v.count1 + 1) .. '<CR>gv=gv'
