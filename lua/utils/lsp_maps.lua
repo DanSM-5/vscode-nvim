@@ -6,6 +6,7 @@ local exclude_filetypes = {
 }
 
 local nxo = { 'n', 'x', 'o' }
+local first_refjump_call = false
 
 ---Get the function for on_forward and on_backward
 ---@param forward boolean If to move forward or backward
@@ -14,13 +15,18 @@ local ref_jump = function(forward, client_id)
   ---References cache
   ---@type RefjumpReference[]?
   local references
+  local refjump = require('lib.refjump')
+  if first_refjump_call == false then
+    first_refjump_call = true
+    refjump.start_hl()
+  end
 
   -- NOTE: It is important to make only this part repeatable and not the whole keymap
   -- so that references will be a brand new reference variable but
   -- it will have the cached references if repeating the motion
   require('utils.repeat_motion').repeat_direction({
     fn = function(opts)
-      require('lib.refjump').reference_jump(opts, references, client_id, function(refs)
+      refjump.reference_jump(opts, references, client_id, function(refs)
         references = refs
       end)
     end,
@@ -80,8 +86,16 @@ local set_lsp_keys = function(client, bufnr)
   end, '[Lsp]: Toggle virtual lines diagnostics show current line')
   -- Buffer local mappings.
   -- See `:help vim.lsp.*` for documentation on any of the below functions
-  set_map('n', 'gD', vim.lsp.buf.declaration, '[Lsp]: Go to declaration')
-  set_map('n', 'gd', vim.lsp.buf.definition, '[Lsp]: Go to definition')
+  set_map('n', 'gD', function ()
+    -- local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      -- fzflsp
+    end
+    vim.lsp.buf.declaration()
+  end, '[Lsp]: Go to declaration')
+  set_map('n', 'gd', function ()
+    vim.lsp.buf.definition()
+  end, '[Lsp]: Go to definition')
   set_map('n', '<space>ds', function()
     vim.cmd.split()
     vim.lsp.buf.definition()
