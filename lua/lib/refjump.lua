@@ -2,18 +2,74 @@
 
 ---Used to keep track of if LSP reference highlights should be enabled
 local highlight_references = false
-local highlight_namespace = vim.api.nvim_create_namespace('RefjumpReferenceHighlights')
+
+local RefjumpReferenceHighlights = 'RefjumpReferenceHighlights'
+
+local highlight_namespace = vim.api.nvim_create_namespace(RefjumpReferenceHighlights)
+
 local reference_hl_name = 'RefjumpReference'
+
+local clear_hl_group = vim.api.nvim_create_augroup(RefjumpReferenceHighlights, { clear = true })
+local hl_clear_events = { 'CursorMoved', 'ModeChanged', 'BufLeave' }
+
+-- Start highlights
+
+local hl_started = false
+
 
 local function create_fallback_hl_group(fallback_hl)
   local hl = vim.api.nvim_get_hl(0, { name = reference_hl_name })
 
   if vim.tbl_isempty(hl) then
     vim.api.nvim_set_hl(0, reference_hl_name, { link = fallback_hl })
+
+    -- NOTE: Debug highlight code
+    -- vim.api.nvim_set_hl(0, reference_hl_name, {
+    --   ctermbg = 64,
+    --   ctermfg = 186,
+    --   fg = '#d7d787',
+    --   bg = '#5f8700',
+    -- })
   end
 end
 
-local function hl_enable(references, bufnr)
+local function hl_disable()
+  if not highlight_references then
+    return
+  end
+
+  vim.api.nvim_buf_clear_namespace(0, highlight_namespace, 0, -1)
+  highlight_references = false
+end
+
+local function register_clear_hl()
+  vim.api.nvim_create_autocmd(hl_clear_events, {
+    callback = function (evt)
+      hl_disable()
+      -- once this fire on any event clear all others too to prevent conflicts
+      vim.api.nvim_clear_autocmds({ group = clear_hl_group, event = hl_clear_events })
+    end,
+    group = clear_hl_group,
+    once = true,
+  })
+end
+
+---Enable word highlight
+---@param references RefjumpReference[] List of cached references
+---@param bufnr integer buffer to apply the highlight to. 0 for current buffer.
+---@param cache boolean If moving to reference from cache
+local function hl_enable(references, bufnr, cache)
+  if not hl_started then
+    return
+  end
+
+  -- When using cache we don't need to clear the highlights to prevent blinking
+  -- and we want to clear the hl event before adding a new one
+  if not cache then
+    hl_disable()
+    vim.api.nvim_clear_autocmds({ group = clear_hl_group, event = hl_clear_events })
+  end
+
   for _, ref in ipairs(references) do
     local line = ref.range.start.line
     local start_col = ref.range.start.character
@@ -29,21 +85,17 @@ local function hl_enable(references, bufnr)
   end
 
   highlight_references = true
-end
+  ---@type uv_timer_t
+  local timer = vim.uv.new_timer()
+  local cb = vim.schedule_wrap(function ()
+    register_clear_hl()
+  end)
 
----@deprecated Use `hl_enable()` instead
--- local function enable_reference_highlights(references, bufnr)
---   local message = 'refjump.nvim: `enable_reference_highlights()` has been renamed to `hl_enable()`'
---   vim.notify(message, vim.log.levels.WARN)
---   hl_enable(references, bufnr)
--- end
-
-local function hl_disable()
-  if not highlight_references then
-    vim.api.nvim_buf_clear_namespace(0, highlight_namespace, 0, -1)
-  else
-    highlight_references = false
-  end
+  timer:start(100, 0, function ()
+    timer:stop()
+    timer:close()
+    cb()
+  end)
 end
 
 ---@deprecated Use `hl_disable()` instead
@@ -53,7 +105,6 @@ end
 --   hl_disable()
 -- end
 
-local clear_hl_group = vim.api.nvim_create_augroup('RefjumpReferenceHighlights', { clear = true })
 
 local function auto_clear_reference_highlights()
   vim.api.nvim_create_autocmd({ 'CursorMoved', 'ModeChanged', 'BufLeave' }, {
@@ -119,7 +170,7 @@ local function jump_to(next_reference, encoding)
   -- perhaps it should be calculated dynamically?
 
   -- vim.lsp.util.jump_to_location(next_location, encoding)
-  vim.lsp.util.show_document(next_location, encoding, { focus = true })
+  vim.lsp.util.show_document(next_location, encoding, { focus = true, reuse_win = true })
 
   -- Open folds if the reference is inside a fold
   vim.cmd('normal! zv')
@@ -147,7 +198,8 @@ end
 ---@param count integer
 ---@param current_position integer[]
 ---@param encoding string
-local function jump_to_next_reference_and_highlight(references, forward, count, current_position, encoding)
+---@param cache boolean true if using cached references
+local function jump_to_next_reference_and_highlight(references, forward, count, current_position, encoding, cache)
   local next_reference = find_next_reference(references, forward, count, current_position)
   jump_to_next_reference(next_reference, forward, references, encoding)
 
@@ -155,7 +207,9 @@ local function jump_to_next_reference_and_highlight(references, forward, count, 
   --   require('refjump.highlight').enable(references, 0)
   -- end
 
-  hl_enable(references, 0)
+  vim.schedule(function ()
+    hl_enable(references, 0, cache)
+  end)
 end
 
 ---Move cursor from `current_position` to the next LSP reference in the current
@@ -182,7 +236,12 @@ local function reference_jump_from(current_position, opts, count, references, cl
 
   -- If references have already been computed (i.e. we're repeating the jump)
   if references then
-    jump_to_next_reference_and_highlight(references, opts.forward, count, current_position, encoding)
+    -- Clear pending hl_disable call registrations on cached references before
+    -- requesting the jump or the jump will trigger before event is cleared in the
+    -- hl_enable function. This prevents blicking when repeating.
+    vim.api.nvim_clear_autocmds({ group = clear_hl_group, event = hl_clear_events })
+
+    jump_to_next_reference_and_highlight(references, opts.forward, count, current_position, encoding, true)
     return
   end
 
@@ -205,7 +264,7 @@ local function reference_jump_from(current_position, opts, count, references, cl
       return a.range.start.line < b.range.start.line
     end)
 
-    jump_to_next_reference_and_highlight(refs, opts.forward, count, current_position, encoding)
+    jump_to_next_reference_and_highlight(refs, opts.forward, count, current_position, encoding, false)
 
     if with_references then
       with_references(refs)
@@ -240,37 +299,68 @@ end
 ---@param client_id integer client id of the lsp
 ---@param with_references? fun(refs: RefjumpReference[]) Called if `references` is `nil` with LSP references for item at `current_position`
 local function reference_jump(opts, references, client_id, with_references)
+  -- local compatible_lsp_clients = vim.lsp.get_clients({
+  --   method = 'textDocument/documentHighlight',
+  -- })
+
   local current_position = vim.api.nvim_win_get_cursor(0)
   local count = vim.v.count1
   reference_jump_from(current_position, opts, count, references, client_id, with_references)
 end
 
--- Start highlights
-
-local started = false
-
-local start = function()
-  if started then
+local start_hl = function()
+  if hl_started then
     return
   end
 
-  started = true
+  hl_started = true
 
   -- highlights enable
   create_fallback_hl_group('LspReferenceText')
 
   -- highlights auto_clear
-  auto_clear_reference_highlights()
+  -- auto_clear_reference_highlights()
 end
 
-local stop = function()
-  started = false
-  clear_hl_group = vim.api.nvim_create_augroup('RefjumpReferenceHighlights', { clear = true })
+local stop_hl = function()
+  hl_started = false
+
+  hl_disable()
+  vim.api.nvim_clear_autocmds({ group = clear_hl_group, event = hl_clear_events })
 end
+
+vim.api.nvim_create_user_command('RefjumpHl', function (args)
+  if args.bang then
+    _ = hl_started and stop_hl() or start_hl()
+    return
+  end
+
+  local value = args.fargs[1]
+
+  if value == 'enable' then
+    start_hl()
+  elseif value == 'disable' then
+    stop_hl()
+  end
+end, { bang = true, desc = '[Refjump] Toggle ref highlight', nargs = '?', complete = function (current, cmd)
+  -- only complete first argument
+  if #vim.split(cmd, ' ') > 2 then
+    return
+  end
+
+  local opts = { 'enable', 'disable' } ---@type string[]
+  ---@type string[]
+  local matches = vim.tbl_filter(function (opt)
+    local _, match = opt:gsub('^' .. current, '')
+    return match > 0
+  end, opts)
+
+  return #matches > 0 and matches or opts
+end })
 
 return {
   reference_jump = reference_jump,
   reference_jump_from = reference_jump_from,
-  start = start,
-  stop = stop,
+  start_hl = start_hl,
+  stop_hl = stop_hl,
 }
