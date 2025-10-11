@@ -399,7 +399,7 @@ local get_hunk_under_cursor_cli = function (staged)
   end
 end
 
--- NOTE: First try extracting hunk from vscdoe, then fallback to git cli
+-- NOTE: First try extracting hunk from vscode, then fallback to git cli
 -- Hunk info from vscode is faster and more accurate
 -- Unstage hunks seems not to be possible from the regular editor and seems to be more
 -- of a feature of some diff view.
@@ -590,7 +590,9 @@ local revert_hunk_under_cursor = function ()
   end
 end
 
-registerGit()
+if vim.g.vscode == 1 then
+  registerGit()
+end
 
 return {
   is_cursor_in_hunk = is_cursor_in_hunk,
