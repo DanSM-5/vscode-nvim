@@ -170,7 +170,7 @@ local function jump_to(next_reference, encoding)
   -- perhaps it should be calculated dynamically?
 
   -- vim.lsp.util.jump_to_location(next_location, encoding)
-  vim.lsp.util.show_document(next_location, encoding, { focus = true, reuse_win = true })
+  vim.lsp.util.show_document(next_location, encoding, { focus = true })
 
   -- Open folds if the reference is inside a fold
   vim.cmd('normal! zv')
