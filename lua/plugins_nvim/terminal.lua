@@ -51,6 +51,7 @@ return {
     --   'DiagnosticsAll',
     -- },
     config = function()
+      vim.g.fzf_lsp_pretty = 1
       require('fzf_lsp').setup({
         override_ui_select = true
       })
