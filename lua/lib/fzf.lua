@@ -7,9 +7,11 @@ local helptags = function(fullscreen)
   if vim.fn.has('win32') ~= 1 then
     local script_preview = vim.g.scripts_dir .. '/tabpreview.sh'
     local helptags_spec = vim.fn['fzf#vim#with_preview']({ placeholder = '--tag {2}:{3}:{4}' })
-    table.insert(fzf_preview_options, '--no-multi')
-    table.insert(fzf_preview_options, '--preview')
-    table.insert(fzf_preview_options, "/usr/bin/bash '" .. script_preview .. '" {2}:{3}:{4}')
+    vim.list_extend(fzf_preview_options, {
+      '--no-multi',
+      '--preview',
+      string.format('/usr/bin/bash "%s" {2}:{3}:{4}', script_preview),
+    })
 
     vim.fn['fzf#vim#helptags'](helptags_spec, full)
     return
