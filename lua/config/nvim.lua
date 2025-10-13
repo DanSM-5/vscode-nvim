@@ -331,6 +331,28 @@ vim.g.fzf_base_options = fzf_base_options
 vim.g.fzf_bind_options = fzf_bind_options
 vim.g.fzf_preview_options = fzf_preview_options
 
+if vim.fn.has('nvim-0.12.0') == 1 then
+  -- Fill chars to hide numbers between folds
+  vim.opt.fillchars:append({ foldinner = ' ' })
+  vim.o.foldcolumn = "auto"
+
+  -- Ref: https://www.reddit.com/r/neovim/comments/1o4eo6s/new_difftool_command_added_to_neovim/
+  -- vim.cmd([[packadd! nvim.difftoll]])
+  -- gitconfig
+  -- [diff]
+  --     tool = nvim_difftool
+  --
+  -- [difftool "nvim_difftool"]
+  --     cmd = nvim -c \"packadd nvim.difftool\" -c \"DiffTool $LOCAL $REMOTE\"
+
+  -- Sample from command line
+  -- gh pr checkout 123
+  -- git difftool -d main
+
+  -- Load the undotree builtin plugin
+  vim.cmd([[packadd! nvim.undotree]])
+end
+
 require('terminal.autocmd').register()
 require('terminal.cmd').register()
 require('terminal.keymaps').register()

@@ -9,6 +9,10 @@ local register = function()
   vim.keymap.set('n', '<A-i>', '<C-i>', { desc = 'Jumplist newer' })
   vim.keymap.set('n', '<A-o>', '<C-o>', { desc = 'Jumplist older' })
 
+  -- Undotree
+  vim.keymap.set('n', '<leader>u', '<cmd>Undotree<cr>', { desc = '[Undotree] toggle undotree ui' })
+
+  -- Move lines with alt
   vim.keymap.set('x', '<A-up>', function ()
     return ":m '<-" .. (vim.v.count1 + 1) .. '<CR>gv=gv'
   end, { silent = true, noremap = true, desc = '[Vim] Move selected lines up', expr = true })
