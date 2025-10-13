@@ -52,6 +52,11 @@ return {
     },
     config = function()
       vim.g.fzf_lsp_pretty = 1
+      vim.g.fzf_lsp_override_opts = {
+        '--bind', 'ctrl-l:change-preview-window(down|hidden|)',
+        '--bind', 'ctrl-/:change-preview-window(down|hidden|)',
+        '--bind', 'ctrl-^:toggle-preview',
+      }
       require('fzf_lsp').setup({
         override_ui_select = true
       })
