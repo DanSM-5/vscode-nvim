@@ -298,9 +298,10 @@ vim.api.nvim_set_hl(0, 'DiagnosticUnderlineHint', {
   force = true,
 })
 
-
--- Global variables
-local fzf_base_options = { '--multi', '--ansi', '--bind', 'alt-c:clear-query', '--input-border=rounded' }
+-- Fzf general options
+local fzf_base_options = {
+  '--multi', '--ansi', '--bind', 'alt-c:clear-query', '--input-border=rounded'
+}
 local fzf_bind_options = {
   '--bind', 'ctrl-l:change-preview-window(down|hidden|)',
   '--bind', 'ctrl-/:change-preview-window(down|hidden|)',
@@ -312,24 +313,21 @@ local fzf_bind_options = {
   '--bind', 'alt-f:first',
   '--bind', 'alt-l:last',
   '--bind', 'alt-a:select-all',
-  '--bind', 'alt-d:deselect-all' }
+  '--bind', 'alt-d:deselect-all'
+}
 local fzf_preview_options = {
   '--layout=reverse',
   '--preview-window', '60%,wrap',
   '--preview', 'bat -pp --color=always --style=numbers {}'
 }
 
-
-local function table_concat(t1, t2)
-  for _, v in pairs(t2) do t1[#t1 + 1] = v end
-end
-
-table_concat(fzf_bind_options, fzf_base_options)
-table_concat(fzf_preview_options, fzf_bind_options)
+vim.list_extend(fzf_bind_options, fzf_base_options)
+vim.list_extend(fzf_preview_options, fzf_bind_options)
 
 vim.g.fzf_base_options = fzf_base_options
 vim.g.fzf_bind_options = fzf_bind_options
 vim.g.fzf_preview_options = fzf_preview_options
+
 
 if vim.fn.has('nvim-0.12.0') == 1 then
   -- Fill chars to hide numbers between folds
