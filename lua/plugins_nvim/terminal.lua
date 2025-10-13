@@ -34,22 +34,22 @@ return {
   },
   {
     'DanSM-5/fzf-lsp.nvim',
-    event = 'VeryLazy',
-    -- cmd = {
-    --   'Definitions',
-    --   'Declarations',
-    --   'TypeDefinitions',
-    --   'Implementations',
-    --   'References',
-    --   'DocumentSymbols',
-    --   'WorkspaceSymbols',
-    --   'IncomingCalls',
-    --   'OutgoingCalls',
-    --   'CodeActions',
-    --   'RangeCodeActions',
-    --   'Diagnostics',
-    --   'DiagnosticsAll',
-    -- },
+    lazy = true,
+    cmd = {
+      'Definitions',
+      'Declarations',
+      'TypeDefinitions',
+      'Implementations',
+      'References',
+      'DocumentSymbols',
+      'WorkspaceSymbols',
+      'IncomingCalls',
+      'OutgoingCalls',
+      'CodeActions',
+      'RangeCodeActions',
+      'Diagnostics',
+      'DiagnosticsAll',
+    },
     config = function()
       vim.g.fzf_lsp_pretty = 1
       require('fzf_lsp').setup({
