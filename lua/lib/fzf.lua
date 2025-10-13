@@ -12,6 +12,7 @@ local helptags = function(fullscreen)
       '--preview',
       string.format('/usr/bin/bash "%s" {2}:{3}:{4}', script_preview),
     })
+    helptags_spec.options = vim.list_extend(helptags_spec.options, fzf_preview_options)
 
     vim.fn['fzf#vim#helptags'](helptags_spec, full)
     return
@@ -23,11 +24,12 @@ local helptags = function(fullscreen)
   -- Leaveing here as fallback but won't work.
   local pwsh = vim.fn.executable('pwsh') and 'pwsh' or 'powershell'
 
-  table.insert(fzf_preview_options, '--no-multi')
-  table.insert(fzf_preview_options, '--with-shell')
-  table.insert(fzf_preview_options, pwsh .. ' -NoLogo -NonInteractive -NoProfile -Command')
-  table.insert(fzf_preview_options, '--preview')
-  table.insert(fzf_preview_options, vim.g.scripts_dir .. '/tagpreview.ps1 {+f}')
+  vim.list_extend(fzf_preview_options, {
+    '--no-multi',
+    '--with-shell',
+    string.format('%s -NoLogo -NonInteractive -NoProfile -Command', pwsh),
+    '--preview', string.format('%s/tagpreview.ps1 {+f}', vim.g.scripts_dir)
+  })
 
   local helptags_spec = {
     options = fzf_preview_options,

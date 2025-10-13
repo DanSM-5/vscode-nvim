@@ -136,28 +136,129 @@ local register = function()
   vim.api.nvim_create_user_command('GitFZF', function(opts)
     local args = vim.fn.join(opts.fargs)
     local bang = opts.bang and 1 or 0
-    local path = ''
+    local path = '' ---@type string?
     if vim.fn.empty(args) == 1 then
       path = require('utils.funcs').git_path()
     else
       path = args
     end
-
-    vim.fn['fzf#vim#files'](path, vim.fn['fzf#vim#with_preview'](), bang)
+    local spec = vim.fn['fzf#vim#with_preview']()
+    vim.list_extend(spec.options, vim.g.fzf_preview_options)
+    vim.list_extend(spec.options, opts.bang and {
+      '--preview-window', 'up,60%,wrap',
+    } or { '--preview-window', 'right,60%,wrap' })
+    vim.fn['fzf#vim#files'](path, spec, bang)
   end, {
     bang = true,
     bar = true,
-    complete = 'dir',
-    nargs = '?',
     force = true,
+    nargs = '?',
+    complete = 'dir',
     desc = '[Git] Open fzf in top git repo or active buffer directory',
   })
 
-  vim.api.nvim_create_user_command('Helptags', function (args)
+  vim.api.nvim_create_user_command('FzfFiles', function(args)
+    local query = table.concat(args.fargs or {}, ' ')
+    local spec = vim.fn['fzf#vim#with_preview']()
+    vim.list_extend(spec.options, vim.g.fzf_preview_options)
+    vim.list_extend(spec.options, args.bang and {
+      '--preview-window', 'up,60%,wrap',
+    } or { '--preview-window', 'right,60%,wrap' })
+    vim.fn['fzf#vim#files'](query, spec, args.bang and 1 or 0)
+
+  end, {
+    bang = true,
+    bar = true,
+    force = true,
+    nargs = '?',
+    complete = 'dir',
+    desc = '[Fzf] Use fzf to select a file',
+  })
+
+  vim.api.nvim_create_user_command('Helptags', function(args)
     require('lib.fzf').helptags(args.bang)
   end, {
     bang = true,
     bar = true,
+    force = true,
+    nargs = '?',
+    complete = 'dir',
+    desc = '[Fzf] Display helptags',
+  })
+
+
+  vim.api.nvim_create_user_command('RG', function(args)
+    local spec = { options = {} }
+    vim.list_extend(spec.options, vim.g.fzf_preview_options)
+    vim.list_extend(spec.options, args.bang and {
+      '--preview-window', 'up,60%,wrap',
+    } or { '--preview-window', 'right,60%,wrap' })
+    local query = table.concat(args.fargs or {})
+    local esc_query = vim.fn.has('win32') == 1 and vim.fn.shellescape(query) or vim.fn['fzf#shellescape'](query)
+    local template = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true'
+    local start_reload = string.format(template, esc_query)
+    local change_reload = string.format(template, '{q}')
+    vim.list_extend(spec.options, {
+      '--bind', string.format('start:reload:%s', start_reload),
+      '--bind', string.format('change:reload:%s', change_reload),
+    })
+
+    -- Preview
+    if vim.fn.has('win32') then
+      vim.list_extend(spec.options, {
+        '--with-shell', string.format(
+          '%s -NoLogo -NonInteractive -NoProfile -Command',
+          vim.fn.executable('pwsh') and 'pwsh' or 'powershell'
+        ),
+        '--preview', string.format('%s/preview.ps1 {}', vim.g.scripts_dir)
+      })
+    else
+      vim.list_extend(spec.options, {
+        '--preview', string.format('%s/preview.sh {}', vim.g.scripts_dir)
+      })
+    end
+
+    vim.fn['fzf#vim#grep2']('rg', query, spec, args.bang and 1 or 0)
+  end, {
+    bang = true,
+    bar = true,
+    force = true,
+    nargs = '*',
+    desc = '[Fzf] RG function',
+  })
+
+  vim.api.nvim_create_user_command('Rg', function(args)
+    local spec = { options = {} }
+    vim.list_extend(spec.options, vim.g.fzf_preview_options)
+    vim.list_extend(spec.options, args.bang and {
+      '--preview-window', 'up,60%,wrap',
+    } or { '--preview-window', 'right,60%,wrap' })
+    local query = vim.fn.shellescape(table.concat(args.fargs or {}))
+    local template = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true'
+    local command = string.format(template, query)
+
+    -- Preview
+    if vim.fn.has('win32') then
+      vim.list_extend(spec.options, {
+        '--with-shell', string.format(
+          '%s -NoLogo -NonInteractive -NoProfile -Command',
+          vim.fn.executable('pwsh') and 'pwsh' or 'powershell'
+        ),
+        '--preview', string.format('%s/preview.ps1 {}', vim.g.scripts_dir)
+      })
+    else
+      vim.list_extend(spec.options, {
+        '--preview', string.format('%s/preview.sh {}', vim.g.scripts_dir)
+      })
+    end
+
+    vim.fn['fzf#vim#grep'](command, spec, args.bang and 1 or 0)
+  end, {
+    bang = true,
+    bar = true,
+    force = true,
+    nargs = '*',
+    desc = '[Fzf] Rg function',
   })
 
   vim.api.nvim_create_user_command('Redir', function(ctx)
