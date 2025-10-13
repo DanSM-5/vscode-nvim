@@ -40,8 +40,8 @@ local set_lsp_keys = function(client, bufnr)
   local buf = bufnr
 
   if
-      vim.tbl_contains(exclude_filetypes, vim.bo[buf].buftype)
-      or vim.tbl_contains(exclude_filetypes, vim.bo[buf].filetype)
+    vim.tbl_contains(exclude_filetypes, vim.bo[buf].buftype)
+    or vim.tbl_contains(exclude_filetypes, vim.bo[buf].filetype)
   then
     vim.notify(string.format('[lsp] buffer %s not allowed to attach keymaps', buf))
     return
@@ -86,26 +86,59 @@ local set_lsp_keys = function(client, bufnr)
   end, '[Lsp]: Toggle virtual lines diagnostics show current line')
   -- Buffer local mappings.
   -- See `:help vim.lsp.*` for documentation on any of the below functions
-  set_map('n', 'gD', function ()
-    -- local ok, fzflsp = pcall(require, 'fzf_lsp')
+  set_map('n', 'gD', function()
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
     if ok then
-      -- fzflsp
+      fzflsp.declaration_call()
+      return
     end
+
+    -- fallback
     vim.lsp.buf.declaration()
   end, '[Lsp]: Go to declaration')
-  set_map('n', 'gd', function ()
+  set_map('n', 'gd', function()
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.definition_call()
+      return
+    end
+
     vim.lsp.buf.definition()
   end, '[Lsp]: Go to definition')
   set_map('n', '<space>ds', function()
     vim.cmd.split()
+
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.definition_call()
+      return
+    end
+
     vim.lsp.buf.definition()
   end, '[Lsp]: Go to definition in vsplit')
   set_map('n', '<space>dv', function()
     vim.cmd.vsplit()
+
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.definition_call()
+      return
+    end
+
     vim.lsp.buf.definition()
   end, '[Lsp]: Go to definition in vsplit')
-  set_map('n', 'K', function() vim.lsp.buf.hover({ border = 'rounded' }) end, '[Lsp]: Hover action')
-  set_map('n', '<space>i', vim.lsp.buf.implementation, '[Lsp]: Go to implementation')
+  set_map('n', 'K', function()
+    vim.lsp.buf.hover({ border = 'rounded' })
+  end, '[Lsp]: Hover action')
+  set_map('n', '<space>i', function()
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.implementation_call()
+      return
+    end
+
+    vim.lsp.buf.implementation()
+  end, '[Lsp]: Go to implementation')
   set_map('n', '<C-k>', function()
     vim.lsp.buf.signature_help({ border = 'rounded' })
   end, '[Lsp]: Show signature help')
@@ -114,11 +147,34 @@ local set_lsp_keys = function(client, bufnr)
   set_map('n', '<space>wl', function()
     vim.print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
   end, '[Lsp]: List workspaces')
-  set_map('n', '<space>D', vim.lsp.buf.type_definition, '[Lsp]: Go to type definition')
+  set_map('n', '<space>D', function ()
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.type_definition_call()
+      return
+    end
+    vim.lsp.buf.type_definition()
+  end, '[Lsp]: Go to type definition')
   set_map('n', '<space>rn', vim.lsp.buf.rename, '[Lsp]: Rename symbol')
   set_map('n', '<f2>', vim.lsp.buf.rename, '[Lsp]: Rename symbol')
-  set_map('n', '<space>ca', vim.lsp.buf.code_action, '[Lsp]: Code Actions')
-  set_map('n', 'gr', vim.lsp.buf.references, '[Lsp]: Go to references')
+  set_map('n', '<space>ca', function ()
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.code_action_call()
+      return
+    end
+
+    vim.lsp.buf.code_action()
+  end, '[Lsp]: Code Actions')
+  set_map('n', 'gr', function()
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.references_call()
+      return
+    end
+
+    vim.lsp.buf.references()
+  end, '[Lsp]: Go to references')
   set_map('n', '<space>f', function()
     vim.lsp.buf.format({ async = false })
 
@@ -130,28 +186,63 @@ local set_lsp_keys = function(client, bufnr)
     vim.cmd.retab()
     vim.cmd.write()
   end, '[Lsp]: Format buffer')
-  set_map('n', '<space>ci', vim.lsp.buf.incoming_calls, '[Lsp]: Incoming Calls')
-  set_map('n', '<space>co', vim.lsp.buf.outgoing_calls, '[Lsp]: Outgoing Calls')
+  set_map('n', '<space>ci', function()
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.incoming_calls_call()
+      return
+    end
 
+    vim.lsp.buf.incoming_calls()
+  end, '[Lsp]: Incoming Calls')
+  set_map('n', '<space>co', function()
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.outgoing_calls_call()
+      return
+    end
+
+    vim.lsp.buf.outgoing_calls()
+  end, '[Lsp]: Outgoing Calls')
   set_map('n', '<space>sw', function()
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.workspace_symbol_call({ query = '' })
+      return
+    end
+
     vim.lsp.buf.workspace_symbol('')
   end, '[Lsp] Open workspace symbols')
   set_map('n', '<space>sW', function()
-    vim.lsp.buf.workspace_symbol(vim.fn.expand('<cword>'))
+    local query = vim.fn.expand('<cword>')
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.workspace_symbol_call({ query = query })
+      return
+    end
+
+    vim.lsp.buf.workspace_symbol(query)
   end, '[Lsp] Open workspace symbols')
   set_map('n', '<space>sd', function()
+    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    if ok then
+      fzflsp.document_symbol_call()
+      return
+    end
+
     vim.lsp.buf.document_symbol({})
   end, '[Lsp] Open document symbols')
   set_map('n', 'gO', function()
+    -- preserving default
     vim.lsp.buf.document_symbol({})
   end, '[Lsp] Open document symbols')
 
   if client:supports_method('textDocument/prepareCallHierarchy') then
-    set_map({ 'n', 'x' }, '<space>cs', function ()
+    set_map({ 'n', 'x' }, '<space>cs', function()
       local hierarchy = require('lib.hierarchy')
       hierarchy.find_recursive_calls('outcoming', hierarchy.depth, client)
     end, '[Hierarchy] Open [outcoming] call hierarchy of function under cursor')
-    set_map({ 'n', 'x' }, '<space>cS', function ()
+    set_map({ 'n', 'x' }, '<space>cS', function()
       local hierarchy = require('lib.hierarchy')
       hierarchy.find_recursive_calls('incoming', hierarchy.depth, client)
     end, '[Hierarchy] Open [incoming] call hierarchy of function under cursor')

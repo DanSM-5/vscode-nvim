@@ -33,6 +33,30 @@ return {
     event = 'VeryLazy',
   },
   {
+    'DanSM-5/fzf-lsp.nvim',
+    event = 'VeryLazy',
+    -- cmd = {
+    --   'Definitions',
+    --   'Declarations',
+    --   'TypeDefinitions',
+    --   'Implementations',
+    --   'References',
+    --   'DocumentSymbols',
+    --   'WorkspaceSymbols',
+    --   'IncomingCalls',
+    --   'OutgoingCalls',
+    --   'CodeActions',
+    --   'RangeCodeActions',
+    --   'Diagnostics',
+    --   'DiagnosticsAll',
+    -- },
+    config = function()
+      require('fzf_lsp').setup({
+        override_ui_select = true
+      })
+    end,
+  },
+  {
     'lewis6991/gitsigns.nvim',
     event = { 'VeryLazy' },
     commit = 'fcfa7a989',
