@@ -4,3 +4,6 @@ plugged/*
 autoload/plug.vim
 lazy/*
 
+# Special files that are device specific
+**/local.*
+**/local/*
