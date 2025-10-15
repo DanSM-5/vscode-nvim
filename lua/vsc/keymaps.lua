@@ -89,6 +89,10 @@ return {
       })
     end, { noremap = true, desc = '[VSCode] Go context up' })
 
+    vim.keymap.set({ 'n' }, '<leader>cU', function()
+      vscode.action('editor.action.focusStickyScroll')
+    end, { noremap = true, desc = '[VSCode] Focus sticky context window' })
+
     vim.keymap.set('n', '<leader>ct', function()
       vscode.action('editor.action.toggleStickyScroll')
     end, { noremap = true, desc = '[VSCode] Toggle sticky scrol' })
