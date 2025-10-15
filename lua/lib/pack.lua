@@ -3,13 +3,62 @@
 -- to allow lazy load of plugins using events, autocmd, or keymaps
 --]]
 
-local group = vim.api.nvim_create_augroup('LoadPluginAutoCmd', { clear = true })
+local default = 'https://github.com/'
+local group = vim.api.nvim_create_augroup('pack-load-cmd', { clear = true })
+local lazy_start = 'LazyStart'
+
+-- local group = vim.api.nvim_create_augroup('LoadPluginAutoCmd', { clear = true })
+
+-- local pack_group = vim.api.nvim_create_augroup('pack-update', { clear = true })
+-- vim.api.nvim_create_autocmd('PackChanged', {
+--   group = pack_group,
+--   callback = function (ev)
+--     if ev.data.kind == 'update' and ev.data.spec.name == '' then
+--
+--     end
+--
+--   end
+-- })
 
 ---@class PluginLoadSpec: vim.pack.Spec
 ---@field lazy boolean
 
----@param plugins (string|vim.pack.Spec)[]
+---Ensure entry is a spec object
+---@param url string
+---@return PluginLoadSpec
+local to_spec = function (url)
+  return {
+    src = url,
+  }
+end
+
+local loaded = false
+
+if not loaded then
+  loaded = true
+  vim.api.nvim_create_autocmd('UIEnter', {
+    callback = vim.schedule_wrap(function ()
+      vim.api.nvim_exec_autocmds('User', { group = group, pattern = lazy_start })
+    end)
+  })
+end
+
+---@param plugins (string|PluginLoadSpec)[]
 local function load(plugins)
+
+  -- Add 'github.com' prefix if not present
+  for i, plugin in ipairs(plugins) do
+    if type(plugin) == "string" then
+      plugin = to_spec(plugin)
+      plugins[i] = plugin
+    end
+
+    local _, matches = plugin.src:gsub('^http', '.')
+    if matches == 0 then
+      plugin.src = default .. vim.trim(plugin.src)
+    end
+  end
+
   vim.pack.add(plugins, {
     load = function(plugin)
       local data = plugin.spec.data or {}
@@ -24,12 +73,21 @@ local function load(plugins)
 
       -- Event trigger
       if data.event then
-        vim.api.nvim_create_autocmd(data.event, {
-          group = group,
-          once = true,
-          pattern = data.pattern or '*',
-          callback = do_load,
-        })
+        if data.event == lazy_start then
+          vim.api.nvim_create_autocmd('User', {
+            group = group,
+            once = true,
+            pattern = lazy_start,
+            callback = do_load,
+          })
+        else
+          vim.api.nvim_create_autocmd(data.event, {
+            group = group,
+            once = true,
+            pattern = data.pattern or '*',
+            callback = do_load,
+          })
+        end
 
         lazy_load = true
       end
@@ -63,6 +121,7 @@ local function load(plugins)
             nargs = cmd_args.nargs,
             range = cmd_args.range ~= 0 and { cmd_args.line1, cmd_args.line2 } or nil,
             count = cmd_args.count ~= -1 and cmd_args.count or nil,
+            reg = cmd_args.reg,
           }, {})
         end, {
           nargs = data.nargs,
@@ -70,6 +129,8 @@ local function load(plugins)
           bang = data.bang,
           complete = data.complete,
           count = data.count,
+          register = data.register,
+          bar = data.bar,
         })
 
         lazy_load = true
