@@ -34,6 +34,18 @@ local function load(plugins)
         lazy_load = true
       end
 
+      -- FileType trigger
+      if data.ft then
+        vim.api.nvim_create_autocmd('filetype', {
+          group = group,
+          once = true,
+          pattern = data.ft,
+          callback = do_load,
+        })
+
+        lazy_load = true
+      end
+
       -- Command trigger
       if data.cmd then
         vim.api.nvim_create_user_command(data.cmd, function(cmd_args)
