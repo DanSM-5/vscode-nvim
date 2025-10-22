@@ -35,12 +35,11 @@ utils.split = function(inputstr, sep)
     sep = '%s'
   end
   local t = {}
-  for str in string.gmatch(inputstr, '([^'..sep..']+)') do
+  for str in string.gmatch(inputstr, '([^' .. sep .. ']+)') do
     table.insert(t, str)
   end
   return t
 end
-
 
 ---Check if keyword length criteria is met
 ---@param request AbstractContext
@@ -60,8 +59,7 @@ local create_abstracted_context = function(request)
   local buf = vim.uri_to_bufnr(request.textDocument.uri)
   -- local full_line = vim.api.nvim_buf_get_lines(buf, line_num, line_num + 1, false)[1]
   local full_line = vim.api.nvim_get_current_line()
-  local before_char = (request.context and request.context.triggerCharacter)
-      or full_line:sub(col_num, col_num + 1)
+  local before_char = (request.context and request.context.triggerCharacter) or full_line:sub(col_num, col_num + 1)
 
   local cursor_before_line = string.sub(full_line, 1, col_num)
   local cursor_after_line = string.sub(full_line, col_num + 1)
@@ -82,7 +80,7 @@ local create_abstracted_context = function(request)
       -- added
       cache = {},
       id = utils.getId('cmp.context.new'),
-      option = { reason =  'none' },
+      option = { reason = 'none' },
       filetype = vim.api.nvim_get_option_value('filetype', { buf = buf }),
       time = uv.now(),
       cursor_line = full_line,
@@ -187,13 +185,12 @@ local handlers = {
       local source_is_available = source.is_available ~= nil and source:is_available() or true
 
       if
-          source_is_available and
-          (not source.get_trigger_characters
-            or vim.tbl_contains(
-              source:get_trigger_characters(),
-              abstracted_context.context.before_char
-            )) and
-          utils.minimum_keyword(abstracted_context, complete_config.keyword_length)
+        source_is_available
+        and (not source.get_trigger_characters or vim.tbl_contains(
+          source:get_trigger_characters(),
+          abstracted_context.context.before_char
+        ))
+        and utils.minimum_keyword(abstracted_context, complete_config.keyword_length)
       then
         source:complete(abstracted_context, function(items)
           for _, item in ipairs(items) do
