@@ -188,37 +188,13 @@ local register = function()
 
 
   vim.api.nvim_create_user_command('RG', function(args)
-    local spec = { options = {} }
-    vim.list_extend(spec.options, vim.g.fzf_preview_options)
-    vim.list_extend(spec.options, args.bang and {
-      '--preview-window', 'up,60%,wrap',
-    } or { '--preview-window', 'right,60%,wrap' })
-    local query = table.concat(args.fargs or {})
-    local esc_query = vim.fn.has('win32') == 1 and vim.fn.shellescape(query) or vim.fn['fzf#shellescape'](query)
-    local template = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true'
-    local start_reload = string.format(template, esc_query)
-    local change_reload = string.format(template, '{q}')
-    vim.list_extend(spec.options, {
-      '--bind', string.format('start:reload:%s', start_reload),
-      '--bind', string.format('change:reload:%s', change_reload),
-    })
+    ---@type fzf.rg.args
+    local opts = {
+      query = table.concat(args.fargs or {}),
+      fullscreen = args.bang,
+    }
 
-    -- Preview
-    if vim.fn.has('win32') then
-      vim.list_extend(spec.options, {
-        '--with-shell', string.format(
-          '%s -NoLogo -NonInteractive -NoProfile -Command',
-          vim.fn.executable('pwsh') and 'pwsh' or 'powershell'
-        ),
-        '--preview', string.format('%s/preview.ps1 {}', vim.g.scripts_dir)
-      })
-    else
-      vim.list_extend(spec.options, {
-        '--preview', string.format('%s/preview.sh {}', vim.g.scripts_dir)
-      })
-    end
-
-    vim.fn['fzf#vim#grep2']('rg', query, spec, args.bang and 1 or 0)
+    require('lib.fzf').fzf_rg(opts)
   end, {
     bang = true,
     bar = true,
@@ -302,6 +278,19 @@ local register = function()
 
       return #matched > 0 and matched or options
     end,
+  })
+
+  vim.api.nvim_create_user_command('Todos', function(args)
+    require('lib.fzf').todos(args.fargs, args.bang)
+  end, {
+    bang = true,
+    bar = true,
+    force = true,
+    nargs = '*',
+    desc = '[Fzf] Find todos',
+    complete = function(current)
+      return require('lib.fzf').todos_complete(current)
+    end
   })
 end
 
