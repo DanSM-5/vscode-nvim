@@ -121,6 +121,11 @@ vim.api.nvim_create_user_command('Diagnostics', function(args)
 end, { desc = '[vscode] Show diagnostics (errors and warnings)', bang = true })
 
 vim.api.nvim_create_user_command('Todos', function(args)
+  if args.bang then
+    vscode.action('todohighlight.listAnnotations')
+    return
+  end
+
   local keywords = #args.fargs > 0 and args.fargs or require('lib.fzf').todo_keywords
   local query = string.format('\\b(%s):', table.concat(keywords, '|'))
 
