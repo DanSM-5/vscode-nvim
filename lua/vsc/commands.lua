@@ -119,3 +119,22 @@ end, { desc = '[vscode] Show call hierarchy', bang = true })
 vim.api.nvim_create_user_command('Diagnostics', function(args)
   vscode.action('workbench.actions.view.problems')
 end, { desc = '[vscode] Show diagnostics (errors and warnings)', bang = true })
+
+vim.api.nvim_create_user_command('Todos', function(args)
+  local keywords = #args.fargs > 0 and args.fargs or require('lib.fzf').todo_keywords
+  local query = string.format('\\b(%s):', table.concat(keywords, '|'))
+
+  vscode.action('workbench.action.findInFiles', {
+    args = {
+      query = query,
+      isRegex = true,
+    },
+  })
+end, {
+  desc = '[vscode] find todos',
+  bang = true,
+  nargs = '*',
+  complete = function(current)
+    return require('lib.fzf').todos_complete(current)
+  end,
+})

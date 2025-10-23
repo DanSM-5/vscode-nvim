@@ -163,7 +163,7 @@ local todo_keywords = {
   'FIXIT',
   'ISSUE',
   'PERFORMANCE',
-  'PERF'
+  'PERF',
 }
 
 ---@param keywords string[]
@@ -204,4 +204,5 @@ return {
   helptags = helptags,
   todos = todos,
   todos_complete = todos_complete,
+  todo_keywords = todo_keywords,
 }
