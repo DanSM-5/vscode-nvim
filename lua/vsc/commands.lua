@@ -112,6 +112,10 @@ vim.api.nvim_create_user_command('OutgoingCalls', function(args)
   vscode.action('editor.showOutgoingCalls')
 end, { desc = '[vscode] Incoming Calls', bang = true })
 
-vim.api.nvim_create_user_command('Hierarchy', function(args)
+vim.api.nvim_create_user_command('FunctionReferences', function(args)
   vscode.action('editor.showCallHierarchy')
 end, { desc = '[vscode] Show call hierarchy', bang = true })
+
+vim.api.nvim_create_user_command('Diagnostics', function(args)
+  vscode.action('workbench.actions.view.problems')
+end, { desc = '[vscode] Show diagnostics (errors and warnings)', bang = true })
