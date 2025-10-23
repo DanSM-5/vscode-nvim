@@ -32,7 +32,6 @@ vim.keymap.set('n', 'g/', '<esc>/\\%V', { desc = '[Nvim] Search in last selected
 --   desc = '[Indent-Object] O-Pending around indent'
 -- })
 
-
 -- Reselect visual blocks after indenting
 vim.keymap.set('x', '<', '<gv', {
   noremap = true,
@@ -48,7 +47,6 @@ vim.keymap.set('x', '<S-Tab>', '<gv', { desc = '[Indent] Decrease indentation of
 vim.keymap.set('x', '<Tab>', '>gv|', { desc = '[Indent] Increase indentation of selected block', noremap = true })
 vim.keymap.set('n', '>', '>>_', { desc = '[Indent] Increase indentation of line', noremap = true })
 vim.keymap.set('n', '<', '<<_', { desc = '[Indent] Decrease indentation of line', noremap = true })
-
 
 -- smart up and down
 vim.keymap.set('n', '<down>', 'gj', { desc = '[Nav] Move down in wrapped lines', silent = true, remap = true })
@@ -103,12 +101,10 @@ vim.keymap.set('x', '<leader>P', 'clipboard#paste("P")', {
   noremap = true,
 })
 
-
 -- Cd to current project or active buffer directory
 vim.keymap.set('n', '<leader>cd', function()
   vim.cmd.Bcd()
 end, { noremap = true, desc = 'Change root directory of repo or file directory' })
-
 
 -- Clean trailing whitespace in file
 vim.keymap.set('n', '<leader>cc', ':%s/\\s\\+$//e<cr>', {
@@ -122,7 +118,6 @@ vim.keymap.set('n', '<leader>cr', ':%s/\\r$//g<cr>', {
   noremap = true,
   silent = true,
 })
-
 
 -- vim-asterisk
 vim.keymap.set(nxo, '*', '<Plug>(asterisk-*)', {
@@ -185,7 +180,6 @@ vim.keymap.set('n', 'g/', '<esc>/\\%V', { noremap = true, desc = '[search] Narro
 -- This obscures default gV that prevents reselection of :vmenu commands
 vim.keymap.set('n', 'gV', '`[v`]', { noremap = true, desc = 'Reselect last yank area' })
 
-
 -- Copy from unnamed register to clipboard
 vim.keymap.set('n', 'yd', function()
   require('utils.funcs').regmove('+', '"')
@@ -195,18 +189,19 @@ vim.keymap.set('n', 'yD', function()
   require('utils.funcs').regmove('"', '+')
 end, { noremap = true, desc = '[clipboard] Move clipboard content to unnamed register' })
 
-
 -- Paste and replace word under cursor
-vim.keymap.set('n', '<leader>vp', 'ciw<C-r>0<esc>',
-  { desc = 'Paste text replacing word under the cursor', noremap = true })
-
+vim.keymap.set(
+  'n',
+  '<leader>vp',
+  'ciw<C-r>0<esc>',
+  { desc = 'Paste text replacing word under the cursor', noremap = true }
+)
 
 -- Move in jumplist
 -- vim.keymap.set('n', '<A-i>', '<C-i>', { noremap = true, desc = 'Jumplist newer' })
 -- vim.keymap.set('n', '<A-o>', '<C-o>', { noremap = true, desc = 'Jumplist older' })
 
 -- : Repeatable keymaps : *************************************************
-
 
 local repeat_motion = require('utils.repeat_motion')
 
@@ -217,30 +212,42 @@ local create_dot_map = repeat_motion.repeat_dot_map
 local create_repeatable_pair = repeat_motion.create_repeatable_pair
 local repeat_pair = repeat_motion.repeat_pair
 
-local next_matching_bracket, prev_matching_bracket = create_repeatable_pair(
-  function()
-    ---@diagnostic disable-next-line Diagnostic have the wrong function signature for searchpair
-    vim.fn.searchpair('{', '', '}')
-  end, function()
-    ---@diagnostic disable-next-line Diagnostic have the wrong function signature for searchpair
-    vim.fn.searchpair('{', '', '}', 'b')
-  end
+local next_matching_bracket, prev_matching_bracket = create_repeatable_pair(function()
+  ---@diagnostic disable-next-line Diagnostic have the wrong function signature for searchpair
+  vim.fn.searchpair('{', '', '}')
+end, function()
+  ---@diagnostic disable-next-line Diagnostic have the wrong function signature for searchpair
+  vim.fn.searchpair('{', '', '}', 'b')
+end)
+local next_bracket_pair, prev_bracket_pair = create_repeatable_pair(function()
+  vim.fn.search('[\\[\\]{}()<>]', 'w')
+end, function()
+  vim.fn.search('[\\[\\]{}()<>]', 'wb')
+end)
+vim.keymap.set(
+  'n',
+  ']}',
+  next_bracket_pair,
+  { desc = '[Bracket]: Go to next bracket pair', silent = true, noremap = true }
 )
-local next_bracket_pair, prev_bracket_pair = create_repeatable_pair(
-  function()
-    vim.fn.search('[\\[\\]{}()<>]', 'w')
-  end, function()
-    vim.fn.search('[\\[\\]{}()<>]', 'wb')
-  end
+vim.keymap.set(
+  'n',
+  '[}',
+  prev_bracket_pair,
+  { desc = '[Bracket]: Go to previous bracket pair', silent = true, noremap = true }
 )
-vim.keymap.set('n', ']}', next_bracket_pair,
-  { desc = '[Bracket]: Go to next bracket pair', silent = true, noremap = true })
-vim.keymap.set('n', '[}', prev_bracket_pair,
-  { desc = '[Bracket]: Go to previous bracket pair', silent = true, noremap = true })
-vim.keymap.set('n', ']{', next_matching_bracket,
-  { desc = '[Bracket]: Go to next matching bracket', silent = true, noremap = true })
-vim.keymap.set('n', '[{', prev_matching_bracket,
-  { desc = '[Bracket]: Go to previous matching bracket', silent = true, noremap = true })
+vim.keymap.set(
+  'n',
+  ']{',
+  next_matching_bracket,
+  { desc = '[Bracket]: Go to next matching bracket', silent = true, noremap = true }
+)
+vim.keymap.set(
+  'n',
+  '[{',
+  prev_matching_bracket,
+  { desc = '[Bracket]: Go to previous matching bracket', silent = true, noremap = true }
+)
 
 -- Dot repeatable maps
 create_dot_map('nnoremap <A-y> :<C-U>t.<cr>')
@@ -249,22 +256,26 @@ create_dot_map('nnoremap <A-e> :<C-U>t-1<cr>')
 -- create_dot_map('inoremap <A-y> <esc>:<C-U>t-1<cr>a')
 -- create_dot_map('inoremap <A-e> <esc>:<C-U>t-1<cr>a')
 
-local move_line_end, move_line_almost_end = create_repeatable_pair(function ()
+local move_line_end, move_line_almost_end = create_repeatable_pair(function()
   vim.cmd.normal([[ddGp``]])
-end, function ()
+end, function()
   vim.cmd.normal([[ddGP``]])
   -- vim.cmd.normal([[ddggP``]])
 end)
-local move_line_start, move_line_almost_start = create_repeatable_pair(function ()
+local move_line_start, move_line_almost_start = create_repeatable_pair(function()
   vim.cmd.normal([[ddggP``]])
-end, function ()
+end, function()
   vim.cmd.normal([[ddggp``]])
 end)
 
 -- move current line to the end or the begin of current buffer
 vim.keymap.set('n', ']<End>', move_line_end, { desc = 'Move line to end of the buffer', noremap = true, silent = true })
-vim.keymap.set('n', '[<End>', move_line_almost_end,
-  { desc = 'Move line to the second last line in the buffer', noremap = true, silent = true })
+vim.keymap.set(
+  'n',
+  '[<End>',
+  move_line_almost_end,
+  { desc = 'Move line to the second last line in the buffer', noremap = true, silent = true }
+)
 vim.keymap.set(
   'n',
   ']<Home>',
@@ -280,7 +291,7 @@ vim.keymap.set(
 
 ---Move to the next indent scope using direction
 ---@param direction boolean
-local move_scope = function (direction)
+local move_scope = function(direction)
   local ok, mini_indent = pcall(require, 'mini.indentscope')
 
   if not ok then
