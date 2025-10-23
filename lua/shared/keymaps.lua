@@ -296,12 +296,31 @@ end
 repeat_pair({
   keys = 'i',
   mode = nxo,
-  on_forward = function ()
+  on_forward = function()
     move_scope(true)
   end,
-  on_backward = function ()
+  on_backward = function()
     move_scope(false)
   end,
   desc_forward = '[MiniIndent] Go to indent scope top',
   desc_backward = '[MiniIndent] Go to indent scope bottom',
+})
+
+local todo_next, todo_prev = create_repeatable_pair(function()
+  local keywords = require('lib.fzf').todo_keywords
+  local query = table.concat(keywords, '\\|')
+  -- search('\(NOTE\|TODO\):', 'bw')
+  vim.fn.search(string.format('\\(%s\\):', query), 'w')
+end, function()
+  local keywords = require('lib.fzf').todo_keywords
+  local query = table.concat(keywords, '\\|')
+  vim.fn.search(string.format('\\(%s\\):', query), 'bw')
+end)
+
+repeat_pair({
+  keys = ':',
+  desc_forward = '[TodoComments] Move to next todo comment',
+  desc_backward = '[TodoComments] Move to previous todo comment',
+  on_forward = todo_next,
+  on_backward = todo_prev,
 })
