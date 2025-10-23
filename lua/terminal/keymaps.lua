@@ -613,6 +613,7 @@ local register = function()
   end, { silent = true,  noremap = true, desc = '[fzf] search word under the cursor' })
 
   vim.keymap.set('x', '<leader>fr', function()
+    -- 'y:RG <c-r><c-w><cr>'
     local region = vim.fn.getregion(vim.fn.getpos('.'), vim.fn.getpos('v'))[1]
     vim.cmd.RG(region)
   end, { silent = true,  noremap = true, desc = '[fzf] search word under the cursor' })
@@ -633,8 +634,9 @@ local register = function()
 
   -- Set grep commands
   -- vim.keymap.set('n', '<leader>lg', '<cmd>Lg<cr>', { silent = true,  noremap = true, desc = '[fzf] live grep on current buffer' })
-  vim.keymap.set('n', '<leader>lg', '<cmd>RG<cr>', { silent = true,  noremap = true, desc = '[fzf] live grep on current project' })
-  vim.keymap.set('n', '<leader>lG', '<c-u>:Rg<space>', { silent = true,  noremap = true, desc = '[fzf] start grep session ' })
+  vim.keymap.set('n', '<leader>fg', '<cmd>RG<cr>', { silent = true,  noremap = true, desc = '[fzf] live grep on current project' })
+  vim.keymap.set('x', '<leader>fg', 'y:RG <c-r>"<cr>', { silent = true,  noremap = true, desc = '[fzf] live grep on current project' })
+  vim.keymap.set('n', '<leader>fG', '<c-u>:Rg<space>', { silent = true,  noremap = true, desc = '[fzf] start grep session ' })
 
   -- Insert mode completion
   vim.keymap.set('i', '<c-x>n', '<plug>(fzf-complete-word)', {

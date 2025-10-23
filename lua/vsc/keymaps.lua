@@ -377,13 +377,13 @@ return {
     vim.keymap.set('n', '<leader>ff', function()
       vscode.action('find-it-faster.findFiles')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
-    vim.keymap.set('n', '<leader>fg', function()
+    vim.keymap.set({ 'n', 'x' }, '<leader>fg', function()
       vscode.action('find-it-faster.findWithinFiles')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
     vim.keymap.set('n', '<leader>fF', function()
       vscode.action('find-it-faster.findFilesWithType')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
-    vim.keymap.set('n', '<leader>fG', function()
+    vim.keymap.set({ 'n', 'x' }, '<leader>fG', function()
       vscode.action('find-it-faster.findWithinFilesWithType')
     end, { desc = '[VSCode] Search word under the cursor', noremap = true })
     vim.keymap.set('n', '<leader>fn', function()
@@ -405,6 +405,16 @@ return {
     vim.keymap.set('n', '<leader>hd', function()
       vscode.action('git.openChange')
     end, { desc = '[VSCode] Diff hunk', noremap = true })
+
+    -- 
+    vim.keymap.set('n', '<leader>hb', function()
+      vscode.action('git.viewLineHistory')
+    end, { desc = '[VSCode] Show blame on line', noremap = true })
+
+    -- Blame line
+    vim.keymap.set('n', '<leader>hB', function()
+      vscode.action('git.blame.toggleEditorDecoration')
+    end, { desc = '[VSCode] Show blame on line', noremap = true })
 
     -- Errors in vscode show with hover rather than a
     -- separate action, so map this one as well
