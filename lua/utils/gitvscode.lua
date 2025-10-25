@@ -509,7 +509,7 @@ end
 ---remote extension
 ---@return string
 local get_tmp_dir = function ()
-  if not vim.fn.has('win32') then
+  if not (vim.fn.has('win32') == 1) then
     return '/tmp'
   end
 
@@ -533,11 +533,12 @@ end
 ---@param file string Filename to backup
 local backup_file = function (file)
   -- Save current changes
-  -- local vscode = require('vscode')
-  -- vscode.call('workbench.action.files.save')
-  vim.cmd.write()
+  local vscode = require('vscode')
+  vscode.call('workbench.action.files.save')
+  -- vim.cmd.write()
   local bac_file = vim.fn.fnamemodify(file, ':t')
   local tmp_dir = get_tmp_dir()
+  vim.fn.mkdir(tmp_dir, 'p') -- ensure exists
   local hash = randomString(10):gsub("[\\/:!?*%[%]%%\"\'><`^, ]", '_')
   -- /path/to/tmp/filename-with-ext.timestamp_10-char-hash.bac
   local back_name = tmp_dir .. '/' .. bac_file .. '.' .. os.time() .. '_' .. hash .. '.bac'
