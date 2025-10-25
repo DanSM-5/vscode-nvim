@@ -39,6 +39,12 @@ vim.cmd('set runtimepath-=' .. windows_default_config_path)
 vim.g.mapleader = '\\'
 vim.g.maplocalleader = ' '
 
+-- NOTE: Debug versions
+-- pcall(require, 'vimstart')
+-- pcall(require, 'platform_setup')
+-- pcall(require, 'config.lazy')
+-- pcall(require, 'shared.load')
+
 require('vimstart')
 require('platform_setup')
 require('config.lazy')
