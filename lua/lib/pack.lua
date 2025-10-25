@@ -4,7 +4,7 @@
 --]]
 
 local default = 'https://github.com/'
-local group = vim.api.nvim_create_augroup('pack-load-cmd', { clear = true })
+-- local group = vim.api.nvim_create_augroup('pack-load-cmd', { clear = true })
 local lazy_start = 'LazyStart'
 
 -- local group = vim.api.nvim_create_augroup('LoadPluginAutoCmd', { clear = true })
@@ -38,7 +38,7 @@ if not loaded then
   loaded = true
   vim.api.nvim_create_autocmd('UIEnter', {
     callback = vim.schedule_wrap(function ()
-      vim.api.nvim_exec_autocmds('User', { group = group, pattern = lazy_start })
+      vim.api.nvim_exec_autocmds('User', { pattern = lazy_start })
     end)
   })
 end
@@ -61,28 +61,68 @@ local function load(plugins)
 
   vim.pack.add(plugins, {
     load = function(plugin)
+      local local_group = vim.api.nvim_create_augroup('pack-load-cmd-'..plugin.spec.name, { clear = true })
       local data = plugin.spec.data or {}
+      -- If spec is lazy, do not load immediately
+      -- plugin should be loaded until manually required
+      -- or loaded with vim.cmd.pack()
+      -- or when a trigger is fired
       local lazy_load = plugin.spec.lazy or false
+      local package_loaded = false
+
+      local do_clear = function ()
+        -- Event trigger and FileType trigger cleanup
+        if data.event then
+          -- Delete all autocmd in the local group
+          pcall(vim.api.nvim_clear_autocmds, { group = local_group })
+        end
+
+        -- Command trigger cleanup
+        if data.cmd then
+          -- Delete placeholder command
+          pcall(vim.api.nvim_del_user_command, data.cmd)
+        end
+
+        -- Keymap trigger cleanup
+        if data.keys then
+          local mode, lhs = data.keys[1], data.keys[2]
+          -- Delete placeholder mapping
+          pcall(vim.keymap.del, mode, lhs)
+        end
+      end
 
       local do_load = function ()
+        -- Prevent double calling from loaded packages
+        if package_loaded then
+          return
+        end
+
+        pcall(do_clear)
+
         vim.cmd.packadd(plugin.spec.name)
         if data.config then
-          data.config(plugin)
+          local succ, err = pcall(data.config, plugin)
+          if not succ then
+            vim.notify(
+              ('[Pack] Could not load plugin: %s'):format(err),
+              vim.log.levels.ERROR)
+          end
         end
+        package_loaded = true
       end
 
       -- Event trigger
       if data.event then
         if data.event == lazy_start then
           vim.api.nvim_create_autocmd('User', {
-            group = group,
+            group = local_group,
             once = true,
             pattern = lazy_start,
             callback = do_load,
           })
         else
           vim.api.nvim_create_autocmd(data.event, {
-            group = group,
+            group = local_group,
             once = true,
             pattern = data.pattern or '*',
             callback = do_load,
@@ -94,8 +134,8 @@ local function load(plugins)
 
       -- FileType trigger
       if data.ft then
-        vim.api.nvim_create_autocmd('filetype', {
-          group = group,
+        vim.api.nvim_create_autocmd('FileType', {
+          group = local_group,
           once = true,
           pattern = data.ft,
           callback = do_load,
@@ -107,9 +147,6 @@ local function load(plugins)
       -- Command trigger
       if data.cmd then
         vim.api.nvim_create_user_command(data.cmd, function(cmd_args)
-          -- Delete placeholder keymap
-          pcall(vim.api.nvim_del_user_command, data.cmd)
-
           -- First load the plugin
           do_load()
 
@@ -140,9 +177,6 @@ local function load(plugins)
       if data.keys then
         local mode, lhs = data.keys[1], data.keys[2]
         vim.keymap.set(mode, lhs, function()
-          -- Delete placeholder mapping
-          vim.keymap.del(mode, lhs)
-
           -- Load the plugin
           do_load()
 
