@@ -85,6 +85,31 @@ local register = function()
       end, { buffer = opts.buf, desc = '[fzf] paste on fzf buffer', noremap = true, expr = true })
     end,
   })
+
+  vim.api.nvim_create_autocmd('LspAttach', {
+    callback = function (opts)
+      local id = opts.data.client_id
+      local client = vim.lsp.get_client_by_id(id)
+
+      -- early return
+      if not client then
+        return
+      end
+
+      if client:supports_method('textDocument/documentSymbol') then
+        pcall(require('lib.breadcrumbs').attach, opts.buf, id)
+      end
+    end,
+    desc = '[Lsp] Generic lsp attach logic',
+  })
+
+  vim.api.nvim_create_autocmd('LspDetach', {
+    callback = function(opts)
+      local id = opts.data.client_id
+      pcall(require('lib.breadcrumbs').detach, opts.buf, id)
+    end,
+    desc = '[Lsp] Generic lsp detach logic',
+  })
 end
 
 return {
