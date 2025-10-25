@@ -533,9 +533,15 @@ end
 ---@param file string Filename to backup
 local backup_file = function (file)
   -- Save current changes
-  local vscode = require('vscode')
-  vscode.call('workbench.action.files.save')
-  -- vim.cmd.write()
+  if vim.g.vscode == 1 then
+    -- NOTE: on vscode we use the native command with a sync call
+    -- to allow the file to be fully saved before backing it up
+    local vscode = require('vscode')
+    vscode.call('workbench.action.files.save')
+  else
+    vim.cmd.write()
+  end
+
   local bac_file = vim.fn.fnamemodify(file, ':t')
   local tmp_dir = get_tmp_dir()
   vim.fn.mkdir(tmp_dir, 'p') -- ensure exists
