@@ -27,6 +27,7 @@ return {
   --   },
   -- },
   { 'rafamadriz/friendly-snippets' },
+  { 'nvim-tree/nvim-web-devicons', lazy = true, },
   -- { 'lukas-reineke/cmp-rg' },
   {
     'psliwka/vim-smoothie',
