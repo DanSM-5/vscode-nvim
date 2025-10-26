@@ -62,7 +62,6 @@ end
 
 -- Main function to add the icons
 function Module.add_icons(buf)
-  local initial_pos = vim.fn.getpos('.')
   local bufnr = buf or vim.api.nvim_get_current_buf()
 
   -- Check if netrw is loaded and current dir is available
@@ -74,10 +73,8 @@ function Module.add_icons(buf)
   -- Clears marks from line 0 to line -1 (end of file)
   vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
 
+  -- Store cursor position
   local saved_view = vim.fn.winsaveview()
-  vim.defer_fn(function()
-    vim.fn.winrestview(saved_view)
-  end, 0)
 
   local current_dir = vim.fn.get(vim.b, 'netrw_curdir')
 
@@ -170,7 +167,8 @@ function Module.add_icons(buf)
     end
   end
 
-  vim.fn.setpos('.', initial_pos) -- recover cursor
+  -- Recover cursor position
+  vim.fn.winrestview(saved_view)
 end
 
 return Module
