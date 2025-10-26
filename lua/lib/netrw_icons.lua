@@ -118,16 +118,18 @@ function Module.add_icons(buf)
     if is_symlink then
       symbol = '' -- Fallback for symlink
       -- symbol = '🔗'
-      hl = 'Special'
+      hl = 'netrwSymLink'
     elseif is_dir then
       symbol = '' -- Fallback for directory
       -- symbol = '📁'
-      hl = 'Directory'
+      hl = 'netrwDir'
     else
       local ok_devicons, devicons = pcall(require, 'nvim-web-devicons')
       if ok_devicons then
         symbol, hl = devicons.get_icon(node)
-      else
+      end
+
+      if not symbol or not hl then
         -- Fallback for unknown file
         symbol = '󰈙'
         -- symbol = '📄'
