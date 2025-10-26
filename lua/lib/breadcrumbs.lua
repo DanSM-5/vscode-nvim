@@ -68,6 +68,45 @@ local kind_icons = {
   Value = "󰎠",
 }
 
+local kind_hl = {
+  File = "Title",
+  Module = "@module",
+  Namespace = "@lsp.type.namespace",
+  Package = "@keyword",
+  Class = "@lsp.type.class",
+  Method = "@lsp.type.method",
+  Property = "@property",
+  Field = "@property",
+  Constructor = "@constructor",
+  Enum = "@lsp.type.enum",
+  Interface = "@lsp.type.interface",
+  Function = "Function", -- @function.method
+  Variable = "@variable",
+  Constant = "@constant",
+  String = "@string",
+  Number = "@lsp.type.number",
+  Boolean = "@boolean",
+  Array = "@variable",
+  Object = "Identifier", --  󱃖 
+  Key = "@keyword",
+  Null = "@comment",
+  EnumMember = "@lsp.type.enumMember",
+  Struct = "Structure",
+  Event = "@lsp.type.event",
+  Operator = "@lsp.type.operator",
+  TypeParameter = "@lsp.type.type",
+
+  Branch = "@diff.plus",
+  Color = "String",
+  Folder = "Directory",
+  Keyword = "@keyword",
+  Reference = "LspReferenceText",
+  Snippet = "SnippetTabstop",
+  Text = "@string",
+  Unit = "Delimiter",
+  Value = "@lsp.type.variable",
+}
+
 ---Get the symbol name
 ---@param symbol lsp.DocumentSymbol|lsp.SymbolInformation
 ---@return string name the name of the symbol
@@ -106,8 +145,10 @@ local function find_symbol_path(symbol_list, line, char, path)
 
   for _, symbol in ipairs(symbol_list) do
     if range_contains_pos(symbol.range, line, char) then
-      local icon = kind_icons[kinds[symbol.kind]]
-      local segment = ('%s %s'):format(icon, get_name(symbol))
+      local kind = kinds[symbol.kind]
+      local icon = kind_icons[kind]
+      local hl = kind_hl[kind]
+      local segment = ('%%#%s#%s %s'):format(hl, icon, get_name(symbol))
       table.insert(path, segment)
       find_symbol_path(symbol.children, line, char, path)
       return true
@@ -148,12 +189,17 @@ local function lsp_callback(err, symbols, ctx, config)
 
       local parts = vim.split(relative_path, '/', { plain = true, trimempty = true })
       for i, p in ipairs(parts) do
-        local icon = i == #parts and kind_icons.File or kind_icons.Folder
-        parts[i] = ('%s %s'):format(icon, p)
+        local icon, hl
+        if i == #parts then
+          icon, hl = kind_icons.File, kind_hl.File
+        else
+          icon, hl = kind_icons.Folder, kind_hl.Folder
+        end
+        parts[i] = ('%%#%s#%s %s'):format(hl, icon, p)
       end
 
       -- relative_path = string.gsub(relative_path, '/', ' > ')
-      relative_path = table.concat(parts, '  ')
+      relative_path = table.concat(parts, '%#Delimiter#  ')
     end
   else
     -- Use filename only
@@ -174,7 +220,7 @@ local function lsp_callback(err, symbols, ctx, config)
   end
 
 
-  local breadcrumb_string = table.concat(breadcrumbs, '  ')
+  local breadcrumb_string = table.concat(breadcrumbs, '%#Delimiter#  ')
 
   if breadcrumb_string ~= '' then
     vim.opt_local.winbar = breadcrumb_string
