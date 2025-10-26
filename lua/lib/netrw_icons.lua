@@ -156,7 +156,7 @@ function Module.add_icons(buf)
     if is_symlink then
       -- if there's a -->, then the view is long and we can just go to the end
       if vim.fn.search('\\s\\+-->\\s*\\f\\+', 'Wn', vim.fn.line('.')) then
-        vim.fn.normal('$')
+        vim.cmd.normal('$')
       end
     end
   end
