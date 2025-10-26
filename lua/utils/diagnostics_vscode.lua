@@ -409,9 +409,9 @@ local diagnose_buffer = function(bufnr)
     return
   end
 
-  local parser = vim.treesitter.get_parser(bufnr, nil, { error = false })
+  local ok, parser = pcall(vim.treesitter.get_parser, bufnr, nil, { error = false })
 
-  if not parser then
+  if not ok or not parser then
     return
   end
 
