@@ -79,6 +79,8 @@ return {
 
       -- Set mappings
       gitsigns.setup({
+        -- Show before diagnostics
+        sign_priority = 11, -- defaults to 6
         on_attach = function(bufnr)
           -- Navigation
           -- vim.keymap.set('n', '<space>nh', function ()
