@@ -120,9 +120,16 @@ function Module.add_icons(buf)
       -- symbol = '🔗'
       hl = 'netrwSymLink'
     elseif is_dir then
-      symbol = '' -- Fallback for directory
-      -- symbol = '📁'
-      hl = 'netrwDir'
+      local ok_devicons, devicons = pcall(require, 'nvim-web-devicons')
+      if ok_devicons then
+        symbol, hl = devicons.get_icon(vim.fn.trim(node, '/'))
+      end
+
+      if not symbol or not hl then
+        symbol = '' -- Fallback for directory
+        -- symbol = '📁'
+        hl = 'netrwDir'
+      end
     else
       local ok_devicons, devicons = pcall(require, 'nvim-web-devicons')
       if ok_devicons then
@@ -138,7 +145,7 @@ function Module.add_icons(buf)
     end
 
     -- Add the icon using nvim_buf_set_extmark (equivalent to prop_add)
-    if symbol ~= '' then
+    if symbol and symbol ~= '' then
       -- Extmark line and column are 0-indexed
       local lnum = vim.fn.line('.') - 1
       local col = vim.fn.col('.') - 1
