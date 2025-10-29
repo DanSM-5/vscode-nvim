@@ -175,6 +175,12 @@ end, {
 -- Search in visual selected area
 vim.keymap.set('x', '/', '<esc>/\\%V', { noremap = true, desc = '[search] Narrow search to visual selection' })
 vim.keymap.set('n', 'g/', '<esc>/\\%V', { noremap = true, desc = '[search] Narrow search to visual selection' })
+vim.keymap.set('n', '<leader>sv', function ()
+  local start_l = vim.fn.line('w0')
+  local end_l = vim.fn.line('w$')
+  vim.cmd(string.format('%dmark < | %dmark >', start_l, end_l))
+  return '/\\%V'
+end, { noremap = true, expr = true, desc = '[search] search current viewport window' })
 
 -- Reselect previous yank
 -- This obscures default gV that prevents reselection of :vmenu commands
