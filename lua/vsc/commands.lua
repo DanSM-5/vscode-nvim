@@ -41,6 +41,15 @@ vim.api.nvim_create_user_command('RG', function(args)
   })
 end, { desc = '[vscode] Search in workspace', nargs = '*', bar = true, bang = true })
 
+vim.api.nvim_create_user_command('Rg', function(args)
+  local query = table.concat(args.fargs or {}, ' ')
+  vscode.action('workbench.action.findInFiles', {
+    args = {
+      query = query,
+    },
+  })
+end, { desc = '[vscode] Search in workspace (no regex)', nargs = '*', bar = true, bang = true })
+
 vim.api.nvim_create_user_command('GitFZF', function(args)
   if args.bang then
     vscode.action('find-it-faster.findFiles')
