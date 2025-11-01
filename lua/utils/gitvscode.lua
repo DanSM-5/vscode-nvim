@@ -354,38 +354,11 @@ local get_hunks = function (staged, dir)
   return hunks
 end
 
----Get the current file absolute path
----@param bur integer? bufnr to get its path
----@return string Path to the current file
-local get_file = function (buf)
-  local path = vim.api.nvim_buf_get_name(buf or 0)
-
-  if vim.fn.has('win32') == 1 then
-    -- Get file, it will return matches if in vscode-remote extension
-    local file, matches = path:gsub('%%2B', '.'):gsub('vscode%-remote://wsl%.', '')
-    if matches > 0 then
-      -- in vscode, add prefix
-      file = '//wsl.localhost/' .. file
-    end
-
-    file = vim.trim(file:gsub('\\', '/'))
-
-    return file
-  elseif vim.fn.has('wsl') == 1 then
-    -- TODO: Pending for revision last regext segment
-    local file, _ = path:gsub('%%2B', '.'):gsub('vscode%-remote://wsl%.', ''):gsub('^[a-zA-Z]+/', '/')
-
-    return file
-  end
-
-  return path
-end
-
 ---Get the current hunk under the cursor
 ---@param staged? boolean Whether or not get the staged hunks
 ---@return Hunk? The hunk under the cursor or nil if non is found
 local get_hunk_under_cursor_cli = function (staged)
-  local file = get_file()
+  local file = require('lib.fs').get_file()
   -- We need a filename for get_hunks
   local dir = vim.fn.fnamemodify(file, ':p:h')
 
@@ -555,7 +528,7 @@ end
 
 ---Revert all changes in the file using the git cli
 local revert_all_changes = function ()
-  local file = get_file()
+  local file = require('lib.fs').get_file()
   pcall(backup_file, file) -- Attempt to backup file before reset
   local dir = vim.fn.fnamemodify(file, ':p:h')
   local git_repo_cmd = { 'git', '-C', dir, 'rev-parse', '--show-toplevel' }
@@ -605,7 +578,6 @@ return {
   is_cursor_in_hunk = is_cursor_in_hunk,
   get_hunks = get_hunks,
   get_hunk_under_cursor = get_hunk_under_cursor_cli,
-  get_file = get_file,
   stage_hunk_under_cursor = stage_hunk_under_cursor,
   stage_hunk_under_cursor_vscode = stage_hunk_under_cursor_vscode,
   unstage_hunk_under_cursor = unstage_hunk_under_cursor,

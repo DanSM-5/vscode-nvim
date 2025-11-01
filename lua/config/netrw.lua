@@ -17,7 +17,7 @@ local try_toggle_netrw = function ()
 
   if cur_file ~= 'NetrwTreeListing' and (not netrw_open) then
     vim.cmd('cd ' .. file_dir)
-    local gitpath = require('utils.funcs').git_path()
+    local gitpath = require('lib.fs').git_path()
     -- WARN: Need to call Lex with the path or netrw will open on the
     -- previous window.
     -- Issue: https://groups.google.com/g/vim_dev/c/np1yarYC4Uo

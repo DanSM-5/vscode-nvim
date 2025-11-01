@@ -91,7 +91,7 @@ local function fzf_rg(opts)
     template = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true',
     query = '',
     -- prevent a require if not needed
-    directory = opts.directory or require('utils.funcs').git_path()
+    directory = opts.directory or require('lib.fs').git_path()
   }, opts)
 
   -- Spec creation

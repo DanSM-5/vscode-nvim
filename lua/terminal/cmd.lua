@@ -138,7 +138,7 @@ local register = function()
     local bang = opts.bang and 1 or 0
     local path = '' ---@type string?
     if vim.fn.empty(args) == 1 then
-      path = require('utils.funcs').git_path()
+      path = require('lib.fs').git_path()
     else
       path = args
     end

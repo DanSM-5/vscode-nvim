@@ -4,7 +4,7 @@
 local function fshow(dir)
   -- TODO: Consider make the fshow script a standalone script in path "user-scripts"
   -- rather than a utility script.
-  local cwd = dir or require('utils.funcs').git_path()
+  local cwd = dir or require('lib.fs').git_path()
   local script_preview = vim.fn.stdpath('config') .. '/bin/git-preview'
   ---@type string[]
   local script_cmd = {}
@@ -31,7 +31,7 @@ end
 ---Open git log in a floating terminal buffer
 ---@param dir? string
 local function git_log(dir)
-  local cwd = dir or require('utils.funcs').git_path()
+  local cwd = dir or require('lib.fs').git_path()
 
   require('lazy.util').float_term({
     'git', 'log', '--oneline', '--decorate', '--graph',
