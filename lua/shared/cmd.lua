@@ -351,4 +351,23 @@ end, {
   bar = true,
   bang = true,
   nargs = '?',
+  desc = '[Bcd] Attempt to cd to the git repository or directory containing buffer'
+})
+
+
+vim.api.nvim_create_user_command('Snap', function(args)
+  require('lib.snap').snap({
+    line1 = args.line1,
+    line2 = args.line2,
+    full = args.bang,
+    file = args.fargs[1] or '%',
+    output = args.fargs[2] or 'clipboard',
+  })
+end, {
+  bar = true,
+  bang = true,
+  nargs = '*',
+  complete = 'file',
+  range = true,
+  desc = '[Snap] Create a snap of the selected code'
 })
