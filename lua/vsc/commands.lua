@@ -27,10 +27,16 @@ end, { desc = '[vscode] Close all other buffers in window', bar = true })
 
 -- Fzf-like
 vim.api.nvim_create_user_command('RG', function(args)
+  if args.bang then
+    -- It is not possible to pass query from args 😔
+    vscode.action('find-it-faster.findWithinFiles')
+  end
+
   local query = table.concat(args.fargs or {}, ' ')
   vscode.action('workbench.action.findInFiles', {
     args = {
       query = query,
+      isRegex = true,
     },
   })
 end, { desc = '[vscode] Search in workspace', nargs = '*', bar = true, bang = true })
