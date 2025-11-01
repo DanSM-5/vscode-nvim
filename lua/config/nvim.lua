@@ -17,19 +17,23 @@ vim.opt.scrolloff = 5
 vim.g.markdown_folding = 1
 
 
-local lsp_servers = {}
-local ignore_servers = { 'cmp2lsp' }
-for _, file in ipairs(vim.api.nvim_get_runtime_file('after/lsp/*', true)) do
-  local name = vim.fn.fnamemodify(file, ':t:r')
-  if vim.tbl_contains(ignore_servers, name) then
-    goto continue
-  end
-  table.insert(lsp_servers, name)
+vim.api.nvim_create_autocmd('UIEnter', {
+  callback = vim.schedule_wrap(function()
+    local lsp_servers = {}
+    local ignore_servers = { 'cmp2lsp' }
+    for _, file in ipairs(vim.api.nvim_get_runtime_file('after/lsp/*', true)) do
+      local name = vim.fn.fnamemodify(file, ':t:r')
+      if vim.tbl_contains(ignore_servers, name) then
+        goto continue
+      end
+      table.insert(lsp_servers, name)
 
-  ::continue::
-end
--- Start lsps
-vim.lsp.enable(lsp_servers)
+      ::continue::
+    end
+    -- Start lsps
+    vim.lsp.enable(lsp_servers)
+  end),
+})
 
 
 -- Configure tab
