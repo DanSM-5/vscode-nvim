@@ -11,18 +11,23 @@ vim.g.miniindentscope_disable = is_vscode
 
 ---@type (LazyPluginSpec|string)[]|
 return {
+  -- Replace with register
+  'inkarkat/vim-ReplaceWithRegister',
+  -- Improve '*' and '#'
   'haya14busa/vim-asterisk',
-  -- 'urxvtcd/vim-indent-object',
+  -- Copy to register motions
   'DanSM-5/vim-system-copy',
+  -- Allow dot repeat function and keymaps
   'tpope/vim-repeat',
-  -- 'christoomey/vim-sort-motion',
+  -- Allow moving in pascal/camel case, snake case and kebab case
   'bkad/CamelCaseMotion',
-  -- 'tpope/vim-surround',
   {
+    -- Git integration
     'tpope/vim-fugitive',
     event = 'VeryLazy',
   },
   {
+    -- Change surroungins
     'kylechui/nvim-surround',
     event = 'VeryLazy',
     config = function()
@@ -39,10 +44,12 @@ return {
     end,
   },
   {
+    -- Add `Repeatable` command to improve ergonomics of vim-repeat
     'kreskij/Repeatable.vim',
     cmd = { 'Repeatable' },
   },
   {
+    -- Improve `a` and `i` text objects
     'nvim-mini/mini.ai',
     event = 'VeryLazy',
     config = function()
@@ -62,6 +69,8 @@ return {
     end,
   },
   {
+    -- Show current indent level guide
+    -- allowed in vscode as it adds the `ii` motion
     'nvim-mini/mini.indentscope',
     event = 'VeryLazy',
     config = function ()
@@ -184,12 +193,14 @@ return {
     end
   },
   {
+    -- Add treesitter queries
     'nvim-treesitter/nvim-treesitter',
     branch = 'main',
     build = ':TSUpdate',
     opts = {},
   },
   {
+    -- Add textobjects using treesitter
     'nvim-treesitter/nvim-treesitter-textobjects',
     branch = 'main',
     event = 'VeryLazy',
@@ -201,6 +212,7 @@ return {
     end,
   },
   {
+    -- Manage treesitter functionality through modules
     'MeanderingProgrammer/treesitter-modules.nvim',
     dependencies = {
       'nvim-treesitter/nvim-treesitter',
