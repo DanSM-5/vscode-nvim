@@ -123,9 +123,9 @@ local function fzf_rg(opts)
     vim.list_extend(spec.options, {
       '--with-shell', string.format(
         '%s -NoLogo -NonInteractive -NoProfile -Command',
-        vim.fn.executable('pwsh') and 'pwsh' or 'powershell'
+        vim.fn.executable('pwsh') == 1 and 'pwsh' or 'powershell'
       ),
-      '--preview', string.format('%s/preview.ps1 {}', vim.g.scripts_dir)
+      '--preview', string.format('%s/preview.ps1 $(Get-Content {f})', vim.g.scripts_dir)
     })
   else
     vim.list_extend(spec.options, {
