@@ -119,6 +119,12 @@ vim.api.nvim_create_autocmd('VimEnter', {
     vim.g.theme_toggle = highlights
 
     -- vim.cmd.ToggleBg()
+
+    vim.cmd.packadd('cfilter')
+    if vim.fn.has('nvim-0.12.0') == 1 then
+      -- Load undotree builtin plugin
+      vim.cmd.packadd('nvim.undotree')
+    end
   end,
 })
 
@@ -256,11 +262,6 @@ if vim.fn.executable('rg') then
   'rg --vimgrep --no-heading --smart-case --no-ignore --engine=pcre2 --hidden -g "!plugged" -g "!.git" -g "!node_modules"'
   vim.opt.grepformat = '%f:%l:%c:%m'
 end
-
--- Add cfilter plugin
-vim.loader.enable(false)
-vim.cmd('packadd! cfilter')
-vim.loader.enable(true)
 
 vim.api.nvim_create_autocmd('QuickFixCmdPost', {
   pattern = '*grep*',
@@ -407,9 +408,6 @@ if vim.fn.has('nvim-0.12.0') == 1 then
   -- Sample from command line
   -- gh pr checkout 123
   -- git difftool -d main
-
-  -- Load the undotree builtin plugin
-  vim.cmd([[packadd! nvim.undotree]])
 end
 
 require('terminal.autocmd').register()
