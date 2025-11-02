@@ -34,29 +34,20 @@ vim.g['asterisk#keeppos'] = 1
 vim.g.smoothie_no_default_mappings = 1
 -- Prevent open dialog
 vim.g.system_copy_silent = 1
+
+---@alias theme.toggle.entry { hi: string; on: string; off: string; }
+
+---@type theme.toggle.entry[]
+vim.g.theme_toggle = {}
 --: }}} :------------------------------------------------------------------
 
-local OnVimEnter = function()
-  -- Border highlight on floats
-  vim.api.nvim_set_hl(0, 'FloatBorder', {
-    ctermbg = 239,
-    ctermfg = 144,
-    bg = '#4a4a4a',
-    fg = '#afaf87',
-    force = true,
-  })
-
-  vim.api.nvim_set_hl(0, 'FoldColumn', {
-    link = 'SignColumn',
-    force = true,
-  })
-end
-
-vim.api.nvim_create_autocmd('VimEnter', {
-  desc = 'Run after all plugins are loaded and nvim is ready',
-  pattern = { '*' },
-  callback = OnVimEnter,
-})
+-- local OnVimEnter = function() end
+--
+-- vim.api.nvim_create_autocmd('VimEnter', {
+--   desc = 'Run after all plugins are loaded and nvim is ready',
+--   pattern = { '*' },
+--   callback = OnVimEnter,
+-- })
 
 -- Fix cursor shape on exit
 -- Windows version of neovim won't set back the cursor shape
