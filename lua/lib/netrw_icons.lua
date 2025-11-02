@@ -39,20 +39,23 @@ local function get_sid(pattern)
   return sid
 end
 
+local get_node_fn = ''
+
 local function netrw_gx()
+  if get_node_fn ~= '' then
+    return vim.trim(vim.fn.execute(get_node_fn))
+  end
+
   local netrw_sid = get_sid('autoload.netrw.vim')
 
   if not netrw_sid then
     return
   end
 
-  local cmd_fmt = [[
-    let NetrwGetWordRef = function("<SNR>%s_NetrwGetWord")
-    echo NetrwGetWordRef()
-  ]]
-  local node = vim.api.nvim_exec2(cmd_fmt:format(netrw_sid), { output = true }).output
+  get_node_fn = ([[ echo function("<SNR>%s_NetrwGetWord")() ]]):format(netrw_sid)
+  -- local node = vim.api.nvim_exec2(cmd_fmt:format(netrw_sid), { output = true }).output
 
-  return vim.trim(node)
+  return vim.trim(vim.fn.execute(get_node_fn))
 end
 
 -- Helper function to get the current buffer's syntax group name
