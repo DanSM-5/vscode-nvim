@@ -45,6 +45,11 @@ local OnVimEnter = function()
     fg = '#afaf87',
     force = true,
   })
+
+  vim.api.nvim_set_hl(0, 'FoldColumn', {
+    link = 'SignColumn',
+    force = true,
+  })
 end
 
 vim.api.nvim_create_autocmd('VimEnter', {
