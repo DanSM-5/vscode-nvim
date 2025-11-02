@@ -56,12 +56,72 @@ vim.api.nvim_create_user_command('SetTab', function(opts)
   end
 end, { desc = '[Tab] Set indentation options on buffer', bang = true, nargs = '?', bar = true })
 
+
+---Get highlight as entry for toggle
+---@param hi string
+---@return theme.toggle.entry
+function vim.g.get_hi_entry(hi, off)
+  return {
+    hi = hi,
+    on = ('hi %s'):format(vim.trim(vim.fn.execute(('hi %s'):format(hi)):gsub('xxx', ''))),
+    off = off or ('hi %s guibg=NONE ctermbg=NONE'):format(hi)
+  }
+end
+
+function vim.g.ToggleBg()
+  ---@type theme.toggle.entry[]
+  local highlights = vim.g.theme_toggle
+  local _, matches = vim.fn.execute('hi Normal'):gsub('guibg', '')
+  local map_fn
+
+  if matches == 0 then
+    map_fn = function(hi) return hi.on end
+  else
+    map_fn = function(hi) return hi.off end
+  else
+    map_fn = function(hi) return hi.on end
+  end
+
+  local cmd = table.concat(vim.tbl_map(map_fn, highlights), '\n')
+  vim.cmd(cmd)
+end
+
+vim.api.nvim_create_user_command('ToggleBg', vim.g.ToggleBg, { desc = 'Toggle background' })
+vim.keymap.set('n', '<leader>tb', '<cmd>ToggleBg<cr>', { desc = 'Toggle background' })
+
 vim.api.nvim_create_autocmd('VimEnter', {
   desc = 'Run after all plugins are loaded and nvim is ready',
   pattern = { '*' },
   callback = function()
     SetTab()
     require('config.netrw').setup()
+
+    -- Border highlight on floats
+    vim.api.nvim_set_hl(0, 'FloatBorder', {
+      ctermbg = 239,
+      ctermfg = 144,
+      bg = '#4a4a4a',
+      fg = '#afaf87',
+      force = true,
+    })
+
+    vim.api.nvim_set_hl(0, 'FoldColumn', {
+      link = 'SignColumn',
+      force = true,
+    })
+
+    ---@type theme.toggle.entry[]
+    local highlights = vim.g.theme_toggle
+
+    vim.list_extend(highlights, {
+       vim.g.get_hi_entry('Normal'),
+       vim.g.get_hi_entry('SignColumn'),
+    })
+
+    ---@type theme.toggle.entry[]
+    vim.g.theme_toggle = highlights
+
+    -- vim.cmd.ToggleBg()
   end,
 })
 
