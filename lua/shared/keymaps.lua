@@ -32,6 +32,11 @@ vim.keymap.set('n', 'g/', '<esc>/\\%V', { desc = '[Nvim] Search in last selected
 --   desc = '[Indent-Object] O-Pending around indent'
 -- })
 
+-- Replace with register keymaps
+vim.keymap.set('n', 'cr', '<Plug>ReplaceWithRegisterOperator', { desc = '[Register] Replace with register operator' })
+vim.keymap.set('n', 'crr', '<Plug>ReplaceWithRegisterLine', { desc = '[Register] Replace with register line' })
+vim.keymap.set('x', 'cr', '<Plug>ReplaceWithRegisterVisual', { desc = '[Register] Replace with register in visual mode' })
+
 -- Reselect visual blocks after indenting
 vim.keymap.set('x', '<', '<gv', {
   noremap = true,

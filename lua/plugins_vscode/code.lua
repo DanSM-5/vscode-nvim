@@ -21,6 +21,8 @@ return {
   'tpope/vim-repeat',
   -- Allow moving in pascal/camel case, snake case and kebab case
   'bkad/CamelCaseMotion',
+  -- Allow replacing text using motions without storing deleted text
+  'inkarkat/vim-ReplaceWithRegister',
   {
     -- Git integration
     'tpope/vim-fugitive',
