@@ -71,12 +71,9 @@ end
 function vim.g.ToggleBg()
   ---@type theme.toggle.entry[]
   local highlights = vim.g.theme_toggle
-  local _, matches = vim.fn.execute('hi Normal'):gsub('guibg', '')
   local map_fn
 
-  if matches == 0 then
-    map_fn = function(hi) return hi.on end
-  else
+  if vim.api.nvim_get_hl(0, { name = 'Normal' }).bg then
     map_fn = function(hi) return hi.off end
   else
     map_fn = function(hi) return hi.on end
