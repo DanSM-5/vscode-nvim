@@ -110,6 +110,22 @@ local register = function()
     end,
     desc = '[Lsp] Generic lsp detach logic',
   })
+
+  vim.api.nvim_create_autocmd({ 'ColorScheme', 'UIEnter' }, {
+    desc = 'Corrects terminal background color according to colorscheme',
+    callback = function()
+      local bg = vim.api.nvim_get_hl(0, { name = 'Normal' }).bg
+      if bg then
+        io.write(string.format('\027]11;#%06x\027\\', bg))
+      end
+    end,
+  })
+  vim.api.nvim_create_autocmd('UILeave', {
+    callback = function()
+      io.write('\027]111\027\\')
+    end,
+    desc = 'Restores terminal background color on exit',
+  })
 end
 
 return {
