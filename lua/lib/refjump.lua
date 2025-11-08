@@ -227,7 +227,11 @@ end
 local function reference_jump_from(current_position, opts, count, references, client_id, with_references)
   opts = opts or { forward = true }
 
-  local client = vim.lsp.get_client_by_id(client_id)
+  local client = vim.lsp.get_client_by_id(client_id) or vim.lsp.get_clients({
+    bufnr = 0,
+    method = 'textDocument/documentHighlight',
+  })[0]
+
   -- If no client, 'utf-16' seems like the most appropriate default
   local encoding = 'utf-16'
   if client then
@@ -245,14 +249,25 @@ local function reference_jump_from(current_position, opts, count, references, cl
     return
   end
 
-  local params = vim.lsp.util.make_position_params(0, encoding)
-  local lsp_request_handler = function(err, refs, _)
+  ---Handle document highlight response
+  ---@param err lsp.ResponseError
+  ---@param refs lsp.DocumentHighlight[]|lsp.DocumentHighlight|nil
+  ---@param ctx lsp.HandlerContext
+  local lsp_request_handler = function(err, refs, ctx)
     if err then
       vim.notify('refjump.nvim: LSP Error: ' .. err.message, vim.log.levels.ERROR)
       return
     end
 
-    if not refs or vim.tbl_isempty(refs) then
+    if not refs then
+      vim.notify('No references found', vim.log.levels.INFO)
+      return
+    end
+
+    ---@type lsp.DocumentHighlight[]
+    refs = vim.isarray(refs) and refs or { refs }
+
+    if vim.tbl_isempty(refs) then
       -- if require('refjump').get_options().verbose then
       --   vim.notify('No references found', vim.log.levels.INFO)
       -- end
@@ -276,6 +291,8 @@ local function reference_jump_from(current_position, opts, count, references, cl
   -- Default to the private function `vim.lsp.buf_request` as it should try to get a
   -- valid lsp client that supports the requested method and then call client:request on it.
 
+  local params = vim.lsp.util.make_position_params(0, encoding)
+
   if client then
     -- We call `textDocument/documentHighlight` here instead of
     -- `textDocument/references` for performance reasons. The latter searches the
@@ -283,7 +300,6 @@ local function reference_jump_from(current_position, opts, count, references, cl
     -- current buffer, which is what we want.
     client:request('textDocument/documentHighlight', params, lsp_request_handler)
   else
-    -- This function is private and probably we shouldn't rely on it.
     vim.lsp.buf_request(0, 'textDocument/documentHighlight', params, lsp_request_handler)
   end
 end
