@@ -11,6 +11,12 @@ vim.api.nvim_set_hl(0, 'HighlightYankedText', {
   link = 'IncSearch',
 })
 
+-- NOTE: Whitespace is linked to NonText
+vim.api.nvim_set_hl(0, 'NonText', {
+  force = true,
+  fg = '#5c6370',
+})
+
 -- Disable vim-smoothie remaps
 vim.g.smoothie_no_default_mappings = 1
 vim.opt.scrolloff = 5
@@ -144,6 +150,20 @@ for insertKmap, pumKmap in pairs(pumMaps) do
   end, { expr = true })
 end
 ---]]
+
+-- `:set list!`
+vim.opt.listchars = {
+  tab = '▏ ',
+  -- trail = '-',
+  -- trail = '',
+  nbsp = '+',
+  precedes = '',
+  extends = '',
+  -- eol = '$',
+  space = '·',
+  leadmultispace = '▏ ',
+  -- multispace = '▏',
+}
 
 -- Enable fold method using indent
 -- Ref: https://www.reddit.com/r/neovim/comments/10q2mjq/comment/j6nmuw8
