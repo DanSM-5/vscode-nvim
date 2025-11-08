@@ -230,7 +230,7 @@ local function reference_jump_from(current_position, opts, count, references, cl
   local client = vim.lsp.get_client_by_id(client_id) or vim.lsp.get_clients({
     bufnr = 0,
     method = 'textDocument/documentHighlight',
-  })[0]
+  })[1]
 
   -- If no client, 'utf-16' seems like the most appropriate default
   local encoding = 'utf-16'
