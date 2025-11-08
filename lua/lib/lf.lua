@@ -22,7 +22,7 @@ local lf = function(dir, fullscreen)
     cwd = vim.fn.fnamemodify(dir, ':p:h')
   end
   -- Check if cwd is assinged, if not try to guess a suitable directory
-  cwd = cwd or vim.fn['utils#git_path']() or vim.fn.expand('%:p:h')
+  cwd = cwd or require('lib.fs').git_path() or vim.fn.expand('%:p:h')
   if not vim.fn.isdirectory(cwd) then
     -- Try find root of git directory by .git file/dir
     cwd = require('utils.stdlib').find_root('.git') --[[@as string]]
