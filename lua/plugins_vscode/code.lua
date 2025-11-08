@@ -169,7 +169,7 @@ return {
           return false
         end
       else
-        vim.api.nvim_create_user_command('MiToggle', function (opts)
+        vim.api.nvim_create_user_command('MIToggle', function (opts)
           ---@type string|boolean|nil
           local option = opts.fargs[1]
 
