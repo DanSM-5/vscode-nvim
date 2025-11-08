@@ -41,6 +41,7 @@ local lazy_start = 'LazyStart'
 ---@field keys? [string|string[], string]
 ---@field desc? string optional description for triggers
 ---@field config? fun(data: pack.plugin.loadSpec) Config function for plugin.
+---@field deps? string|string[]
 
 ---@alias pack.data.str_evt (string|'LazyStart')
 ---@alias pack.data.str_evt_arr pack.data.str_evt[]
@@ -70,6 +71,10 @@ if not loaded then
     end),
   })
 end
+
+---Table containing plugins not loaded yet
+---@type table<string, { load: fun(); clear: fun() }?>
+local load_tbl = {}
 
 --- Ensure plugin entries match the spec
 ---@param plugins (string|pack.plugin.loadSpec)[]
@@ -113,7 +118,10 @@ local function load(plugins)
       -- or when a trigger is fired
       local lazy_load = data.lazy or false
       local package_loaded = false
+      -- Flag to attempt avoiding a recursive load chain
+      local loading_deps = false
 
+      --- Function that clears handlers
       local do_clear = function()
         -- Event trigger and FileType trigger cleanup
         if data.event then
@@ -136,13 +144,26 @@ local function load(plugins)
         end
       end
 
+      --- Function that load the plugin.
+      --- On the very basic config, it just calls `packadd <pname>`
       local do_load = function()
         -- Prevent double calling from loaded packages
-        if package_loaded then
+        if package_loaded or loading_deps then
           return
         end
 
         pcall(do_clear)
+
+        if data.deps then
+          ---@type string[]
+          local deps = vim.isarray(data.deps) and data.deps or { data.deps }
+
+          for _, dep in ipairs(deps) do
+            if load_tbl[dep] then
+              pcall(load_tbl[dep].load)
+            end
+          end
+        end
 
         vim.cmd.packadd(plugin.spec.name)
         if data.config then
@@ -152,7 +173,10 @@ local function load(plugins)
           end
         end
         package_loaded = true
+        load_tbl[plugin.spec.name] = nil
       end
+
+      load_tbl[plugin.spec.name] = { load = do_load, clear = do_clear }
 
       -- Event trigger
       if data.event then
@@ -308,4 +332,5 @@ end
 
 return {
   load = load,
+  load_tbl = load_tbl,
 }
