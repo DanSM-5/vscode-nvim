@@ -255,6 +255,7 @@ local set_lsp_keys = function(client, bufnr)
     set_map(nxo, '[r', function()
       ref_jump(false, client.id)
     end, '[Reference] Next reference')
+    require('lib.cursor_highlight').set_autocmds()
   end
 end
 
