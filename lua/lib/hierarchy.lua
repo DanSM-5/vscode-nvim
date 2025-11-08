@@ -487,8 +487,8 @@ end
 
 ---@param direction hierarchy.Direction Direction to search inwards or outwards
 ---@param depth? integer How deep to search in the calls
----@param lsp_client? vim.lsp.Client Optional client instance to use
-function Hierarchy.find_recursive_calls(direction, depth, lsp_client)
+---@param client_id? integer Optional client instance to use
+function Hierarchy.find_recursive_calls(direction, depth, client_id)
   Hierarchy.reference_tree = {
     name = '',
     uri = '',
@@ -500,7 +500,7 @@ function Hierarchy.find_recursive_calls(direction, depth, lsp_client)
   Hierarchy.pending_items = 0
   Hierarchy.depth = depth or 3
 
-  local client = lsp_client or vim.lsp.get_clients({ method = method })[1]
+  local client = (client_id and vim.lsp.get_client_by_id(client_id)) or vim.lsp.get_clients({ method = method })[1]
   if not client then
     vim.notify('No LSP client found for call hierarchy', vim.log.levels.ERROR)
     return
