@@ -154,15 +154,20 @@ local function load(plugins)
 
         pcall(do_clear)
 
-        if data.deps then
-          ---@type string[]
-          local deps = vim.isarray(data.deps) and data.deps or { data.deps }
+        local deps = data.deps
+        if deps then
+          ---@cast deps string[]
+          deps = vim.isarray(deps) and deps or { deps }
+
+          loading_deps = true
 
           for _, dep in ipairs(deps) do
             if load_tbl[dep] then
               pcall(load_tbl[dep].load)
             end
           end
+
+          loading_deps = false
         end
 
         vim.cmd.packadd(plugin.spec.name)
