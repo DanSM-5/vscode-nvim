@@ -37,6 +37,13 @@ vim.keymap.set('n', 'cr', '<Plug>ReplaceWithRegisterOperator', { desc = '[Regist
 vim.keymap.set('n', 'crr', '<Plug>ReplaceWithRegisterLine', { desc = '[Register] Replace with register line' })
 vim.keymap.set('x', 'cr', '<Plug>ReplaceWithRegisterVisual', { desc = '[Register] Replace with register in visual mode' })
 
+-- Yank paths
+vim.keymap.set('n', '<leader>yf', "<cmd>let @+=expand('%:.')<cr>", { desc = '[Yank] Copy path to file (relative)' })
+vim.keymap.set('n', '<leader>yF', "<cmd>let @+=expand('%:p')<cr>", { desc = '[Yank] Copy path to file (absolute)' })
+vim.keymap.set('n', '<leader>yp', "<cmd>let @+=expand('%:.:h')<cr>", { desc = '[Yank] Copy path to directory (relative)' })
+vim.keymap.set('n', '<leader>yP', "<cmd>let @+=expand('%:p:h')<cr>", { desc = '[Yank] Copy path to directory (absolute)' })
+vim.keymap.set('n', '<leader>yn', "<cmd>let @+=expand('%:t')<cr>", { desc = '[Yank] Copy name of file' })
+
 -- Reselect visual blocks after indenting
 vim.keymap.set('x', '<', '<gv', {
   noremap = true,
