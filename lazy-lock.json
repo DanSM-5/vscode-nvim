@@ -9,7 +9,7 @@
   "mini.ai": { "branch": "main", "commit": "0d3c9cf22e37b86b7a0dfbe7ef129ee7a5f4f93c" },
   "mini.indentscope": { "branch": "main", "commit": "0308f949f31769e509696af5d5f91cebb2159c69" },
   "nvim-surround": { "branch": "main", "commit": "fcfa7e02323d57bfacc3a141f8a74498e1522064" },
-  "nvim-treesitter": { "branch": "main", "commit": "d97d226cfd4c00af000b3b8529261352677fc6a8" },
+  "nvim-treesitter": { "branch": "main", "commit": "0a6817bcbb6d843d579a119d98f405c1215f2ff5" },
   "nvim-treesitter-textobjects": { "branch": "main", "commit": "7024f8687b060dd9a425bde1fa8621c896a38138" },
   "nvim-web-devicons": { "branch": "master", "commit": "8dcb311b0c92d460fac00eac706abd43d94d68af" },
   "treesitter-modules.nvim": { "branch": "main", "commit": "30fd3750c04a1bcbcf08a73890911167546de209" },
