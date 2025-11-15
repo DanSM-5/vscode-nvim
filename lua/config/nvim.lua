@@ -160,7 +160,7 @@ vim.opt.listchars = {
   precedes = '',
   extends = '',
   -- eol = '$',
-  space = '·',
+  -- space = '·',
   leadmultispace = '▏ ',
   -- multispace = '▏',
 }
