@@ -123,6 +123,29 @@ local register = function()
     end,
     desc = 'Restores terminal background color on exit',
   })
+
+  vim.api.nvim_create_autocmd('FileType', {
+    group = vim.api.nvim_create_augroup('FzfRegisters', { clear = true }),
+    pattern = 'fzf',
+    callback = function(opts)
+      vim.keymap.set('n', '<leader>v', function()
+        return 'p'
+      end, {
+        desc = '[fzf] paste from register "',
+        buffer = opts.buf,
+        expr = true,
+      })
+      vim.keymap.set('n', '<leader>"', function()
+        local content = vim.fn.getreg(vim.fn.nr2char(vim.fn.getchar()))
+        vim.fn.setreg('"', content)
+        return 'p'
+      end, {
+        desc = '[fzf] paste from register',
+        buffer = opts.buf,
+        expr = true,
+      })
+    end
+  })
 end
 
 return {
