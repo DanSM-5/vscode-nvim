@@ -307,33 +307,82 @@ vim.keymap.set(
   { desc = 'Move line to start of the buffer', noremap = true, silent = true }
 )
 
----Move to the next indent scope using direction
----@param direction boolean
-local move_scope = function(direction)
-  local ok, mini_indent = pcall(require, 'mini.indentscope')
+------Move to the next indent scope using direction
+------@param direction boolean
+---local move_scope = function(direction)
+---  local ok, mini_indent = pcall(require, 'mini.indentscope')
+---
+---  if not ok then
+---    vim.notify('mini_indent not found', vim.log.levels.WARN)
+---    return
+---  end
+---
+---  local dir = direction and 'bottom' or 'top'
+---
+---  mini_indent.operator(dir)
+---end
+----- TODO: Consider if overriding this defaults is correct
+---repeat_pair({
+---  keys = 'i',
+---  mode = nxo,
+---  on_forward = function()
+---    move_scope(true)
+---  end,
+---  on_backward = function()
+---    move_scope(false)
+---  end,
+---  desc_forward = '[MiniIndent] Go to indent scope top',
+---  desc_backward = '[MiniIndent] Go to indent scope bottom',
+---})
 
-  if not ok then
-    vim.notify('mini_indent not found', vim.log.levels.WARN)
-    return
-  end
-
-  local dir = direction and 'bottom' or 'top'
-
-  mini_indent.operator(dir)
+---@type fun(), fun()
+local indent_scope_top_n, indent_scope_bottom_n
+---@type fun(), fun()
+local indent_scope_top_xo, indent_scope_bottom_xo
+local get_indent_scope = function (...)
+  local blink_indent_motion = require('blink.indent.motion')
+  return blink_indent_motion.operator(...)
 end
--- TODO: Consider if overriding this defaults is correct
-repeat_pair({
-  keys = 'i',
-  mode = nxo,
-  on_forward = function()
-    move_scope(true)
-  end,
-  on_backward = function()
-    move_scope(false)
-  end,
-  desc_forward = '[MiniIndent] Go to indent scope top',
-  desc_backward = '[MiniIndent] Go to indent scope bottom',
-})
+
+local indent_bottom_n, indent_top_n = create_repeatable_pair(function()
+  indent_scope_bottom_n = indent_scope_bottom_n or get_indent_scope('bottom', true)
+  indent_scope_bottom_n()
+end, function()
+  indent_scope_top_n = indent_scope_top_n or get_indent_scope('top', true)
+  indent_scope_top_n()
+end)
+local indent_bottom_xo, indent_top_xo = create_repeatable_pair(function()
+  indent_scope_bottom_xo = indent_scope_bottom_xo or get_indent_scope('bottom')
+  indent_scope_bottom_xo()
+end, function()
+  indent_scope_top_xo = indent_scope_top_xo or get_indent_scope('top')
+  indent_scope_top_xo()
+end)
+
+vim.keymap.set(
+  'n',
+  '[i',
+  indent_top_n,
+  { desc = '[indent] Go to indent scope top', noremap = true, silent = true }
+)
+vim.keymap.set(
+  'n',
+  ']i',
+  indent_bottom_n,
+  { desc = '[indent] Go to indent scope bottom', noremap = true, silent = true }
+)
+vim.keymap.set(
+  { 'x', 'o' },
+  '[i',
+  indent_top_xo,
+  { desc = '[indent] Go to indent scope top', noremap = true, silent = true }
+)
+vim.keymap.set(
+  { 'x', 'o' },
+  ']i',
+  indent_bottom_xo,
+  { desc = '[indent] Go to indent scope bottom', noremap = true, silent = true }
+)
 
 local todo_next, todo_prev = create_repeatable_pair(function()
   local keywords = require('lib.fzf').todo_keywords
