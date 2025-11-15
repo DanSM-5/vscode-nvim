@@ -196,6 +196,7 @@ return {
   -- },
   {
     'saghen/blink.indent',
+    event = 'VeryLazy',
     config = function()
       ---@type boolean Contron blink.indent
       vim.g.indent_guide = true
