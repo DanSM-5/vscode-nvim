@@ -219,7 +219,7 @@ return {
           goto_bottom = '', -- ']i',
         },
         static = {
-          enabled = true,
+          enabled = not is_vscode,
           char = '▏',
           priority = 1,
           -- specify multiple highlights here for rainbow-style indent guides
@@ -227,7 +227,7 @@ return {
           highlights = { 'BlinkIndent' },
         },
         scope = {
-          enabled = true,
+          enabled = not is_vscode,
           char = '▏',
           priority = 1000,
           -- set this to a single highlight, such as 'BlinkIndent' to disable rainbow-style indent guides
@@ -250,25 +250,28 @@ return {
         },
       })
 
-      vim.api.nvim_create_user_command('IndentGuides', function (opts)
-        ---@type string|boolean|nil
-        local option = opts.fargs[1]
+      if not is_vscode then
+        vim.api.nvim_create_user_command('IndentGuides', function (opts)
+          ---@type string|boolean|nil
+          local option = opts.fargs[1]
 
-        if option ~= nil then
-          option = option == 'on'
-        end
+          if option ~= nil then
+            option = option == 'on'
+          end
 
-        -- blink.indent control
-        local blink_indent = option ~= nil and option or (not vim.g.indent_guide)
-        vim.g.indent_guide = blink_indent
+          -- blink.indent control
+          local blink_indent = option ~= nil and option or (not vim.g.indent_guide)
+          vim.g.indent_guide = blink_indent
 
-      end, {
-        desc = '[Indent] Change indent guides visibility',
-        nargs = '?',
-        bang = true,
-        bar = true,
-        complete = function () return { 'on', 'off' }  end,
-      })
+        end, {
+          desc = '[Indent] Change indent guides visibility',
+          nargs = '?',
+          bang = true,
+          bar = true,
+          complete = function () return { 'on', 'off' }  end,
+        })
+      end
+
     end,
   },
   {
