@@ -456,6 +456,18 @@ return {
       noremap = true,
       desc = '[VSCode] Open signature helpt',
     })
+
+    vim.keymap.set({ 'x', 'n' }, 'zf', vscode.to_op(function(ctx)
+      vscode.action('editor.createFoldingRangeFromSelection', {
+        range = ctx.range,
+        callback = function()
+          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<esc>', true, true, true), 'n', false)
+        end,
+      })
+    end), {
+      desc = '[fold] zf operator',
+      expr = true,
+    })
   end,
 
   set_repeatable = function()
