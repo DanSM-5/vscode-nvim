@@ -19,4 +19,5 @@ keymaps.set_repeatable()
 -- the ts query by using a motion ]m/[m. etc.
 -- keymaps.treesiter()
 require('vsc.commands')
+require('vsc.autocmd')
 
