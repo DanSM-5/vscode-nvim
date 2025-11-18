@@ -34,6 +34,12 @@ local function snap(opts)
     or 'clipboard'
   local line1 = opts.line1
   local line2 = opts.line2
+  local handle_wsl_img = false
+
+  if vim.fn.has('wsl') == 1 and output == 'clipboard' then
+    output = vim.fn.tempname() .. '.png'
+    handle_wsl_img = true
+  end
 
   local command = {
     'codesnap',
@@ -41,6 +47,25 @@ local function snap(opts)
     output,
     '--has-line-number',
   }
+
+  local on_complete = vim.schedule_wrap(function()
+    if handle_wsl_img then
+      local img = vim.system({ 'wslpath', '-w', output }, { text = true }):wait().stdout
+
+      vim.system({
+        'powershell.exe',
+        '-windowstyle',
+        'hidden',
+        '-Command',
+        ("Add-Type -AssemblyName System.Windows.Forms; [Windows.Forms.Clipboard]::SetImage($([System.Drawing.Image]::FromFile('%s')))"):format(img),
+      }, {}, vim.schedule_wrap(function()
+        vim.notify('[Snap] Snap completed', vim.log.levels.INFO)
+      end))
+      return
+    end
+
+    vim.notify('[Snap] Snap completed', vim.log.levels.INFO)
+  end)
 
   -- Buffer is a file
   if vim.uv.fs_stat(file) then
@@ -54,9 +79,7 @@ local function snap(opts)
       })
     end
 
-    vim.system(command, {}, vim.schedule_wrap(function ()
-      vim.notify('[Snap] Snap completed', vim.log.levels.INFO)
-    end))
+    vim.system(command, {}, on_complete)
     return
   end
 
@@ -74,9 +97,7 @@ local function snap(opts)
     '--from-code', code,
   })
 
-  vim.system(command, {}, vim.schedule_wrap(function ()
-    vim.notify('[Snap] Snap completed', vim.log.levels.INFO)
-  end))
+  vim.system(command, {}, on_complete)
 end
 
 return {
