@@ -54,6 +54,11 @@ local function snap(opts)
 
       vim.system({
         'powershell.exe',
+        '-NoLogo',
+        '-NonInteractive',
+        '-NoProfile',
+        '-ExecutionPolicy',
+        'bypass',
         '-windowstyle',
         'hidden',
         '-Command',
