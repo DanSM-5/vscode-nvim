@@ -65,6 +65,9 @@ local function snap(opts)
         ("Add-Type -AssemblyName System.Windows.Forms; [Windows.Forms.Clipboard]::SetImage($([System.Drawing.Image]::FromFile('%s')))"):format(img),
       }, {}, vim.schedule_wrap(function()
         vim.notify('[Snap] Snap completed', vim.log.levels.INFO)
+        if vim.uv.fs_stat(output) then
+          pcall(vim.fs.rm, output)
+        end
       end))
       return
     end
