@@ -16,6 +16,7 @@ local try_toggle_netrw = function ()
   end
 
   if cur_file ~= 'NetrwTreeListing' and (not netrw_open) then
+    vim.g.custom_netrw_from_win = vim.api.nvim_get_current_win()
     vim.cmd('cd ' .. file_dir)
     local gitpath = require('lib.fs').git_path()
     -- WARN: Need to call Lex with the path or netrw will open on the
@@ -47,7 +48,8 @@ local try_toggle_netrw = function ()
     end)
 
   else
-    vim.cmd('Lex!')
+    vim.cmd.Lex({ bang = true })
+    vim.g.custom_netrw_from_win = nil
   end
 end
 
