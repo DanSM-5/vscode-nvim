@@ -43,8 +43,7 @@ local try_toggle_netrw = function ()
     -- This block whole purpose is to toggle the header and hope for the best
     local bufnr = vim.api.nvim_get_current_buf()
     vim.api.nvim_buf_call(bufnr, function ()
-      vim.cmd.normal('I')
-      vim.cmd.normal('I')
+      vim.cmd.normal('II')
     end)
 
   else
