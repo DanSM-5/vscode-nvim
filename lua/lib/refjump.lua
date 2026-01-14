@@ -1,5 +1,7 @@
 --- Highlights handling
 
+local documentHighlight = 'textDocument/documentHighlight'
+
 ---Used to keep track of if LSP reference highlights should be enabled
 local highlight_references = false
 
@@ -212,6 +214,30 @@ local function jump_to_next_reference_and_highlight(references, forward, count, 
   end)
 end
 
+---Helper function to flatten the return of buf_request_all
+---@param results_lsp table<integer, { err?: (lsp.ResponseError)?; error?: (lsp.ResponseError)?; result: table|any[]; context?: lsp.HandlerContext }>?
+---@return lsp.DocumentHighlight|lsp.DocumentHighlight[]|nil
+local function flatten_results(results_lsp)
+  if results_lsp then
+    ---@type lsp.DocumentHighlight[]
+    local results = {}
+    for client_id, response in pairs(results_lsp) do
+      if response.result then
+        ---@type any[]
+        local res = vim.isarray(response.result) and response.result or { response.result }
+        for _, result in pairs(res) do
+          result.client_id = client_id
+          table.insert(results, result)
+        end
+      end
+    end
+
+    return results
+  end
+
+  return {}
+end
+
 ---Move cursor from `current_position` to the next LSP reference in the current
 ---buffer if `forward` is `true`, otherwise move to the previous reference.
 ---
@@ -229,7 +255,7 @@ local function reference_jump_from(current_position, opts, count, references, cl
 
   local client = vim.lsp.get_client_by_id(client_id) or vim.lsp.get_clients({
     bufnr = 0,
-    method = 'textDocument/documentHighlight',
+    method = documentHighlight,
   })[1]
 
   -- If no client, 'utf-16' seems like the most appropriate default
@@ -250,7 +276,7 @@ local function reference_jump_from(current_position, opts, count, references, cl
   end
 
   ---Handle document highlight response
-  ---@param err lsp.ResponseError
+  ---@param err lsp.ResponseError|nil
   ---@param refs lsp.DocumentHighlight[]|lsp.DocumentHighlight|nil
   ---@param ctx lsp.HandlerContext
   local lsp_request_handler = function(err, refs, ctx)
@@ -298,9 +324,22 @@ local function reference_jump_from(current_position, opts, count, references, cl
     -- `textDocument/references` for performance reasons. The latter searches the
     -- entire workspace, but `textDocument/documentHighlight` only searches the
     -- current buffer, which is what we want.
-    client:request('textDocument/documentHighlight', params, lsp_request_handler)
+    client:request(documentHighlight, params, lsp_request_handler)
   else
-    vim.lsp.buf_request(0, 'textDocument/documentHighlight', params, lsp_request_handler)
+    -- vim.lsp.buf_request(0,documentHighlight, params, lsp_request_handler)
+
+    vim.lsp.buf_request_all(0, documentHighlight, params, function(results, ctx, config)
+
+      local err = nil
+      if results then
+        local _, first_v = next(results)
+        err = first_v and first_v.err or nil
+      end
+
+      local refs = flatten_results(results)
+      lsp_request_handler(err, refs, ctx)
+    end)
+
   end
 end
 
@@ -316,7 +355,7 @@ end
 ---@param with_references? fun(refs: RefjumpReference[]) Called if `references` is `nil` with LSP references for item at `current_position`
 local function reference_jump(opts, references, client_id, with_references)
   -- local compatible_lsp_clients = vim.lsp.get_clients({
-  --   method = 'textDocument/documentHighlight',
+  --   method = documentHighlight,
   -- })
 
   local current_position = vim.api.nvim_win_get_cursor(0)

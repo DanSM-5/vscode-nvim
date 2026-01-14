@@ -897,6 +897,41 @@ function LspInterop.preview_location(location, context)
   return preview_buf, preview_win
 end
 
+---Helper function to flatten the return of buf_request_all
+---@param results_lsp table<integer, { err?: (lsp.ResponseError)?; error?: (lsp.ResponseError)?; result: table|any[]; context?: lsp.HandlerContext }>?
+---@param context lsp.HandlerContext 
+---@return lsp.Location|lsp.Location[]|lsp.LocationLink[]|nil
+local function flatten_results(results_lsp, context)
+
+  -- Debug
+  -- vim.print(results_lsp)
+
+  if results_lsp then
+    ---@type lsp.DocumentHighlight[]
+    local results = {}
+
+    if not vim.isarray(results_lsp) then
+      ---@diagnostic disable-next-line: assign-type-mismatch, undefined-field
+      results_lsp = { [context.client_id] = results_lsp.result and results_lsp or { result = results_lsp } }
+    end
+
+    for client_id, response in pairs(results_lsp) do
+      if response.result then
+        ---@type any[]
+        local res = vim.isarray(response.result) and response.result or { response.result }
+        for _, result in pairs(res) do
+          result.client_id = client_id
+          table.insert(results, result)
+        end
+      end
+    end
+
+    return results
+  end
+
+  return {}
+end
+
 function LspInterop.make_preview_location_callback(query_string, query_group, context)
   query_group = query_group or 'textobjects'
   context = context or 0
@@ -931,8 +966,18 @@ function LspInterop.make_preview_location_callback(query_string, query_group, co
     _, floating_win = LspInterop.preview_location(result, context)
   end
 
-  local signature_handler = function(err, result, handler_context, config)
-    callback(err, handler_context.method, result)
+  -- local signature_handler = function(err, result, handler_context, config)
+  local signature_handler = function(result, handler_context, config)
+
+    local err = nil
+    if result then
+      local _, first_v = next(result)
+      err = first_v and first_v.err or nil
+    end
+
+    local parsed_result = flatten_results(result, handler_context)
+
+    callback(err, handler_context.method, parsed_result)
   end
 
   return vim.schedule_wrap(signature_handler)
@@ -943,7 +988,6 @@ end
 ---@param query_group? string
 ---@param lsp_request? string
 ---@param context? any
----@return table<integer, integer>?
 ---@return fun()?
 function LspInterop.peek_definition_code(query_string, query_group, lsp_request, context)
   query_group = query_group or 'textobjects'
@@ -955,12 +999,17 @@ function LspInterop.peek_definition_code(query_string, query_group, lsp_request,
     local params = function(client)
       return vim.lsp.util.make_position_params(win_id, client.offset_encoding)
     end
-    return vim.lsp.buf_request(
-      0,
-      lsp_request,
-      params,
-      LspInterop.make_preview_location_callback(query_string, query_group, context)
-    )
+
+    -- Updated to use buf_request_all
+    return vim.lsp.buf_request_all(0, lsp_request, params, LspInterop.make_preview_location_callback(query_string, query_group, context))
+
+    -- TODO: Remove deprecated
+    -- return vim.lsp.buf_request(
+    --   0,
+    --   lsp_request,
+    --   params,
+    --   LspInterop.make_preview_location_callback(query_string, query_group, context)
+    -- )
   end
 end
 
