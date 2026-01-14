@@ -240,7 +240,14 @@ local function breadcrumbs_set()
   local params = {
     textDocument = textDocument,
   }
-  vim.lsp.buf_request(bufnr, 'textDocument/documentSymbol', params, lsp_callback)
+
+  -- Deprecated method
+  -- vim.lsp.buf_request(bufnr, 'textDocument/documentSymbol', params, lsp_callback)
+
+  local client = vim.lsp.get_clients({ buffer = bufnr, method = 'textDocument/documentSymbol' })[1]
+  if client then
+    client:request('textDocument/documentSymbol', params, lsp_callback)
+  end
 end
 
 local breadcrumbs_augroup = vim.api.nvim_create_augroup('Breadcrumbs', { clear = true })
