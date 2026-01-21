@@ -86,32 +86,99 @@ local configure = function(client, buffer, opts)
   ---]]
 
   ---[[Code required to add documentation popup for an item
-  local _, cancel_prev = nil, function() end
   vim.api.nvim_create_autocmd('CompleteChanged', {
     buffer = buffer,
     callback = function()
-      cancel_prev()
       local info = vim.fn.complete_info({ 'selected' })
       local completionItem = vim.tbl_get(vim.v.completed_item, 'user_data', 'nvim', 'lsp', 'completion_item')
       if nil == completionItem then
         return
       end
-      _, cancel_prev = vim.lsp.buf_request(
+      -- _cancel_prev = vim.lsp.buf_request_all(
+      --   buffer,
+      --   vim.lsp.protocol.Methods.completionItem_resolve,
+      --   completionItem,
+      --   function(results, ctx, config)
+      --     vim.print(results)
+      --     local err = nil
+      --     if results then
+      --       local _, first_v = next(results)
+      --       err = first_v and first_v.err or nil
+      --     end
+      --
+      --     if err then
+      --       return
+      --     end
+      --
+      --     -- for client_id, response in pairs(results_lsp) do
+      --     --   if response.result then
+      --     --     ---@type any[]
+      --     --     local res = vim.isarray(response.result) and response.result or { response.result }
+      --     --     for _, result in pairs(res) do
+      --     --       result.client_id = client_id
+      --     --       table.insert(results, result)
+      --     --     end
+      --     --   end
+      --     -- end
+      --   end
+      -- )
+
+      -- client:request(
+      --   vim.lsp.protocol.Methods.textDocument_completion,
+      --   completionItem,
+      --   function(err, item, ctx)
+      --     if not item then
+      --       return
+      --     end
+      --
+      --     local docs = (item.documentation or {}).value
+      --     local win = vim.api.nvim__complete_set(info['selected'], { info = docs })
+      --     if win.winid and vim.api.nvim_win_is_valid(win.winid) then
+      --       vim.api.nvim_win_set_config(win.winid, { border = 'rounded' })
+      --       vim.treesitter.start(win.bufnr, 'markdown')
+      --       vim.wo[win.winid].conceallevel = 3
+      --     end
+      --   end
+      -- )
+
+      local resolvedItem = vim.lsp.buf_request_sync(
         buffer,
         vim.lsp.protocol.Methods.completionItem_resolve,
         completionItem,
-        function(err, item, ctx)
-          if not item then
-            return
-          end
-          local docs = (item.documentation or {}).value
-          local win = vim.api.nvim__complete_set(info['selected'], { info = docs })
-          if win.winid and vim.api.nvim_win_is_valid(win.winid) then
-            vim.treesitter.start(win.bufnr, 'markdown')
-            vim.wo[win.winid].conceallevel = 3
-          end
-        end
-      )
+        500
+      ) or {}
+
+      local docs = vim.tbl_get(resolvedItem[client.id] or {}, 'result', 'documentation', 'value')
+      if nil == docs then
+        return
+      end
+
+      local winData = vim.api.nvim__complete_set(info['selected'], { info = docs })
+      if not winData.winid or not vim.api.nvim_win_is_valid(winData.winid) then
+        return
+      end
+
+      vim.api.nvim_win_set_config(winData.winid, { border = 'rounded' })
+      vim.treesitter.start(winData.bufnr, 'markdown')
+      vim.wo[winData.winid].conceallevel = 3
+
+      -- _, cancel_prev = vim.lsp.buf_request(
+      --   buffer,
+      --   vim.lsp.protocol.Methods.completionItem_resolve,
+      --   completionItem,
+      --   function(err, item, ctx)
+      --     if not item then
+      --       return
+      --     end
+      --     local docs = (item.documentation or {}).value
+      --     local win = vim.api.nvim__complete_set(info['selected'], { info = docs })
+      --     if win.winid and vim.api.nvim_win_is_valid(win.winid) then
+      --       vim.treesitter.start(win.bufnr, 'markdown')
+      --       vim.wo[win.winid].conceallevel = 3
+      --       vim.api.nvim_win_set_config(winData.winid, { border = 'rounded' })
+      --     end
+      --   end
+      -- )
     end,
   })
   ---]]
