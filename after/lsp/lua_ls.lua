@@ -1,4 +1,5 @@
 local root_markers = {
+  'emmyrc.json',
   '.luarc.json',
   '.luarc.jsonc',
   '.luacheckrc',
@@ -30,9 +31,30 @@ return {
   log_level = vim.lsp.protocol.MessageType.Warning,
   settings = {
     Lua = {
-      signatureHelp = { enabled = true },
-      runtime = { version = 'LuaJIT' },
-      telemetry = { enabled = false },
+      codelens = { enable = true },
+      signatureHelp = { enable = true },
+      hint = {
+        enable = true,
+        paramName = 'All',
+        paramType = true,
+      },
+      completion = {
+        enable = true,
+        autoRequire = true,
+        callSnippet = 'Both',
+        displayContext = 5,
+        keywordSnippet = 'Both',
+      },
+      runtime = {
+        version = 'LuaJIT',
+        workspace = {
+          checkThirdparty = false,
+          library = {
+            vim.env.VIMRUNTIME,
+          },
+        }
+      },
+      telemetry = { enable = false },
       workspace = { library = vim.api.nvim_get_runtime_file('', true), checkThirdparty = false },
       format = {
         enable = true,
