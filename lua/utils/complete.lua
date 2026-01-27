@@ -1,3 +1,6 @@
+---@type table<integer, integer>
+local complete_bufs = {}
+
 ---Configure lsp completion
 ---@param client vim.lsp.Client Client id
 ---@param buffer integer Butter to attach completion to
@@ -86,42 +89,44 @@ local configure = function(client, buffer, opts)
   ---]]
 
   ---[[Code required to add documentation popup for an item
-  vim.api.nvim_create_autocmd('CompleteChanged', {
+  if complete_bufs[buffer] ~= nil then
+    vim.api.nvim_del_autocmd(complete_bufs[buffer])
+  end
+
+  ---@type function()
+  local _cancel_prev = function() end
+
+  local client_id = client.id
+  complete_bufs[buffer] = vim.api.nvim_create_autocmd('CompleteChanged', {
     buffer = buffer,
     callback = function()
+      _cancel_prev()
       local info = vim.fn.complete_info({ 'selected' })
       local completionItem = vim.tbl_get(vim.v.completed_item, 'user_data', 'nvim', 'lsp', 'completion_item')
       if nil == completionItem then
         return
       end
-      -- _cancel_prev = vim.lsp.buf_request_all(
-      --   buffer,
-      --   vim.lsp.protocol.Methods.completionItem_resolve,
-      --   completionItem,
-      --   function(results, ctx, config)
-      --     vim.print(results)
-      --     local err = nil
-      --     if results then
-      --       local _, first_v = next(results)
-      --       err = first_v and first_v.err or nil
-      --     end
-      --
-      --     if err then
-      --       return
-      --     end
-      --
-      --     -- for client_id, response in pairs(results_lsp) do
-      --     --   if response.result then
-      --     --     ---@type any[]
-      --     --     local res = vim.isarray(response.result) and response.result or { response.result }
-      --     --     for _, result in pairs(res) do
-      --     --       result.client_id = client_id
-      --     --       table.insert(results, result)
-      --     --     end
-      --     --   end
-      --     -- end
-      --   end
-      -- )
+
+      _cancel_prev = vim.lsp.buf_request_all(
+        buffer,
+        vim.lsp.protocol.Methods.completionItem_resolve,
+        completionItem,
+        function(results, ctx, config)
+          local docs = vim.tbl_get(results[client_id] or {}, 'result', 'documentation', 'value')
+          if nil == docs then
+            return
+          end
+
+          local winData = vim.api.nvim__complete_set(info['selected'], { info = docs })
+          if not winData.winid or not vim.api.nvim_win_is_valid(winData.winid) then
+            return
+          end
+
+          vim.api.nvim_win_set_config(winData.winid, { border = 'rounded' })
+          vim.treesitter.start(winData.bufnr, 'markdown')
+          vim.wo[winData.winid].conceallevel = 3
+        end
+      )
 
       -- client:request(
       --   vim.lsp.protocol.Methods.textDocument_completion,
@@ -181,6 +186,7 @@ local configure = function(client, buffer, opts)
       -- )
     end,
   })
+
   ---]]
 end
 
