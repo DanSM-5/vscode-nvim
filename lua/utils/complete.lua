@@ -90,7 +90,7 @@ local configure = function(client, buffer, opts)
 
   ---[[Code required to add documentation popup for an item
   if complete_bufs[buffer] ~= nil then
-    vim.api.nvim_del_autocmd(complete_bufs[buffer])
+    pcall(vim.api.nvim_del_autocmd, complete_bufs[buffer])
   end
 
   ---@type function()
