@@ -153,7 +153,7 @@ end
 
 -- `:set list!`
 vim.opt.listchars = {
-  tab = '▏ ',
+  -- tab = '▏ ',
   -- trail = '-',
   -- trail = '',
   nbsp = '+',
@@ -161,7 +161,7 @@ vim.opt.listchars = {
   extends = '',
   -- eol = '$',
   -- space = '·',
-  leadmultispace = '▏ ',
+  -- leadmultispace = '▏ ',
   -- multispace = '▏',
 }
 
