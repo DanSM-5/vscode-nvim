@@ -27,7 +27,7 @@ vim.g.markdown_folding = 1
 
 --- Prevent attaching lsp to known buffers
 vim.lsp.start = (function()
-  ---@type fun(config: vim.lsp.ClientConfig, opts?: vim.lsp.start.Opts)
+  ---@type fun(config: vim.lsp.ClientConfig, opts?: vim.lsp.start.Opts): clientId: integer
   local og_lsp_start = vim.lsp.start
   -- known ignored filetypes
   local exclude_filetypes = {
@@ -55,7 +55,7 @@ vim.lsp.start = (function()
     end
 
     -- Start the client
-    og_lsp_start(...)
+    return og_lsp_start(...)
   end
 end)()
 
