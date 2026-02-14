@@ -3,8 +3,11 @@ vim.cmd.colorscheme('slate')
 
 -- Color scheme overrides
 -- MatchParen ctermfg=16 ctermbg=220 guifg=#000000 guibg=#ffd700
-vim.api.nvim_set_hl(0, 'MatchParen',
-  { force = true, ctermfg = 16, ctermbg = 220, fg = '#5f87d7', sp = '#5f87d7', underline = true })
+vim.api.nvim_set_hl(
+  0,
+  'MatchParen',
+  { force = true, ctermfg = 16, ctermbg = 220, fg = '#5f87d7', sp = '#5f87d7', underline = true }
+)
 
 -- Highlight when yanking text
 vim.api.nvim_set_hl(0, 'HighlightYankedText', {
@@ -22,25 +25,60 @@ vim.g.smoothie_no_default_mappings = 1
 vim.opt.scrolloff = 5
 vim.g.markdown_folding = 1
 
+--- Prevent attaching lsp to known buffers
+vim.lsp.start = (function()
+  ---@type fun(config: vim.lsp.ClientConfig, opts?: vim.lsp.start.Opts)
+  local og_lsp_start = vim.lsp.start
+  -- known ignored filetypes
+  local exclude_filetypes = {
+    'help',
+    'fzf',
+    'fugitive',
+    'qf',
+  }
 
-vim.api.nvim_create_autocmd('UIEnter', {
-  callback = vim.schedule_wrap(function()
-    local lsp_servers = {}
-    local ignore_servers = { 'cmp2lsp' }
-    for _, file in ipairs(vim.api.nvim_get_runtime_file('after/lsp/*', true)) do
-      local name = vim.fn.fnamemodify(file, ':t:r')
-      if vim.tbl_contains(ignore_servers, name) then
-        goto continue
+  return function(...)
+    ---@type vim.lsp.start.Opts
+    local opt = select(2, ...) or {}
+    local bufnr = opt.bufnr
+
+    if bufnr then
+      if
+        not vim.api.nvim_buf_is_valid(bufnr)
+        or vim.bo[bufnr].buftype ~= '' -- non regular buffers
+        or vim.b[bufnr].fugitive_type -- known fugitive buffer
+        or vim.startswith(vim.api.nvim_buf_get_name(bufnr), 'fugitive://') -- fugitive buffer
+        or vim.tbl_contains(exclude_filetypes, vim.bo[bufnr].filetype) -- excluded filetypes
+      then
+        return
       end
-      table.insert(lsp_servers, name)
-
-      ::continue::
     end
-    -- Start lsps
-    vim.lsp.enable(lsp_servers)
-  end),
-})
 
+    -- Start the client
+    og_lsp_start(...)
+  end
+end)()
+
+--- Lsp enable logic
+vim.api.nvim_create_autocmd('UIEnter', {
+  callback = function()
+    coroutine.resume(coroutine.create(vim.schedule_wrap(function()
+      local lsp_servers = {}
+      local ignore_servers = { 'cmp2lsp' }
+      for _, file in ipairs(vim.api.nvim_get_runtime_file('after/lsp/*', true)) do
+        local name = vim.fn.fnamemodify(file, ':t:r')
+        if vim.tbl_contains(ignore_servers, name) then
+          goto continue
+        end
+        table.insert(lsp_servers, name)
+
+        ::continue::
+      end
+      -- Start lsps
+      vim.lsp.enable(lsp_servers)
+    end)))
+  end,
+})
 
 -- Configure tab
 local function SetTab(space)
@@ -62,7 +100,6 @@ vim.api.nvim_create_user_command('SetTab', function(opts)
   end
 end, { desc = '[Tab] Set indentation options on buffer', bang = true, nargs = '?', bar = true })
 
-
 ---Get highlight as entry for toggle
 ---@param hi string
 ---@return theme.toggle.entry
@@ -70,7 +107,7 @@ function vim.g.get_hi_entry(hi, off)
   return {
     hi = hi,
     on = ('hi %s'):format(vim.trim(vim.fn.execute(('hi %s'):format(hi)):gsub('xxx', ''))),
-    off = off or ('hi %s guibg=NONE ctermbg=NONE'):format(hi)
+    off = off or ('hi %s guibg=NONE ctermbg=NONE'):format(hi),
   }
 end
 
@@ -80,9 +117,13 @@ function vim.g.ToggleBg()
   local map_fn
 
   if vim.api.nvim_get_hl(0, { name = 'Normal' }).bg then
-    map_fn = function(hi) return hi.off end
+    map_fn = function(hi)
+      return hi.off
+    end
   else
-    map_fn = function(hi) return hi.on end
+    map_fn = function(hi)
+      return hi.on
+    end
   end
 
   local cmd = table.concat(vim.tbl_map(map_fn, highlights), '\n')
@@ -117,8 +158,8 @@ vim.api.nvim_create_autocmd('VimEnter', {
     local highlights = vim.g.theme_toggle
 
     vim.list_extend(highlights, {
-       vim.g.get_hi_entry('Normal'),
-       vim.g.get_hi_entry('SignColumn'),
+      vim.g.get_hi_entry('Normal'),
+      vim.g.get_hi_entry('SignColumn'),
     })
 
     ---@type theme.toggle.entry[]
@@ -133,8 +174,6 @@ vim.api.nvim_create_autocmd('VimEnter', {
     end
   end,
 })
-
-
 
 ---[[ Setup keymaps so we can accept completion using Enter and choose items using arrow keys or Tab.
 local pumMaps = {
@@ -218,7 +257,6 @@ vim.opt.signcolumn = 'auto:2'
 -- Set wrap on lines
 vim.opt.wrap = true
 
-
 -- Briefly move cursor to matching pair: [], {}, ()
 -- vim.opt.showmatch = true
 -- Add angle brackets as matching pair.
@@ -279,7 +317,7 @@ end
 
 if vim.fn.executable('rg') then
   vim.opt.grepprg =
-  'rg --vimgrep --no-heading --smart-case --no-ignore --engine=pcre2 --hidden -g "!plugged" -g "!.git" -g "!node_modules"'
+    'rg --vimgrep --no-heading --smart-case --no-ignore --engine=pcre2 --hidden -g "!plugged" -g "!.git" -g "!node_modules"'
   vim.opt.grepformat = '%f:%l:%c:%m'
 end
 
@@ -296,35 +334,30 @@ vim.keymap.set(
   vim.diagnostic.open_float,
   { desc = 'LSP: Open float window', silent = true, noremap = true }
 )
-vim.keymap.set(
-  'n',
-  '<space>E',
-  function()
-    local curr_config = vim.diagnostic.config()
-    vim.diagnostic.config({ virtual_lines = { current_line = true }, virtual_text = false })
+vim.keymap.set('n', '<space>E', function()
+  local curr_config = vim.diagnostic.config()
+  vim.diagnostic.config({ virtual_lines = { current_line = true }, virtual_text = false })
 
-    local unset = function()
-      vim.diagnostic.config(curr_config)
-      pcall(vim.keymap.del, 'n', '<esc>', { buffer = true })
-    end
+  local unset = function()
+    vim.diagnostic.config(curr_config)
+    pcall(vim.keymap.del, 'n', '<esc>', { buffer = true })
+  end
 
-    vim.keymap.set('n', '<esc>', function()
-      unset()
-    end, { silent = true, buffer = true, desc = '[Diagnostic] Hide virtual lines' })
+  vim.keymap.set('n', '<esc>', function()
+    unset()
+  end, { silent = true, buffer = true, desc = '[Diagnostic] Hide virtual lines' })
 
-    vim.api.nvim_create_autocmd('CursorMoved', {
-      once = true,
-      desc = '[Diagnostic] Hide virtual lines',
-      callback = unset
-    })
-  end,
-  { desc = '[Lsp] Open virtual lines', silent = true, noremap = true }
-)
+  vim.api.nvim_create_autocmd('CursorMoved', {
+    once = true,
+    desc = '[Diagnostic] Hide virtual lines',
+    callback = unset,
+  })
+end, { desc = '[Lsp] Open virtual lines', silent = true, noremap = true })
 vim.keymap.set('n', '<space>l', vim.diagnostic.setloclist, { desc = 'LSP: Open diagnostic list', silent = true })
 vim.keymap.set('n', '<space>q', vim.diagnostic.setqflist, { desc = 'LSP: Open diagnostic list', silent = true })
 
 -- Signs for diagnostics
-local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
+local signs = { Error = ' ', Warn = ' ', Hint = '󰠠 ', Info = ' ' }
 vim.diagnostic.config({
   signs = {
     text = {
@@ -332,7 +365,7 @@ vim.diagnostic.config({
       [vim.diagnostic.severity.WARN] = signs.Warn,
       [vim.diagnostic.severity.HINT] = signs.Hint,
       [vim.diagnostic.severity.INFO] = signs.Info,
-    }
+    },
   },
 
   -- Start diagnostics (virtual text) enabled
@@ -382,25 +415,41 @@ vim.api.nvim_set_hl(0, 'DiagnosticUnderlineHint', {
 
 -- Fzf general options
 local fzf_base_options = {
-  '--multi', '--ansi', '--bind', 'alt-c:clear-query', '--input-border=rounded'
+  '--multi',
+  '--ansi',
+  '--bind',
+  'alt-c:clear-query',
+  '--input-border=rounded',
 }
 local fzf_bind_options = {
-  '--bind', 'ctrl-l:change-preview-window(down|hidden|)',
-  '--bind', 'ctrl-/:change-preview-window(down|hidden|)',
-  '--bind', 'alt-up:preview-page-up,alt-down:preview-page-down',
-  '--bind', 'shift-up:preview-up,shift-down:preview-down',
-  '--bind', 'ctrl-^:toggle-preview',
-  '--bind', 'ctrl-s:toggle-sort',
+  '--bind',
+  'ctrl-l:change-preview-window(down|hidden|)',
+  '--bind',
+  'ctrl-/:change-preview-window(down|hidden|)',
+  '--bind',
+  'alt-up:preview-page-up,alt-down:preview-page-down',
+  '--bind',
+  'shift-up:preview-up,shift-down:preview-down',
+  '--bind',
+  'ctrl-^:toggle-preview',
+  '--bind',
+  'ctrl-s:toggle-sort',
   '--cycle',
-  '--bind', 'alt-f:first',
-  '--bind', 'alt-l:last',
-  '--bind', 'alt-a:select-all',
-  '--bind', 'alt-d:deselect-all'
+  '--bind',
+  'alt-f:first',
+  '--bind',
+  'alt-l:last',
+  '--bind',
+  'alt-a:select-all',
+  '--bind',
+  'alt-d:deselect-all',
 }
 local fzf_preview_options = {
   '--layout=reverse',
-  '--preview-window', '60%,wrap',
-  '--preview', 'bat -pp --color=always --style=numbers {}'
+  '--preview-window',
+  '60%,wrap',
+  '--preview',
+  'bat -pp --color=always --style=numbers {}',
 }
 
 vim.list_extend(fzf_bind_options, fzf_base_options)
@@ -410,11 +459,10 @@ vim.g.fzf_base_options = fzf_base_options
 vim.g.fzf_bind_options = fzf_bind_options
 vim.g.fzf_preview_options = fzf_preview_options
 
-
 if vim.fn.has('nvim-0.12.0') == 1 then
   -- Fill chars to hide numbers between folds
   vim.opt.fillchars:append({ foldinner = ' ' })
-  vim.o.foldcolumn = "auto"
+  vim.o.foldcolumn = 'auto'
 
   -- Ref: https://www.reddit.com/r/neovim/comments/1o4eo6s/new_difftool_command_added_to_neovim/
   -- vim.cmd([[packadd! nvim.difftoll]])
