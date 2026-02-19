@@ -36,6 +36,7 @@ vim.keymap.set('n', 'g/', '<esc>/\\%V', { desc = '[Nvim] Search in last selected
 vim.keymap.set('n', 'cr', '<Plug>ReplaceWithRegisterOperator', { desc = '[Register] Replace with register operator' })
 vim.keymap.set('n', 'crr', '<Plug>ReplaceWithRegisterLine', { desc = '[Register] Replace with register line' })
 vim.keymap.set('x', 'cr', '<Plug>ReplaceWithRegisterVisual', { desc = '[Register] Replace with register in visual mode' })
+pcall(vim.keymap.del, 'n', 'grr')
 
 -- Yank paths
 vim.keymap.set('n', '<leader>yf', "<cmd>let @+=expand('%:.')<cr>", { desc = '[Yank] Copy path to file (relative)' })
