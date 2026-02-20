@@ -26,7 +26,7 @@ return {
   --     enable = true,
   --   },
   -- },
-  { 'rafamadriz/friendly-snippets' },
+  { 'rafamadriz/friendly-snippets', lazy = true },
   { 'nvim-tree/nvim-web-devicons', lazy = true, },
   -- { 'lukas-reineke/cmp-rg' },
   {
