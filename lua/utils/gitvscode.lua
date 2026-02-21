@@ -359,6 +359,10 @@ end
 ---@return Hunk? The hunk under the cursor or nil if non is found
 local get_hunk_under_cursor_cli = function (staged)
   local file = require('lib.fs').get_file()
+  if not file then
+    return
+  end
+
   -- We need a filename for get_hunks
   local dir = vim.fn.fnamemodify(file, ':p:h')
 
@@ -529,6 +533,10 @@ end
 ---Revert all changes in the file using the git cli
 local revert_all_changes = function ()
   local file = require('lib.fs').get_file()
+  -- return if no file was found
+  if not file then
+    return
+  end
   pcall(backup_file, file) -- Attempt to backup file before reset
   local dir = vim.fn.fnamemodify(file, ':p:h')
   local git_repo_cmd = { 'git', '-C', dir, 'rev-parse', '--show-toplevel' }

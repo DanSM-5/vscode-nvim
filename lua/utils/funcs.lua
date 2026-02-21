@@ -43,12 +43,12 @@ local buffer_cd = function(buf)
 
   ---@type string|nil
   local buffer_path = require('lib.fs').get_file(buffer)
-  -- TEST: removing expansion to parent (':h') because `git_path()`
-  -- expects the path to a file and not the path to a directory.
-  -- if buffer_path ~= nil then
-  --   buffer_path = vim.fn.fnamemodify(buffer_path, ':h')
-  -- elseif buf ~= 0 and buf ~= nil then
-  if buf ~= 0 and buf ~= nil then
+  if buffer_path ~= nil then
+    -- TEST: removing expansion to parent (':h') because `git_path()`
+    -- expects the path to a file and not the path to a directory.
+    -- buffer_path = vim.fn.fnamemodify(buffer_path, ':h')
+  elseif buf ~= 0 and buf ~= nil then
+  -- if buf ~= 0 and buf ~= nil then
     -- A buffer other than current was provided but we are unable to locate
     -- the path to that buffer. Return here as below will infer current buffer
     -- if nil or 0 is passed

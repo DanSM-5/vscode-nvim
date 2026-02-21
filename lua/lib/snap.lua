@@ -19,14 +19,14 @@ local function snap(opts)
   if file == '%' then
     -- expand is different from empty string if buffer has a name
     if vim.fn.expand('%:p') ~= '' then
-      file = require('lib.fs').get_file(0)
+      file = (require('lib.fs').get_file(0) --[[@as string]])
     end
   else
     file = require('lib.fs').expand_path(file)
   end
 
   -- NOOP if got a directory
-  if vim.fn.isdirectory(file) == 1 then
+  if not file or vim.fn.isdirectory(file) == 1 then
     return
   end
 
