@@ -1,5 +1,40 @@
 -- Filesystem related functions that deal with vscode remote path conversions
 
+local function query_default_distro()
+  -- NOTE: in the future when the proposed `resolvers` api in vscode becomes
+  -- available, it should be possible to fetch the distro name from vscode.
+  --
+  -- ```lua
+  -- =require('vscode').eval(return vscode.env.remoteAuthority)
+  -- ```
+  -- 
+  -- Ref: https://github.com/microsoft/vscode/blob/main/src/vscode-dts/vscode.proposed.resolvers.d.ts
+  -- Ref: https://code.visualstudio.com/api/advanced-topics/using-proposed-api
+
+  local command = {
+    'powershell.exe',
+    '-NoLogo',
+    '-NonInteractive',
+    '-NoProfile',
+    '-ExecutionPolicy',
+    'Bypass',
+  }
+
+  -- If on vscode, set window style to hidden
+  if vim.g.vscode then
+    table.insert(command, '-windowstyle')
+    table.insert(command, 'hidden')
+  end
+
+  -- Add actual powershell command to run
+  command = vim.list_extend(command, {
+    '-Command',
+    "((wsl --status)[0].Split(':')[1] -replace ([char]0), '').Trim()",
+  })
+  local default_distro = vim.system(command, { text = true }):wait().stdout
+  return vim.trim(default_distro or '')
+end
+
 ---Helper to transform windows paths e.g. C:/Windows/System32 into /mnt/c/Windows/System32
 ---@param path any
 ---@return string
@@ -51,28 +86,7 @@ local function wsl_to_win_path(path)
 
   -- On windows with a wsl path. Similar to above but we assume default distro
   -- E.g. "/home/user" becomes "//wsl.localhost/<distro>/home/user" 
-  local command = {
-    'powershell.exe',
-    '-NoLogo',
-    '-NonInteractive',
-    '-NoProfile',
-    '-ExecutionPolicy',
-    'Bypass',
-  }
-
-  -- If on vscode, set window style to hidden
-  if vim.g.vscode then
-    table.insert(command, '-windowstyle')
-    table.insert(command, 'hidden')
-  end
-
-  -- Add actual powershell command to run
-  command = vim.list_extend(command, {
-    '-Command',
-    "((wsl --status)[0].Split(':')[1] -replace ([char]0), '').Trim()",
-  })
-  local default_distro = vim.system(command, { text = true }):wait().stdout
-
+  local default_distro = query_default_distro()
 
   return string.format(
     '//wsl.localhost/%s%s',
@@ -121,10 +135,17 @@ local function expand_path(path)
     end
 
 
-    -- WSL path to windows format
+    -- WSL path to windows FS
     local wsl_path_to_windows, wsl_path_to_windows_matches = expanded:gsub('^/mnt/', '')
     if wsl_path_to_windows_matches > 0 then
       expanded = partial_win_path_transform(wsl_path_to_windows)
+      return vim.trim(vim.fs.normalize(expanded))
+    end
+
+    -- WSL path
+    local _, unix_path_matches = expanded:gsub('^/', '')
+    if unix_path_matches > 0 then
+      expanded = wsl_to_win_path(expanded)
     end
 
     -- expanded = vim.trim(expanded:gsub('\\', '/'))
