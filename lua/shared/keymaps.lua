@@ -403,3 +403,5 @@ repeat_pair({
   on_forward = todo_next,
   on_backward = todo_prev,
 })
+
+require('config.args_list').set_keymaps()
