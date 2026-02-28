@@ -145,8 +145,8 @@ local register = function()
     local spec = vim.fn['fzf#vim#with_preview']()
     vim.list_extend(spec.options, vim.g.fzf_preview_options)
     vim.list_extend(spec.options, opts.bang and {
-      '--preview-window', 'up,60%,wrap',
-    } or { '--preview-window', 'right,60%,wrap' })
+      '--preview-window', 'up,60%,wrap-word',
+    } or { '--preview-window', 'right,60%,wrap-word' })
     vim.fn['fzf#vim#files'](path, spec, bang)
   end, {
     bang = true,
@@ -162,8 +162,8 @@ local register = function()
     local spec = vim.fn['fzf#vim#with_preview']()
     vim.list_extend(spec.options, vim.g.fzf_preview_options)
     vim.list_extend(spec.options, args.bang and {
-      '--preview-window', 'up,60%,wrap',
-    } or { '--preview-window', 'right,60%,wrap' })
+      '--preview-window', 'up,60%,wrap-word',
+    } or { '--preview-window', 'right,60%,wrap-word' })
     vim.fn['fzf#vim#files'](query, spec, args.bang and 1 or 0)
 
   end, {
@@ -207,8 +207,8 @@ local register = function()
     local spec = { options = {} }
     vim.list_extend(spec.options, vim.g.fzf_preview_options)
     vim.list_extend(spec.options, args.bang and {
-      '--preview-window', 'up,60%,wrap',
-    } or { '--preview-window', 'right,60%,wrap' })
+      '--preview-window', 'up,60%,wrap-word',
+    } or { '--preview-window', 'right,60%,wrap-word' })
     local query = vim.fn.shellescape(table.concat(args.fargs or {}))
     local template = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true'
     local command = string.format(template, query)

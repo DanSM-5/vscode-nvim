@@ -57,6 +57,7 @@ return {
         '--bind', 'ctrl-l:change-preview-window(down|hidden|)',
         '--bind', 'ctrl-/:change-preview-window(down|hidden|)',
         '--bind', 'ctrl-^:toggle-preview',
+        '--preview-window', 'right,wrap-word',
       }
       require('fzf_lsp').setup({
         override_ui_select = true

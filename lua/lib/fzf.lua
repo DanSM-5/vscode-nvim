@@ -104,8 +104,8 @@ local function fzf_rg(opts)
   }
   vim.list_extend(spec.options, vim.g.fzf_bind_options) -- inject globals
   vim.list_extend(spec.options, opts.fullscreen and {
-    '--preview-window', 'up,60%,wrap',
-  } or { '--preview-window', 'right,60%,wrap' }) -- inject mode
+    '--preview-window', 'up,60%,wrap-word',
+  } or { '--preview-window', 'right,60%,wrap-word' }) -- inject mode
 
   -- Query parsing
   ---@type string
