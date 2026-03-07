@@ -1,33 +1,33 @@
 -- Ref: https://github.com/juniorsundar/nvim/blob/679acb2e259f23a55fc87ba837bab18705cfc3e7/lua/config/lsp/breadcrumbs.lua
 
-local kinds = {
-  'File', -- 1
-  'Module', -- 2
-  'Namespace', -- 3
-  'Package', -- 4
-  'Class', -- 5
-  'Method', -- 6
-  'Property', -- 7
-  'Field', -- 8
-  'Constructor', -- 9
-  'Enum', -- 10
-  'Interface', -- 11
-  'Function', -- 12
-  'Variable', -- 13
-  'Constant', -- 14
-  'String', -- 15
-  'Number', -- 16
-  'Boolean', -- 17
-  'Array', -- 18
-  'Object', -- 19
-  'Key', -- 20
-  'Null', -- 21
-  'EnumMember', -- 22
-  'Struct', -- 23
-  'Event', -- 24
-  'Operator', -- 25
-  'TypeParameter', -- 26
-}
+-- local kinds = {
+--   'File', -- 1
+--   'Module', -- 2
+--   'Namespace', -- 3
+--   'Package', -- 4
+--   'Class', -- 5
+--   'Method', -- 6
+--   'Property', -- 7
+--   'Field', -- 8
+--   'Constructor', -- 9
+--   'Enum', -- 10
+--   'Interface', -- 11
+--   'Function', -- 12
+--   'Variable', -- 13
+--   'Constant', -- 14
+--   'String', -- 15
+--   'Number', -- 16
+--   'Boolean', -- 17
+--   'Array', -- 18
+--   'Object', -- 19
+--   'Key', -- 20
+--   'Null', -- 21
+--   'EnumMember', -- 22
+--   'Struct', -- 23
+--   'Event', -- 24
+--   'Operator', -- 25
+--   'TypeParameter', -- 26
+-- }
 
 local kind_icons = {
   File = "󰈙",
@@ -69,42 +69,42 @@ local kind_icons = {
 }
 
 local kind_hl = {
-  File = "Title",
-  Module = "@module",
-  Namespace = "@lsp.type.namespace",
-  Package = "@keyword",
-  Class = "@lsp.type.class",
-  Method = "@lsp.type.method",
-  Property = "@property",
-  Field = "@property",
-  Constructor = "@constructor",
-  Enum = "@lsp.type.enum",
-  Interface = "@lsp.type.interface",
-  Function = "Function", -- @function.method
-  Variable = "@variable",
-  Constant = "@constant",
-  String = "@string",
-  Number = "@lsp.type.number",
-  Boolean = "@boolean",
-  Array = "@variable",
-  Object = "Identifier", --  󱃖 
-  Key = "@keyword",
-  Null = "@comment",
-  EnumMember = "@lsp.type.enumMember",
-  Struct = "Structure",
-  Event = "@lsp.type.event",
-  Operator = "@lsp.type.operator",
-  TypeParameter = "@lsp.type.type",
+  File = 'Title',
+  Module = '@module',
+  Namespace = '@lsp.type.namespace',
+  Package = '@keyword',
+  Class = '@lsp.type.class',
+  Method = '@lsp.type.method',
+  Property = '@property',
+  Field = '@property',
+  Constructor = '@constructor',
+  Enum = '@lsp.type.enum',
+  Interface = '@lsp.type.interface',
+  Function = 'Function', -- @function.method
+  Variable = '@variable',
+  Constant = '@constant',
+  String = '@string',
+  Number = '@lsp.type.number',
+  Boolean = '@boolean',
+  Array = '@variable',
+  Object = 'Identifier', --  󱃖 
+  Key = '@keyword',
+  Null = '@comment',
+  EnumMember = '@lsp.type.enumMember',
+  Struct = 'Structure',
+  Event = '@lsp.type.event',
+  Operator = '@lsp.type.operator',
+  TypeParameter = '@lsp.type.type',
 
-  Branch = "@diff.plus",
-  Color = "String",
-  Folder = "Directory",
-  Keyword = "@keyword",
-  Reference = "LspReferenceText",
-  Snippet = "SnippetTabstop",
-  Text = "@string",
-  Unit = "Delimiter",
-  Value = "@lsp.type.variable",
+  Branch = '@diff.plus',
+  Color = 'String',
+  Folder = 'Directory',
+  Keyword = '@keyword',
+  Reference = 'LspReferenceText',
+  Snippet = 'SnippetTabstop',
+  Text = '@string',
+  Unit = 'Delimiter',
+  Value = '@lsp.type.variable',
 }
 
 ---Get the symbol name
@@ -145,7 +145,8 @@ local function find_symbol_path(symbol_list, line, char, path)
 
   for _, symbol in ipairs(symbol_list) do
     if range_contains_pos(symbol.range, line, char) then
-      local kind = kinds[symbol.kind]
+      local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
+      -- local kind = kinds[symbol.kind]
       local icon = kind_icons[kind]
       local hl = kind_hl[kind]
       local segment = ('%%#%s#%s %s'):format(hl, icon, get_name(symbol))
@@ -174,7 +175,9 @@ local function lsp_callback(err, symbols, ctx, config)
 
   local clients = vim.lsp.get_clients({ bufnr = ctx.bufnr })
   ---@type vim.lsp.Client[]
-  local clients_with_root = vim.tbl_filter(function(c) return c.root_dir end, clients)
+  local clients_with_root = vim.tbl_filter(function(c)
+    return c.root_dir
+  end, clients)
 
   -- Use project root as reference if available
   if #clients_with_root > 0 and clients_with_root[1].root_dir then
@@ -218,7 +221,6 @@ local function lsp_callback(err, symbols, ctx, config)
 
     find_symbol_path(symbols, cursor_line, cursor_char, breadcrumbs)
   end
-
 
   local breadcrumb_string = table.concat(breadcrumbs, '%#Delimiter#  ')
 
