@@ -11,6 +11,7 @@ local function query_default_distro()
   -- Ref: https://github.com/microsoft/vscode/blob/main/src/vscode-dts/vscode.proposed.resolvers.d.ts
   -- Ref: https://code.visualstudio.com/api/advanced-topics/using-proposed-api
 
+
   local command = {
     'powershell.exe',
     '-NoLogo',
@@ -48,6 +49,18 @@ local function win_to_wsl_path(path)
   )
 end
 
+---Helper to build a path using wsl.localhost protocol
+---@param path string
+---@param distro string
+---@return string the built path
+local function build_wsl_to_windows_path(path, distro)
+    return string.format(
+      '//wsl.localhost/%s%s',
+      distro,
+      path
+    )
+end
+
 ---Helper to transform wsl_paths to windows e.g. /mnt/c/Windows/System32 into C:/Windows/System32
 ---@param path string
 ---@return string
@@ -76,23 +89,33 @@ local function wsl_to_win_path(path)
   -- If inside wsl, nvim can access WSL_DISTRO_NAME to compose
   -- a valid windows path '/wsl.localhost/<distro>/path'
   if vim.fn.has('wsl') == 1 then
-    return string.format(
-      '//wsl.localhost/%s%s',
-      -- os.getenv('WSL_DISTRO_NAME'),
-      vim.env.WSL_DISTRO_NAME,
-      normalized
-    )
+    -- os.getenv('WSL_DISTRO_NAME'),
+    return build_wsl_to_windows_path(normalized, vim.env.WSL_DISTRO_NAME)
   end
+
+
+  ---Fetch distro from workspace
+  ---@type { authority: string; is_wsl: true; }
+  local wf = require('vscode').eval([[ 
+    const wf = vscode?.workspace?.workspaceFolder ?? vscode?.workspace?.workspaceFolders?.[0] ?? {};
+    const authority = wf.uri?.authority ?? '';
+
+    return {
+      is_wsl: authority.includes('wsl+'),
+      authority: authority.replace('wsl+', ''),
+    };
+  ]])
+
+  if wf.is_wsl and wf.authority ~= '' then
+    return build_wsl_to_windows_path(normalized, wf.authority)
+  end
+
+
 
   -- On windows with a wsl path. Similar to above but we assume default distro
   -- E.g. "/home/user" becomes "//wsl.localhost/<distro>/home/user" 
   local default_distro = query_default_distro()
-
-  return string.format(
-    '//wsl.localhost/%s%s',
-    default_distro,
-    normalized
-  )
+  return build_wsl_to_windows_path(normalized, default_distro)
 end
 
 ---Internal helper function to join part of a windows path
