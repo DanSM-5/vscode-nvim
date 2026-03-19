@@ -162,7 +162,8 @@ end
 ---@param symbols lsp.DocumentSymbol[]|lsp.SymbolInformation[]|nil
 ---@param ctx lsp.HandlerContext
 ---@param config table?
-local function lsp_callback(err, symbols, ctx, config)
+---@param winid integer
+local function lsp_callback(err, symbols, ctx, config, winid)
   local file_path = vim.fn.bufname(ctx.bufnr)
   if not file_path or file_path == '' then
     vim.opt_local.winbar = '[No Name]'
@@ -222,6 +223,13 @@ local function lsp_callback(err, symbols, ctx, config)
     find_symbol_path(symbols, cursor_line, cursor_char, breadcrumbs)
   end
 
+  -- Check if still under the same window and buffer that issue the request
+  local winnr = vim.api.nvim_get_current_win()
+  local bufnr = vim.api.nvim_get_current_buf()
+  if winnr ~= winid or ctx.bufnr ~= bufnr then
+    return
+  end
+
   local breadcrumb_string = table.concat(breadcrumbs, '%#Delimiter#  ')
 
   if breadcrumb_string ~= '' then
@@ -232,6 +240,12 @@ local function lsp_callback(err, symbols, ctx, config)
 end
 
 local function breadcrumbs_set()
+  local winnr = vim.api.nvim_get_current_win()
+  if vim.w.qfpeek_floatwin and vim.w.qfpeek_floatwin == 1 then
+    vim.opt_local.winbar = ''
+    return
+  end
+
   local bufnr = vim.api.nvim_get_current_buf()
   local textDocument = vim.lsp.util.make_text_document_params(bufnr)
   if not textDocument.uri then
@@ -248,7 +262,9 @@ local function breadcrumbs_set()
 
   local client = vim.lsp.get_clients({ buffer = bufnr, method = 'textDocument/documentSymbol' })[1]
   if client then
-    client:request('textDocument/documentSymbol', params, lsp_callback)
+    client:request('textDocument/documentSymbol', params, function(err, symbols, ctx, config)
+      lsp_callback(err, symbols, ctx, config, winnr)
+    end)
   end
 end
 
