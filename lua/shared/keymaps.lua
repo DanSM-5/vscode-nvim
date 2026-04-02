@@ -404,4 +404,37 @@ repeat_pair({
   on_backward = todo_prev,
 })
 
+-- Treesitter builtin incremental selection
+local incremental_selection_next = function()
+  require('vim.treesitter._select').select_next(vim.v.count1)
+end
+local incremental_selection_prev = function()
+  require('vim.treesitter._select').select_prev(vim.v.count1)
+end
+repeat_pair({
+  keys = 't',
+  mode = 'x',
+  desc_forward = '[TS] Incremental selection next node',
+  desc_backward = '[TS] Incremental selection previous node',
+  on_forward = incremental_selection_next,
+  on_backward = incremental_selection_prev,
+})
+
+-- Node incremental selection mappings with LSP fallback
+vim.keymap.set({ 'x', 'o' }, 'at', function()
+  if vim.treesitter.get_parser(nil, nil, { error = false }) then
+    require('vim.treesitter._select').select_parent(vim.v.count1)
+  else
+    vim.lsp.buf.selection_range(vim.v.count1)
+  end
+end, { desc = 'Select parent (outer) node' })
+
+vim.keymap.set({ 'x', 'o' }, 'it', function()
+  if vim.treesitter.get_parser(nil, nil, { error = false }) then
+    require('vim.treesitter._select').select_child(vim.v.count1)
+  else
+    vim.lsp.buf.selection_range(-vim.v.count1)
+  end
+end, { desc = 'Select child (inner) node' })
+
 require('config.args_list').set_keymaps()

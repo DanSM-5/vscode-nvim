@@ -59,6 +59,7 @@ vim.api.nvim_create_autocmd('VimLeave', {
   end,
 })
 
+-- Remove conflicting default keymaps
 if vim.fn.has('nvim-0.11.0') == 1 then
   -- Unset defaults and let lsp-settings/keymaps.lua handle the keys
   vim.keymap.del('n', 'grr')
@@ -68,6 +69,13 @@ if vim.fn.has('nvim-0.11.0') == 1 then
   vim.keymap.del('n', 'gri')
   vim.keymap.del('n', 'grt')
   -- vim.keymap.del('n', 'gO')
+end
+if vim.fn.has('nvim-0.12.0') == 1 then
+  -- Unset defaults for incremental selection due to conflicts
+  vim.keymap.del('x', '[n')
+  vim.keymap.del('x', ']n')
+  vim.keymap.del({ 'x', 'o' }, 'an')
+  vim.keymap.del({ 'x', 'o' }, 'in')
 end
 
 vim.g.scripts_dir = vim.fn.substitute(
