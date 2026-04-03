@@ -1,18 +1,5 @@
 --- Utility functions
 
----Get the matching value from the a list
----@param options string[]
----@param value string
----@return string[]
-local function get_matched(options, value)
-  local matched = vim.tbl_filter(function(option)
-    local _, matches = string.gsub(option, value, '')
-    return matches > 0
-  end, options)
-
-  return #matched > 0 and matched or options
-end
-
 ---Callback function for TSModule commands
 ---@param module string
 ---@param state 'enable'|'disable'|''|nil
@@ -96,7 +83,7 @@ end
 local ts_modules_complete_name = function(current)
   local names = ts_modules_get_names()
   if #current > 0 then
-    return get_matched(names, current)
+    return require('lib.cmd').get_matched(names, current)
   end
 
   return names
@@ -208,7 +195,7 @@ end, {
 
     local engines = { '@google', '@bing', '@duckduckgo', '@wikipedia', '@brave', '@yandex', '@github' }
     if type(current) == 'string' and #current > 0 then
-      return get_matched(engines, current)
+      return require('lib.cmd').get_matched(engines, current)
     end
 
     return engines
@@ -234,7 +221,7 @@ end, {
     end
 
     if #cmd_parts == 3 then
-      return get_matched({ 'enable', 'disable' }, current)
+        return require('lib.cmd').get_matched({ 'enable', 'disable' }, current)
     end
 
     return ts_modules_complete_name(current)
