@@ -143,11 +143,25 @@ local function on_win_focus(floatwin)
   end)
 end
 
+---@class qfpeek.getqflist.return
+---@field changedtick integer
+---@field context string
+---@field id integer
+---@field idx integer
+---@field items vim.quickfix.entry[]
+---@field nr integer
+---@field qfbufnr integer
+---@field quickfixtextfunc string
+---@field size integer
+---@field title string
+---@field winid integer
+
 function M.on_cmd()
   local qf_buf = api.nvim_get_current_buf()
 
   local line = vim.fn.line('.') -- 1-based line index
   local is_loc_list = vim.fn.getwininfo(api.nvim_get_current_win())[1].loclist == 1
+  ---@type fun(opts: vim.fn.setqflist.what): qfpeek.getqflist.return
   local get_qf_list = is_loc_list and function(...)
     return vim.fn.getloclist(0, ...)
   end or vim.fn.getqflist
@@ -157,6 +171,7 @@ function M.on_cmd()
     return
   end
   local buf, lnum, end_lnum, col, end_col = item.bufnr, item.lnum, item.end_lnum, item.col, item.end_col
+  ---@cast buf integer
 
   --- Either create a new floating window for preview
   --- or jump to it if already visible
@@ -178,6 +193,12 @@ function M.on_cmd()
   lnum = lnum > 0 and lnum or 1
   col = col > 0 and col or 1
   api.nvim_win_set_cursor(floatwin, { lnum, col - 1 })
+  local function close_float_win()
+    if api.nvim_win_is_valid(floatwin) then
+      api.nvim_win_close(floatwin, true)
+    end
+  end
+  
 
   end_lnum = end_lnum > 0 and end_lnum or lnum
   end_col = end_col > 0 and end_col or col
@@ -198,12 +219,13 @@ function M.on_cmd()
     buffer = qf_buf,
     -- group = augroup,
     once = true,
-    callback = function()
-      if api.nvim_win_is_valid(floatwin) then
-        api.nvim_win_close(floatwin, true)
-      end
-    end,
+    callback = close_float_win,
   })
+
+  return {
+    win = floatwin,
+    close = close_float_win,
+  }
 end
 
 return M
