@@ -292,6 +292,22 @@ local register = function()
       return require('lib.fzf').todos_complete(current)
     end
   })
+
+  -- Recreate removed lsp commands
+  if vim.fn.has('nvim-0.12.0') == 1 then
+    vim.api.nvim_create_user_command("LspInfo", "checkhealth vim.lsp", {
+      desc = "Show LSP Info",
+    })
+
+    vim.api.nvim_create_user_command("LspLog", function(_)
+      local state_path = vim.fn.stdpath("state")
+      local log_path = vim.fs.joinpath(state_path, "lsp.log")
+
+      vim.cmd.edit(log_path)
+    end, {
+      desc = "Show LSP log",
+    })
+  end
 end
 
 return {

@@ -171,6 +171,10 @@ vim.api.nvim_create_autocmd('VimEnter', {
     if vim.fn.has('nvim-0.12.0') == 1 then
       -- Load undotree builtin plugin
       vim.cmd.packadd('nvim.undotree')
+      -- Load difftool builtin plugin
+      vim.cmd.packadd('nvim.difftool')
+      -- Load TOHtml **It is now not enabled by default!**
+      -- vim.cmd.packadd('nvim.tohtml')
     end
   end,
 })
