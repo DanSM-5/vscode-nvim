@@ -241,7 +241,9 @@ end
 
 local function breadcrumbs_set()
   local winnr = vim.api.nvim_get_current_win()
-  if vim.w.qfpeek_floatwin and vim.w.qfpeek_floatwin == 1 then
+
+  -- Signal to this module that the window should be ignored
+  if vim.w.breadcrumbs_ignore and vim.w.breadcrumbs_ignore == 1 then
     vim.opt_local.winbar = ''
     return
   end

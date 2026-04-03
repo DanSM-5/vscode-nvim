@@ -184,6 +184,7 @@ function M.on_cmd()
     floatwin = open_win(buf, false, opts)
     api.nvim_buf_set_var(qf_buf, 'qfpeek_floatwin', floatwin)
     api.nvim_win_set_var(floatwin, 'qfpeek_floatwin', 1)
+    api.nvim_win_set_var(floatwin, 'breadcrumbs_ignore', 1)
   else
     floatwin = vim.b.qfpeek_floatwin
     on_win_focus(floatwin)
