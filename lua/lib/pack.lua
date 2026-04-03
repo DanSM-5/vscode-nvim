@@ -50,7 +50,7 @@ local lazy_start = 'LazyStart'
 ---@field event? (pack.data.str_evt)|(pack.data.str_evt_arr)
 
 ---@class pack.plugin.loadSpec: vim.pack.Spec
----@field data pack.data.spec
+---@field data? pack.data.spec
 
 ---Ensure entry is a spec object
 ---@param url string
@@ -335,7 +335,58 @@ end
 --   },
 -- })
 
+
+---Install the list of plugins
+---@param plugins (string|vim.pack.Spec)[] 
+local function pack_install(plugins)
+  vim.pack.add(plugins, { load = true, confirm = false })
+end
+
+---Update the list of plugins
+---if plugins is empty array or nil it will update all plugins as per
+---vim.pack.update behavior
+---@param plugins string[]|nil
+---@param opts? { force?: boolean }
+local function pack_update(plugins, opts)
+  opts = vim.tbl_deep_extend('force', { force = false }, opts or {})
+
+  -- vim.pack.update will update all plugins if passed an empty array
+  -- this take advantage of that and sends nil if called with empty array
+  plugins = plugins and #plugins == 0 and nil or plugins
+  vim.pack.update(plugins, { force = opts.force })
+end
+
+---Remove the list of plugins
+---@param plugins string[] List of plugin names
+---@param opts? { force?: boolean } if it should confirm or force
+local function pack_delete(plugins, opts)
+  opts = vim.tbl_deep_extend('force', { force = false }, opts or {})
+  vim.pack.del(plugins, opts)
+end
+
+
+---Complete the package name
+---@param arg_lead string
+---@return string[]
+local function complete_packages(arg_lead)
+  arg_lead = arg_lead or ''
+
+  return vim
+    .iter(vim.pack.get())
+    :map(function(pack)
+      return pack.spec.name
+    end)
+    :filter(function(name)
+      return vim.startswith(name, arg_lead)
+    end)
+    :totable()
+end
+
 return {
   load = load,
   load_tbl = load_tbl,
+  update = pack_update,
+  install = pack_install,
+  delete = pack_delete,
+  complete_packages = complete_packages,
 }

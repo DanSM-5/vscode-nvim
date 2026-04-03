@@ -342,13 +342,105 @@ local register = function()
       complete = complete_lsp_cmd,
     })
 
-    vim.api.nvim_create_user_command("LspLog", function(_)
-      local state_path = vim.fn.stdpath("state")
-      local log_path = vim.fs.joinpath(state_path, "lsp.log")
+    ---@alias pack.cmd.complete fun(arg_lead: string): string[]
+    ---@alias pack.cmd.handler fun(plugins: string[], opts: { force?: boolean })
 
-      vim.cmd.edit(log_path)
+    ---@class pack.cmd.subcmd
+    ---@field complete? pack.cmd.complete
+    ---@field handler pack.cmd.handler
+
+    ---@type table<string, pack.cmd.subcmd | nil>
+    local pack_subcmds = {
+      update = {
+        handler = function(plugins, opts)
+          -- If there are plugins follow the regular path
+          if plugins and #plugins > 0 then
+            require('lib.pack').update(plugins, opts)
+            return
+          end
+
+          -- update all if forced
+          if opts.force then
+            -- require('lib.pack').update(plugins, { force = true })
+            require('lib.pack').update(plugins, opts)
+          end
+
+          -- otherwise confirm first
+          local prompt = 'Do you want to update ALL packages?'
+          local choice = vim.fn.confirm(prompt, '&Yes\n&No', 2)
+
+          if choice == 1 then
+            vim.notify('[:Pack] Updating everything.', vim.log.levels.INFO)
+            require('lib.pack').update(nil, opts)
+          else
+            vim.notify('Update aborted.', vim.log.levels.WARN)
+          end
+        end,
+        complete = function(...)
+          return require('lib.pack').complete_packages(...)
+        end,
+      },
+      install = {
+        handler = function(plugins)
+          require('lib.pack').install(plugins)
+        end,
+      },
+      delete = {
+        handler = function(...)
+          require('lib.pack').delete(...)
+        end,
+        complete = function(...)
+          return require('lib.pack').complete_packages(...)
+        end,
+      },
+    }
+
+    ---Completion function for :Pack command
+    ---@param param string Current param being typed
+    local function complete_pack_subcmd(param)
+      local options = vim.tbl_keys(pack_subcmds)
+      return require('lib.cmd').get_matched(options, ('^%s'):format(param))
+    end
+
+    ---Completion function for :Pack command
+    ---@param param string Current param being typed
+    ---@param cmd string Full cmd string
+    local function complete_pack_cmd(param, cmd)
+      local segments = vim.split(cmd, ' ', { plain = true })
+
+      if #segments <= 2 then
+        return complete_pack_subcmd(param)
+      end
+
+      local subcmd = pack_subcmds[segments[2]]
+      if subcmd and subcmd.complete then
+        return subcmd.complete(param)
+      end
+    end
+
+    vim.api.nvim_create_user_command('Pack', function(info)
+      -- vim.print(info.fargs)
+      local sub = info.fargs[1]
+      local subcmd = pack_subcmds[sub]
+      if subcmd == nil then
+        vim.notify(('[:Pack] unknown command "%s"'):format(subcmd), vim.log.levels.WARN)
+        return
+      end
+
+      local rest = {}
+      for i = 2, #info.fargs do
+        rest[#rest + 1] = info.fargs[i]
+      end
+
+      local opts = { force = info.bang }
+      return subcmd(rest, opts)
     end, {
-      desc = "Show LSP log",
+      desc = '[Pack] Helpers for using vim.pack',
+      nargs = '*',
+      bang = true,
+      bar = true,
+      force = true,
+      complete = complete_pack_cmd,
     })
   end
 end
