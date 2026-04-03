@@ -364,6 +364,12 @@ local function pack_delete(plugins, opts)
   vim.pack.del(plugins, opts)
 end
 
+---Restore plugins to match lockfile
+---@param plugins? string[] Not used. Can be only listed ones 🤔
+local function pack_restore(plugins)
+  vim.pack.update(nil, { target = 'lockfile' })
+end
+
 
 ---Complete the package name
 ---@param arg_lead string
@@ -388,5 +394,6 @@ return {
   update = pack_update,
   install = pack_install,
   delete = pack_delete,
+  restore = pack_restore,
   complete_packages = complete_packages,
 }

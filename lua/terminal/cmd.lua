@@ -355,14 +355,13 @@ local register = function()
         handler = function(plugins, opts)
           -- If there are plugins follow the regular path
           if plugins and #plugins > 0 then
-            require('lib.pack').update(plugins, opts)
-            return
+            return require('lib.pack').update(plugins, opts)
           end
 
           -- update all if forced
           if opts.force then
             -- require('lib.pack').update(plugins, { force = true })
-            require('lib.pack').update(plugins, opts)
+            return require('lib.pack').update(plugins, opts)
           end
 
           -- otherwise confirm first
@@ -371,7 +370,7 @@ local register = function()
 
           if choice == 1 then
             vim.notify('[:Pack] Updating everything.', vim.log.levels.INFO)
-            require('lib.pack').update(nil, opts)
+            return require('lib.pack').update(nil, opts)
           else
             vim.notify('Update aborted.', vim.log.levels.WARN)
           end
@@ -382,15 +381,20 @@ local register = function()
       },
       install = {
         handler = function(plugins)
-          require('lib.pack').install(plugins)
+          return require('lib.pack').install(plugins)
         end,
       },
       delete = {
         handler = function(...)
-          require('lib.pack').delete(...)
+          return require('lib.pack').delete(...)
         end,
         complete = function(...)
           return require('lib.pack').complete_packages(...)
+        end,
+      },
+      restore = {
+        handler = function ()
+          return require('lib.pack').restore()
         end,
       },
     }
