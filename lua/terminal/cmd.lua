@@ -145,7 +145,8 @@ local register = function()
     local spec = vim.fn['fzf#vim#with_preview']()
     vim.list_extend(spec.options, vim.g.fzf_preview_options)
     vim.list_extend(spec.options, opts.bang and {
-      '--preview-window', 'up,60%,wrap-word',
+      '--preview-window',
+      'up,60%,wrap-word',
     } or { '--preview-window', 'right,60%,wrap-word' })
     vim.fn['fzf#vim#files'](path, spec, bang)
   end, {
@@ -162,10 +163,10 @@ local register = function()
     local spec = vim.fn['fzf#vim#with_preview']()
     vim.list_extend(spec.options, vim.g.fzf_preview_options)
     vim.list_extend(spec.options, args.bang and {
-      '--preview-window', 'up,60%,wrap-word',
+      '--preview-window',
+      'up,60%,wrap-word',
     } or { '--preview-window', 'right,60%,wrap-word' })
     vim.fn['fzf#vim#files'](query, spec, args.bang and 1 or 0)
-
   end, {
     bang = true,
     bar = true,
@@ -185,7 +186,6 @@ local register = function()
     complete = 'dir',
     desc = '[Fzf] Display helptags',
   })
-
 
   vim.api.nvim_create_user_command('RG', function(args)
     ---@type fzf.rg.args
@@ -207,7 +207,8 @@ local register = function()
     local spec = { options = {} }
     vim.list_extend(spec.options, vim.g.fzf_preview_options)
     vim.list_extend(spec.options, args.bang and {
-      '--preview-window', 'up,60%,wrap-word',
+      '--preview-window',
+      'up,60%,wrap-word',
     } or { '--preview-window', 'right,60%,wrap-word' })
     local query = vim.fn.shellescape(table.concat(args.fargs or {}))
     local template = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true'
@@ -216,15 +217,18 @@ local register = function()
     -- Preview
     if vim.fn.has('win32') then
       vim.list_extend(spec.options, {
-        '--with-shell', string.format(
+        '--with-shell',
+        string.format(
           '%s -NoLogo -NonInteractive -NoProfile -Command',
           vim.fn.executable('pwsh') and 'pwsh' or 'powershell'
         ),
-        '--preview', string.format('%s/preview.ps1 {}', vim.g.scripts_dir)
+        '--preview',
+        string.format('%s/preview.ps1 {}', vim.g.scripts_dir),
       })
     else
       vim.list_extend(spec.options, {
-        '--preview', string.format('%s/preview.sh {}', vim.g.scripts_dir)
+        '--preview',
+        string.format('%s/preview.sh {}', vim.g.scripts_dir),
       })
     end
 
@@ -270,13 +274,7 @@ local register = function()
         return
       end
 
-      local options = { 'incoming', 'outcoming' }
-      local matched = vim.tbl_filter(function(option)
-        local _, matches = string.gsub(option, '^' .. param, '')
-        return matches > 0
-      end, options)
-
-      return #matched > 0 and matched or options
+      return require('lib.cmd').get_matched({ 'incoming', 'outcoming' }, string.format('^%s', param))
     end,
   })
 
@@ -290,7 +288,7 @@ local register = function()
     desc = '[Fzf] Find todos',
     complete = function(current)
       return require('lib.fzf').todos_complete(current)
-    end
+    end,
   })
 
   -- Recreate removed lsp commands
