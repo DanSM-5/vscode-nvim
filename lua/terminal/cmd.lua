@@ -342,12 +342,69 @@ local register = function()
       complete = complete_lsp_cmd,
     })
 
-    ---@alias pack.cmd.complete fun(arg_lead: string): string[]
+    ---@alias pack.cmd.complete fun(arg_lead: string, cmd: string, pos: integer): string[]
     ---@alias pack.cmd.handler fun(plugins: string[], opts: { force?: boolean })
 
     ---@class pack.cmd.subcmd
     ---@field complete? pack.cmd.complete
     ---@field handler pack.cmd.handler
+
+    ---Get lockfile file path and flag if it exits
+    ---@return string lockfile path
+    ---@return boolean exists is there lockfile?
+    local get_lockfile_path = function()
+      local config_path = vim.fn.stdpath('config')
+      local lockfile = vim.fs.joinpath(config_path, 'nvim-pack-lock.json')
+
+      if vim.uv.fs_stat(lockfile) then
+        return lockfile, true
+      end
+
+      return lockfile, false
+    end
+
+    ---@type table<string, { handler: fun() } | nil>
+    local pack_lockfile_subcmds = {
+      edit = {
+        handler = function()
+          local lockfile, exists = get_lockfile_path()
+
+          if exists then
+            vim.cmd.edit(lockfile)
+          else
+            vim.notify(('[:Pack] Lockfile not found in "%s"'):format(lockfile), vim.log.levels.WARN)
+          end
+        end,
+      },
+      status = {
+        handler = function()
+          local lockfile, exists = get_lockfile_path()
+          if exists then
+            vim.cmd(('Git diff HEAD %s'):format(lockfile))
+          else
+            vim.notify(('[:Pack] Lockfile not found in "%s"'):format(lockfile), vim.log.levels.WARN)
+          end
+        end,
+      },
+      update = {
+        handler = function()
+          local lockfile, exists = get_lockfile_path()
+          if exists then
+            vim.cmd(('Git add %s'):format(lockfile))
+            -- Commit with default message but open editor for confirmation
+            vim.cmd(('Git commit -m "chore(deps): update deps `pack`" -e %s'):format(lockfile))
+          end
+        end,
+      },
+      clear = {
+        handler = function()
+          local lockfile, exists = get_lockfile_path()
+          if exists then
+            vim.cmd(('Git checkout -- %s'):format(lockfile))
+          end
+        end,
+      },
+    }
 
     ---@type table<string, pack.cmd.subcmd | nil>
     local pack_subcmds = {
@@ -393,8 +450,46 @@ local register = function()
         end,
       },
       restore = {
-        handler = function ()
-          return require('lib.pack').restore()
+        handler = function(_, opts)
+          local _, exists_lockfile = get_lockfile_path()
+          if not exists_lockfile then
+            return vim.notify('[:Pack] Cannot restore because there is no lockfile "nvim-pack-lock.json"', vim.log.levels.ERROR)
+          end
+
+          if opts.force then
+            return require('lib.pack').restore()
+          end
+
+          -- otherwise confirm first
+          local prompt = 'Do you want to restore ALL packages?'
+          local choice = vim.fn.confirm(prompt, '&Yes\n&No', 2)
+
+          if choice == 1 then
+            vim.notify('[:Pack] Restoring to current lockfile values.', vim.log.levels.INFO)
+            return require('lib.pack').restore()
+          else
+            vim.notify('[:Pack] Restore aborted.', vim.log.levels.WARN)
+          end
+        end,
+      },
+      lockfile = {
+        handler = function(options)
+          local selection = options[1]
+          local subcmd = pack_lockfile_subcmds[selection]
+          if subcmd == nil then
+            vim.notify('[:Pack] Unknown "lockfile" option', vim.log.levels.WARN)
+            return
+          end
+
+          subcmd.handler()
+        end,
+        complete = function(param, cmd)
+          local segments = vim.split(cmd, ' ')
+          if #segments > 3 then
+            return {}
+          end
+
+          return require('lib.cmd').get_matched(vim.tbl_keys(pack_lockfile_subcmds), ('^%s'):format(param))
         end,
       },
     }
@@ -409,7 +504,8 @@ local register = function()
     ---Completion function for :Pack command
     ---@param param string Current param being typed
     ---@param cmd string Full cmd string
-    local function complete_pack_cmd(param, cmd)
+    ---@param pos integer Cursor position
+    local function complete_pack_cmd(param, cmd, pos)
       local segments = vim.split(cmd, ' ', { plain = true })
 
       if #segments <= 2 then
@@ -418,7 +514,7 @@ local register = function()
 
       local subcmd = pack_subcmds[segments[2]]
       if subcmd and subcmd.complete then
-        return subcmd.complete(param)
+        return subcmd.complete(param, cmd, pos)
       end
     end
 
