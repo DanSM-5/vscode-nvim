@@ -293,8 +293,53 @@ local register = function()
 
   -- Recreate removed lsp commands
   if vim.fn.has('nvim-0.12.0') == 1 then
-    vim.api.nvim_create_user_command("LspInfo", "checkhealth vim.lsp", {
-      desc = "Show LSP Info",
+    ---@type table<string, { handler: fun() } | nil>
+    local lsp_subcmds = {
+      info = {
+        handler = function()
+          vim.cmd.checkhealth('vim.lsp')
+        end,
+      },
+      log = {
+        handler = function()
+          local state_path = vim.fn.stdpath('state')
+          local log_path = vim.fs.joinpath(state_path, 'lsp.log')
+
+          vim.cmd.edit(log_path)
+        end,
+      },
+    }
+
+    ---Completion function for :Lsp command
+    ---@param param string Current param being typed
+    ---@param cmd string Full cmd string
+    local function complete_lsp_cmd(param, cmd)
+      local segments = vim.split(cmd, ' ', { plain = true })
+
+      if #segments == 2 then
+        return require('lib.cmd').get_matched(vim.tbl_keys(lsp_subcmds), param)
+      end
+
+      return {}
+    end
+
+    vim.api.nvim_create_user_command('Lsp', function(info)
+      local sub = info.fargs[1]
+      local subcmd = lsp_subcmds[sub]
+
+      if subcmd == nil then
+        vim.notify(('[:Lsp] unknown subcmd "%s"'):format(sub))
+        return
+      end
+
+      subcmd.handler()
+    end, {
+      desc = '[:Lsp] missing options from `:lsp` command',
+      nargs = 1,
+      bang = true,
+      bar = true,
+      force = true,
+      complete = complete_lsp_cmd,
     })
 
     vim.api.nvim_create_user_command("LspLog", function(_)
