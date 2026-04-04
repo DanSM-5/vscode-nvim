@@ -47,10 +47,11 @@ local pack_group = vim.api.nvim_create_augroup('pack_group', { clear = true })
 ---@field cmd? pack.data.cmd Command trigger.
 ---@field keys? pack.data.keys|pack.data.keys[]
 ---@field desc? string optional description for triggers
----@field config? fun(data: pack.plugin.loadSpec) Config function for plugin.
+---@field config? fun(data: pack.plugin) Config function for plugin.
 ---@field deps? string|string[] Ensure dependencies are loaded. This is not a full spec, all dependencies need to be added at the top object and this just reference them from it
 ---@field build? pack.load.build_hook Build hook
 ---@field buildPre? pack.load.build_hook PreBuild hook
+---@field init? fun(data: pack.plugin) Like config but before plugin is loaded
 
 -- Hack to avoid typing errors when matching a string agains the events type
 -- by collapsing them into just string or 'LazyStart' for handling it internally
@@ -62,6 +63,8 @@ local pack_group = vim.api.nvim_create_augroup('pack_group', { clear = true })
 
 ---@class pack.plugin.loadSpec: vim.pack.Spec
 ---@field data? pack.data.spec
+
+---@alias pack.plugin { spec: pack.plugin.loadSpec; path: string; }
 
 ---Ensure entry is a spec object
 ---@param url string
@@ -137,8 +140,23 @@ if not loaded then
   })
 end
 
+---Run safely a callback such as `config` or `init`
+---@param cb fun(data: pack.plugin) callback to run
+---@param plugin pack.plugin plugin spec to pass to callback
+---@param cb_type 'init'|'config' type of callback
+local function run_cb(cb, plugin, cb_type)
+  local succ, err = pcall(cb, plugin)
+  if not succ then
+    vim.notify(err, vim.log.levels.ERROR)
+    vim.notify(
+      ('[Pack] Could failed to run "%" for plugin: %s'):format(cb_type, plugin.spec.name),
+      vim.log.levels.ERROR
+    )
+  end
+end
+
 ---Table containing plugins not loaded yet
----@type table<string, { load: fun(); clear: fun(), build: fun() }?>
+---@type table<string, { load: fun(); clear: fun() }?>
 local load_tbl = {}
 
 --- Ensure plugin entries match the spec
@@ -245,14 +263,14 @@ local function load(plugins)
           loading_deps = false
         end
 
+        ---@cast plugin pack.plugin
+
+        -- Run initialization and configuration
+        if data.init then run_cb(data.config, plugin, 'init') end
         vim.cmd.packadd(plugin.spec.name)
-        if data.config then
-          local succ, err = pcall(data.config, plugin)
-          if not succ then
-            vim.notify(err, vim.log.levels.ERROR)
-            vim.notify(('[Pack] Could not load plugin: %s'):format(plugin.spec.name), vim.log.levels.ERROR)
-          end
-        end
+        if data.config then run_cb(data.config, plugin, 'config') end
+
+        -- cleanup state
         package_loaded = true
         load_tbl[plugin.spec.name] = nil
       end
@@ -265,7 +283,8 @@ local function load(plugins)
         local events = type(data.event) == 'string' and { data.event } or data.event --[[@as pack.data.str_evt_arr]]
 
         ---@type string[]
-        local filtered_evts = vim.iter(events)
+        local filtered_evts = vim
+          .iter(events)
           :filter(function(evt)
             return evt ~= lazy_start
           end)
