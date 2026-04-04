@@ -400,7 +400,13 @@ vim.diagnostic.config({
   -- Start diagnostics (virtual text) enabled
   virtual_text = true,
   jump = {
-    float = true,
+    on_jump = function(_, bufnr)
+      vim.diagnostics.open_float({
+        bufnr = bufnr,
+        scope = 'cursor',
+        focus = false,
+      })
+    end,
   },
 
   float = {
