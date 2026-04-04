@@ -111,7 +111,8 @@ local function createFile(opts)
       return
     end
 
-    local dir = vim.fs.normalize(vim.fn.expand('%'):gsub('NetrwTreeListing', ''), {})
+    --- Use the window `netrw_treetop`
+    local dir = vim.w.netrw_treetop or vim.fs.normalize(vim.fn.expand('%'):gsub('NetrwTreeListing', ''), {})
 
     if vim.fn.isdirectory(dir) == 0 then
       return
