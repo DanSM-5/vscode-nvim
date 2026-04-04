@@ -11,20 +11,19 @@ local lazy_start = 'LazyStart'
 
 -- local group = vim.api.nvim_create_augroup('LoadPluginAutoCmd', { clear = true })
 
--- local pack_group = vim.api.nvim_create_augroup('pack-update', { clear = true })
--- vim.api.nvim_create_autocmd('PackChanged', {
---   group = pack_group,
---   callback = function (ev)
---     if ev.data.kind == 'update' and ev.data.spec.name == '' then
---
---     end
---
---   end
--- })
+local pack_group = vim.api.nvim_create_augroup('pack_group', { clear = true })
 
+---:h PackChanged
+---@class pack.build.data 
+---@field active boolean Whether plugin was added via vim.pack.add
+---@field kind 'install' | 'update' | 'delete' kind of package change
+---@field spec pack.plugin.loadSpec
+---@field path string
+
+-- Needed for completion when adding a spec to the array of plugins
 ---@alias pack.load.event vim.api.keyset.events|'LazyStart'
-
 ---@alias pack.load.events pack.load.event|pack.load.event[]
+---@alias pack.load.build_hook string|string[]|fun(data: pack.build.data)
 
 ---@class pack.data.spec
 ---@field lazy? boolean Whether to lazy load the plugin or not.
@@ -41,8 +40,12 @@ local lazy_start = 'LazyStart'
 ---@field keys? [string|string[], string]
 ---@field desc? string optional description for triggers
 ---@field config? fun(data: pack.plugin.loadSpec) Config function for plugin.
----@field deps? string|string[]
+---@field deps? string|string[] Ensure dependencies are loaded. This is not a full spec, all dependencies need to be added at the top object and this just reference them from it
+---@field build? pack.load.build_hook Build hook
+---@field buildPre? pack.load.build_hook PreBuild hook
 
+-- Hack to avoid typing errors when matching a string agains the events type
+-- by collapsing them into just string or 'LazyStart' for handling it internally
 ---@alias pack.data.str_evt (string|'LazyStart')
 ---@alias pack.data.str_evt_arr pack.data.str_evt[]
 
@@ -66,14 +69,68 @@ local loaded = false
 if not loaded then
   loaded = true
   vim.api.nvim_create_autocmd('UIEnter', {
+    group = pack_group,
     callback = vim.schedule_wrap(function()
       vim.api.nvim_exec_autocmds('User', { pattern = lazy_start })
     end),
   })
+
+  ---Build hook function
+  ---@param data pack.build.data
+  ---@param buildType 'buildPre'|'build'
+  local function build_hook(data, buildType)
+    ---@type pack.load.build_hook?
+    local hook = data.spec.data[buildType]
+
+    -- No hook, skip
+    if not hook then
+      return
+    end
+
+    -- Delegate build to caller
+    if type(hook) == 'function' then
+      return hook(data)
+    end
+
+    -- Ensure hook is string
+    hook = vim.islist(hook) and hook or vim.split(hook --[[@as string]], ' ', { plain = true, trimempty = true })
+    ---@cast hook string[]
+    vim.schedule(function ()
+      local package_name = vim.fn.fnamemodify(data.spec.src, ':t')
+      vim.notify(('Building %s...'):format(package_name), vim.log.levels.INFO)
+      vim.system(hook, { cwd = data.path }, function(result)
+        local success = result.code == 0
+        local log_level = success and vim.log.levels.INFO or vim.log.levels.ERROR
+        local message = success and 'successful' or 'failed'
+        vim.notify(('Build %s for %s'):format(message, package_name), log_level)
+      end)
+    end)
+  end
+
+  vim.api.nvim_create_autocmd('PackChanged', {
+    group = pack_group,
+    callback = function (args)
+      ---@type pack.build.data
+      local data = args.data
+      if vim.tbl_contains({ 'install', 'update' },data.kind) then
+        build_hook(data, 'build')
+      end
+    end
+  })
+  vim.api.nvim_create_autocmd('PackChangedPre', {
+    group = pack_group,
+    callback = function (args)
+      ---@type pack.build.data
+      local data = args.data
+      if vim.tbl_contains({ 'install', 'update' },data.kind) then
+        build_hook(data, 'buildPre')
+      end
+    end
+  })
 end
 
 ---Table containing plugins not loaded yet
----@type table<string, { load: fun(); clear: fun() }?>
+---@type table<string, { load: fun(); clear: fun(), build: fun() }?>
 local load_tbl = {}
 
 --- Ensure plugin entries match the spec
