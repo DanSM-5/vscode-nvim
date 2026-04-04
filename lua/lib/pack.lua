@@ -33,18 +33,19 @@ local pack_group = vim.api.nvim_create_augroup('pack_group', { clear = true })
 ---@field count? integer count for command trigger.
 ---@field register? boolean optional register for command trigger.
 ---@field bar? boolean allow usage of bar `|` in command trigger.
----@field desc? string optional description for triggers
+---@field desc? string optional description for command trigger.
 ---@field complete? fun(alead: string, cmd_line: string, pos: number): string[] optional description for triggers
 
 ---@alias pack.data.cmd string|string[]|pack.plugin.cmd_opts|pack.plugin.cmd_opts[]
+---@alias pack.data.keys { modes: string|string[], lhs: string } key format
 
 ---@class pack.data.spec
 ---@field lazy? boolean Whether to lazy load the plugin or not.
 ---@field event? pack.load.events Event trigger.
 ---@field pattern? string patter for event trigger autocmd. '*' by default.
----@field ft? string filetype pattern for FileType autocmd.
+---@field ft? string|string[] filetype pattern for FileType autocmd.
 ---@field cmd? pack.data.cmd Command trigger.
----@field keys? [string|string[], string]
+---@field keys? pack.data.keys|pack.data.keys[]
 ---@field desc? string optional description for triggers
 ---@field config? fun(data: pack.plugin.loadSpec) Config function for plugin.
 ---@field deps? string|string[] Ensure dependencies are loaded. This is not a full spec, all dependencies need to be added at the top object and this just reference them from it
@@ -207,9 +208,14 @@ local function load(plugins)
 
         -- Keymap trigger cleanup
         if data.keys then
-          local mode, lhs = data.keys[1], data.keys[2]
-          -- Delete placeholder mapping
-          pcall(vim.keymap.del, mode, lhs)
+          local keys = vim.islist(data.keys) and data.keys or { data.keys }
+          ---@cast keys pack.data.keys[]
+
+          for _, keymap in ipairs(keys) do
+            local modes, lhs = keymap.modes, keymap.lhs
+            -- Delete placeholder mapping
+            pcall(vim.keymap.del, modes, lhs)
+          end
         end
       end
 
@@ -258,14 +264,14 @@ local function load(plugins)
         local events = type(data.event) == 'string' and { data.event } or data.event --[[@as pack.data.str_evt_arr]]
 
         ---@type string[]
-        local rest_evts = vim.tbl_filter(function(
-          evt --[[@as string]]
-        )
-          return evt ~= lazy_start
-        end, events)
+        local filtered_evts = vim.iter(events)
+          :filter(function(evt)
+            return evt ~= lazy_start
+          end)
+          :totable()
 
         --- If LazyStart got filtered out
-        local has_lazy_start = #events > #rest_evts
+        local has_lazy_start = #events > #filtered_evts
 
         if has_lazy_start then
           vim.api.nvim_create_autocmd('User', {
@@ -277,8 +283,8 @@ local function load(plugins)
           })
         end
 
-        if #rest_evts > 0 then
-          vim.api.nvim_create_autocmd(rest_evts, {
+        if #filtered_evts > 0 then
+          vim.api.nvim_create_autocmd(filtered_evts, {
             group = local_group,
             once = true,
             pattern = data.pattern or '*',
@@ -292,13 +298,17 @@ local function load(plugins)
 
       -- FileType trigger
       if data.ft then
-        vim.api.nvim_create_autocmd('FileType', {
-          group = local_group,
-          once = true,
-          pattern = data.ft,
-          callback = do_load,
-          desc = data.desc,
-        })
+        local fts = vim.islist(data.ft) and data.ft or { data.ft }
+        ---@cast fts string[]
+        for _, ft in ipairs(fts) do
+          vim.api.nvim_create_autocmd('FileType', {
+            group = local_group,
+            once = true,
+            pattern = ft,
+            callback = do_load,
+            desc = data.desc,
+          })
+        end
 
         lazy_load = true
       end
@@ -313,7 +323,7 @@ local function load(plugins)
           local cmd_opts = type(cmd) == 'string'
               and {
                 cmd = cmd,
-                desc = ('[Pack] Placeholder command trigger for %s'):format(cmd),
+                desc = ('[Pack] Placeholder command trigger for %s'):format(plugin.spec.name),
               } --[[@as pack.plugin.cmd_opts]]
             or cmd
 
@@ -322,7 +332,7 @@ local function load(plugins)
             do_load()
 
             ---@type vim.api.keyset.cmd
-            local _cmd ={
+            local _cmd = {
               cmd = cmd_opts.cmd,
               args = cmd_args.fargs,
               bang = cmd_args.bang,
@@ -362,14 +372,21 @@ local function load(plugins)
 
       -- Keymap trigger
       if data.keys then
-        local mode, lhs = data.keys[1], data.keys[2]
-        vim.keymap.set(mode, lhs, function()
-          -- Load the plugin
-          do_load()
+        local keys = vim.islist(data.keys) and data.keys or { data.keys }
+        ---@cast keys pack.data.keys[]
 
-          -- Then feed the key sequence
-          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(lhs, true, false, true), 'm', false)
-        end, { desc = data.desc })
+        for _, keymap in ipairs(keys) do
+          local modes, lhs = keymap.modes, keymap.lhs
+
+          -- Set keymap trigger
+          vim.keymap.set(modes, lhs, function()
+            -- Load the plugin
+            do_load()
+
+            -- Then feed the key sequence
+            vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(lhs, true, false, true), 'm', false)
+          end, { desc = data.desc or ('[pack] keymap trigger for %s'):format(plugin.spec.name) })
+        end
 
         lazy_load = true
       end
