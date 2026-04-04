@@ -78,7 +78,7 @@ local function extend(list, add)
 end
 
 local function can_merge(v)
-  return type(v) == 'table' and (vim.tbl_isempty(v) or not M.is_list(v))
+  return type(v) == 'table' and (vim.tbl_isempty(v) or not vim.islist(v))
 end
 
 --- Merges the values similar to vim.tbl_deep_extend with the **force** behavior,
