@@ -14,7 +14,7 @@ local lazy_start = 'LazyStart'
 local pack_group = vim.api.nvim_create_augroup('pack_group', { clear = true })
 
 ---:h PackChanged
----@class pack.build.data 
+---@class pack.build.data
 ---@field active boolean Whether plugin was added via vim.pack.add
 ---@field kind 'install' | 'update' | 'delete' kind of package change
 ---@field spec pack.plugin.loadSpec
@@ -25,18 +25,25 @@ local pack_group = vim.api.nvim_create_augroup('pack_group', { clear = true })
 ---@alias pack.load.events pack.load.event|pack.load.event[]
 ---@alias pack.load.build_hook string|string[]|fun(data: pack.build.data)
 
----@class pack.data.spec
----@field lazy? boolean Whether to lazy load the plugin or not.
----@field event? pack.load.events Event trigger.
----@field pattern? string patter for event trigger autocmd. '*' by default.
----@field ft? string filetype pattern for FileType autocmd.
----@field cmd? string Command trigger.
+---@class pack.plugin.cmd_opts
+---@field cmd string Command trigger
 ---@field nargs? string number of arguments for command trigger. See `:h nargs`.
 ---@field range? integer range for command trigger.
 ---@field bang? boolean whether to accept bang for command trigger.
 ---@field count? integer count for command trigger.
 ---@field register? boolean optional register for command trigger.
 ---@field bar? boolean allow usage of bar `|` in command trigger.
+---@field desc? string optional description for triggers
+---@field complete? fun(alead: string, cmd_line: string, pos: number): string[] optional description for triggers
+
+---@alias pack.data.cmd string|string[]|pack.plugin.cmd_opts|pack.plugin.cmd_opts[]
+
+---@class pack.data.spec
+---@field lazy? boolean Whether to lazy load the plugin or not.
+---@field event? pack.load.events Event trigger.
+---@field pattern? string patter for event trigger autocmd. '*' by default.
+---@field ft? string filetype pattern for FileType autocmd.
+---@field cmd? pack.data.cmd Command trigger.
 ---@field keys? [string|string[], string]
 ---@field desc? string optional description for triggers
 ---@field config? fun(data: pack.plugin.loadSpec) Config function for plugin.
@@ -95,7 +102,7 @@ if not loaded then
     -- Ensure hook is string
     hook = vim.islist(hook) and hook or vim.split(hook --[[@as string]], ' ', { plain = true, trimempty = true })
     ---@cast hook string[]
-    vim.schedule(function ()
+    vim.schedule(function()
       local package_name = vim.fn.fnamemodify(data.spec.src, ':t')
       vim.notify(('Building %s...'):format(package_name), vim.log.levels.INFO)
       vim.system(hook, { cwd = data.path }, function(result)
@@ -109,23 +116,23 @@ if not loaded then
 
   vim.api.nvim_create_autocmd('PackChanged', {
     group = pack_group,
-    callback = function (args)
+    callback = function(args)
       ---@type pack.build.data
       local data = args.data
-      if vim.tbl_contains({ 'install', 'update' },data.kind) then
+      if vim.tbl_contains({ 'install', 'update' }, data.kind) then
         build_hook(data, 'build')
       end
-    end
+    end,
   })
   vim.api.nvim_create_autocmd('PackChangedPre', {
     group = pack_group,
-    callback = function (args)
+    callback = function(args)
       ---@type pack.build.data
       local data = args.data
-      if vim.tbl_contains({ 'install', 'update' },data.kind) then
+      if vim.tbl_contains({ 'install', 'update' }, data.kind) then
         build_hook(data, 'buildPre')
       end
-    end
+    end,
   })
 end
 
@@ -189,8 +196,13 @@ local function load(plugins)
 
         -- Command trigger cleanup
         if data.cmd then
-          -- Delete placeholder command
-          pcall(vim.api.nvim_del_user_command, data.cmd)
+          local cmds = vim.islist(data.cmd) and data.cmd or { data.cmd }
+          ---@cast cmds string[]|pack.plugin.cmd_opts[]
+
+          for _, cmd in ipairs(cmds) do
+            local cmd_str = type(cmd) == 'string' and cmd or cmd.cmd
+            pcall(vim.api.nvim_del_user_command, cmd_str)
+          end
         end
 
         -- Keymap trigger cleanup
@@ -293,36 +305,57 @@ local function load(plugins)
 
       -- Command trigger
       if data.cmd then
-        vim.api.nvim_create_user_command(data.cmd, function(cmd_args)
-          -- First load the plugin
-          do_load()
+        local cmds = vim.islist(data.cmd) and data.cmd or { data.cmd }
+        ---@cast cmds string[]|pack.plugin.cmd_opts[]
 
-          -- Then call the command
-          vim.api.nvim_cmd({
-            cmd = data.cmd,
-            args = cmd_args.fargs,
-            bang = cmd_args.bang,
-            nargs = cmd_args.nargs,
-            range = cmd_args.range ~= 0 and { cmd_args.line1, cmd_args.line2 } or nil,
-            count = cmd_args.count ~= -1 and cmd_args.count or nil,
-            reg = cmd_args.reg,
-          }, {})
-        end, {
-          nargs = data.nargs,
-          range = data.range,
-          bang = data.bang,
-          count = data.count,
-          register = data.register,
-          bar = data.bar,
-          desc = data.desc,
-          -- complete = data.complete,
-          complete = function(curr, cmd, pos)
-            -- upon requesting completion, load the real plugin
-            -- to allow real completion to take effect
+        for _, cmd in ipairs(cmds) do
+          ---@type pack.plugin.cmd_opts
+          local cmd_opts = type(cmd) == 'string'
+              and {
+                cmd = cmd,
+                desc = ('[Pack] Placeholder command trigger for %s'):format(cmd),
+              } --[[@as pack.plugin.cmd_opts]]
+            or cmd
+
+          vim.api.nvim_create_user_command(cmd_opts.cmd, function(cmd_args)
+            -- First load the plugin
             do_load()
-            return { curr } -- return current?
-          end,
-        })
+
+            ---@type vim.api.keyset.cmd
+            local _cmd ={
+              cmd = cmd_opts.cmd,
+              args = cmd_args.fargs,
+              bang = cmd_args.bang,
+              nargs = cmd_args.nargs,
+              range = cmd_args.range ~= 0 and { cmd_args.line1, cmd_args.line2 } or nil,
+              count = cmd_args.count ~= -1 and cmd_args.count or nil,
+              reg = cmd_args.reg,
+            }
+
+            -- Then call the command
+            vim.api.nvim_cmd(_cmd, {})
+          end, {
+            nargs = cmd_opts.nargs,
+            range = cmd_opts.range,
+            bang = cmd_opts.bang,
+            count = cmd_opts.count,
+            register = cmd_opts.register,
+            bar = cmd_opts.bar,
+            desc = cmd_opts.desc,
+            ---complete = cmd_opts.complete,
+            ---completion function
+            ---@param arg_lead string
+            ---@param cmd_line string
+            ---@param pos number
+            ---@return string[]
+            complete = function(arg_lead, cmd_line, pos)
+              -- upon requesting completion, load the real plugin
+              -- to allow real completion to take effect
+              do_load()
+              return cmd_opts.complete and cmd_opts.complete(arg_lead, cmd_line, pos) or { arg_lead } -- return current?
+            end,
+          })
+        end
 
         lazy_load = true
       end
@@ -392,9 +425,8 @@ end
 --   },
 -- })
 
-
 ---Install the list of plugins
----@param plugins (string|vim.pack.Spec)[] 
+---@param plugins (string|vim.pack.Spec)[]
 local function pack_install(plugins)
   vim.pack.add(plugins, { load = true, confirm = false })
 end
@@ -426,7 +458,6 @@ end
 local function pack_restore(plugins)
   vim.pack.update(nil, { target = 'lockfile' })
 end
-
 
 ---Complete the package name
 ---@param arg_lead string
