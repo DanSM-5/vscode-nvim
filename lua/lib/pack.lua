@@ -249,7 +249,8 @@ local function load(plugins)
         if data.config then
           local succ, err = pcall(data.config, plugin)
           if not succ then
-            vim.notify(('[Pack] Could not load plugin: %s'):format(err), vim.log.levels.ERROR)
+            vim.notify(err, vim.log.levels.ERROR)
+            vim.notify(('[Pack] Could not load plugin: %s'):format(plugin.spec.name), vim.log.levels.ERROR)
           end
         end
         package_loaded = true
