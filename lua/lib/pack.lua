@@ -103,6 +103,17 @@ if not loaded then
       return hook(data)
     end
 
+    -- Call if provided string is a vim command
+    if type(hook) == 'string' and vim.startswith(hook, ':') then
+      local cmd = hook:gsub('^:', '')
+
+      -- Then call the command
+      vim.api.nvim_cmd({
+        cmd = cmd,
+      }, {})
+      return
+    end
+
     -- Ensure hook is string
     hook = vim.islist(hook) and hook or vim.split(hook --[[@as string]], ' ', { plain = true, trimempty = true })
     ---@cast hook string[]
@@ -266,9 +277,13 @@ local function load(plugins)
         ---@cast plugin pack.plugin
 
         -- Run initialization and configuration
-        if data.init then run_cb(data.config, plugin, 'init') end
+        if data.init then
+          run_cb(data.config, plugin, 'init')
+        end
         vim.cmd.packadd(plugin.spec.name)
-        if data.config then run_cb(data.config, plugin, 'config') end
+        if data.config then
+          run_cb(data.config, plugin, 'config')
+        end
 
         -- cleanup state
         package_loaded = true
