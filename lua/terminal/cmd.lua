@@ -533,7 +533,7 @@ local register = function()
       end
 
       local opts = { force = info.bang }
-      return subcmd(rest, opts)
+      return subcmd.handler(rest, opts)
     end, {
       desc = '[Pack] Helpers for using vim.pack',
       nargs = '*',
