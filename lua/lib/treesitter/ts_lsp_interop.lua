@@ -6,6 +6,18 @@ local utils = {}
 
 --- TSRange
 
+
+--- Get the node's start position. Return three values: the row, column and
+--- total byte count (all zero-based).
+
+---@class lsp_interop.TSRange
+---@field start_pos [integer, integer, integer]
+---@field end_pos [integer, integer, integer]
+---@field buf integer
+---@field [1] integer start row
+---@field [2] integer start column
+---@field [3] integer end row
+---@field [4] integer end column
 local TSRange = {}
 TSRange.__index = TSRange
 
@@ -27,6 +39,11 @@ function TSRange.new(buf, start_row, start_col, end_row, end_col)
   }, TSRange)
 end
 
+---Get a TSRange from the given nodes
+---@param buf integer
+---@param start_node TSNode
+---@param end_node TSNode
+---@return lsp_interop.TSRange
 function TSRange.from_nodes(buf, start_node, end_node)
   TSRange.__index = TSRange
   local start_pos = start_node and { start_node:start() } or { end_node:start() }
@@ -326,7 +343,7 @@ function utils.has_parser(lang)
   if not lang or #lang == 0 then
     return false
   end
-  -- HACK: nvim internal API 😎
+  -- HACK: nvim internal API ≡ƒÿÄ
   if vim._ts_has_language(lang) then
     return true
   end
@@ -355,9 +372,12 @@ function utils.node_length(node)
   return end_byte - start_byte
 end
 
+---Get range of node
+---@param match { metadata?: vim.treesitter.query.TSMetadata } | { node?: TSNode }
+---@return Range4
 utils.get_range = function(match)
   if match.metadata ~= nil then
-    return match.metadata.range
+    return match.metadata.range --[[@as Range4]]
   end
 
   return { match.node:range() }
@@ -428,11 +448,13 @@ function utils.prepare_query(bufnr, query_name, root, root_lang)
 end
 
 -- Given a path (i.e. a List(String)) this functions inserts value at path
----@param object any
+---@generic V
+---@generic T : table
+---@param source T
 ---@param path string[]
----@param value any
-function utils.insert_to_path(object, path, value)
-  local curr_obj = object
+---@param value V
+function utils.insert_to_path(source, path, value)
+  local curr_obj = source
 
   for index = 1, (#path - 1) do
     if curr_obj[path[index]] == nil then
@@ -445,10 +467,15 @@ function utils.insert_to_path(object, path, value)
   curr_obj[path[#path]] = value
 end
 
+
+---@alias lsp_interop.ExtractedMatches TSNode|vim.treesitter.query.TSMetadata|string[]|lsp_interop.TSRange
+---@alias lsp_interop.Iterator table<string, lsp_interop.ExtractedMatches>
+
 ---@param query vim.treesitter.Query
 ---@param bufnr integer
 ---@param start_row integer
 ---@param end_row integer
+---@return fun(): lsp_interop.Iterator
 function utils.iter_prepared_matches(query, qnode, bufnr, start_row, end_row)
   -- A function that splits  a string on '.'
   ---@param to_split string
@@ -462,38 +489,52 @@ function utils.iter_prepared_matches(query, qnode, bufnr, start_row, end_row)
     return t
   end
 
-  local matches = query:iter_matches(qnode, bufnr, start_row, end_row, { all = false })
+  local matches = query:iter_matches(qnode, bufnr, start_row, end_row)
 
   local function iterator()
     local pattern, match, metadata = matches()
     if pattern ~= nil then
+      ---@type lsp_interop.Iterator
       local prepared_match = {}
 
+      ---@type table<integer, TSNode>
+      local lastnode_match = {}
+
+      -- Convert the match table into the old buggy version for backward
+      -- compatibility. This is slow but it works somehow ≡ƒñ╖ΓÇìΓÖé∩╕Å
+      for k, v in pairs(match or {}) do
+        lastnode_match[k] = v[#v]
+      end
+
       -- Extract capture names from each match
-      for id, node in pairs(match) do
+      for id, node in pairs(lastnode_match) do
         local name = query.captures[id] -- name of the capture in the query
         if name ~= nil then
           local path = split(name .. '.node')
           utils.insert_to_path(prepared_match, path, node)
           local metadata_path = split(name .. '.metadata')
-          utils.insert_to_path(prepared_match, metadata_path, metadata[id])
+          local meta  = metadata[id] --[[@as vim.treesitter.query.TSMetadata]]
+          utils.insert_to_path(prepared_match, metadata_path, meta)
         end
       end
 
       -- Add some predicates for testing
-      ---@type string[][] ( TODO: make pred type so this can be pred[])
+      ---@type (string|integer)[][] ( TODO: make pred type so this can be pred[])
       local preds = query.info.patterns[pattern]
       if preds then
         for _, pred in pairs(preds) do
           -- functions
-          if pred[1] == 'set!' and type(pred[2]) == 'string' then
-            utils.insert_to_path(prepared_match, split(pred[2]), pred[3])
+          local pred2 = pred[2]
+          if pred[1] == 'set!' and type(pred2) == 'string' then
+            utils.insert_to_path(prepared_match, split(pred2), pred[3])
           end
-          if pred[1] == 'make-range!' and type(pred[2]) == 'string' and #pred == 4 then
+          if pred[1] == 'make-range!' and type(pred2) == 'string' and #pred == 4 then
+
+            local tsrange = TSRange.from_nodes(bufnr, match[pred[3]], match[pred[4]])
             utils.insert_to_path(
               prepared_match,
               split(pred[2] .. '.node'),
-              TSRange.from_nodes(bufnr, match[pred[3]], match[pred[4]])
+              tsrange
             )
           end
         end
@@ -521,9 +562,11 @@ function utils.iter_group_results(bufnr, query_group, root, root_lang)
 end
 
 -- Gets a property at path
----@param tbl table the table to access
+---@generic T : table
+---@generic V
+---@param tbl T the table to access
 ---@param path string the '.' separated path
----@return table|nil result the value at path or nil
+---@return V|nil result the value at path or nil
 function utils.get_at_path(tbl, path)
   if path == "" then
     return tbl
@@ -554,7 +597,7 @@ end
 ---@param root TSNode|nil node from where to start the search
 ---@param lang string|nil the language from where to get the captures.
 ---              Root nodes can have several languages.
----@return table|nil
+---@return lsp_interop.ExtractedMatches[]|nil
 function utils.get_capture_matches(bufnr, captures, query_group, root, lang)
   if type(captures) == 'string' then
     captures = { captures }
@@ -569,6 +612,7 @@ function utils.get_capture_matches(bufnr, captures, query_group, root, lang)
     strip_captures[i] = capture:sub(2)
   end
 
+  ---@type lsp_interop.ExtractedMatches[]
   local matches = {}
   for match in utils.iter_group_results(bufnr, query_group, root, lang) do
     for _, capture in ipairs(strip_captures) do
@@ -590,7 +634,7 @@ end
 ---                       The function can return `nil` to ignore that tree.
 ---@param query_type string? The query to get the capture from. This is ignored if a function is provided
 ---                    for the capture argument.
----@return table[]
+---@return lsp_interop.ExtractedMatches[]
 function utils.get_capture_matches_recursively(bufnr, capture_or_fn, query_type)
   ---@type CaptureResFn
   local type_fn
@@ -602,6 +646,7 @@ function utils.get_capture_matches_recursively(bufnr, capture_or_fn, query_type)
     end
   end
   local parser = utils.get_parser(bufnr)
+  ---@type lsp_interop.ExtractedMatches[]
   local matches = {}
 
   if parser then
@@ -675,11 +720,24 @@ function utils.node_contains(node, range)
   return true
 end
 
+---@generic T
+---@param value T
+---@return boolean
+local function isTsNode(value)
+  local tsnode_like = value --[[@as { range: fun() }]]
+  local ok = pcall(function ()
+    --- @diagnostic disable-next-line: missing-fields LuaLS bug
+    local nrange = { tsnode_like:range() } --- @type Range4
+    return nrange
+  end)
+
+  return ok
+end
 
 --- Get the best match at a given point
 --- If the point is inside a node, the smallest node is returned
 --- If the point is not inside a node, the closest node is returned (if opts.lookahead or opts.lookbehind is true)
----@param matches table list of matches
+---@param matches { node?: TSNode; start?: { node?: TSNode } }[] list of matches
 ---@param row number 0-indexed
 ---@param col number 0-indexed
 ---@param opts { lookahead?: boolean; lookbehind?: boolean } lookahead and lookbehind options
@@ -769,12 +827,12 @@ end
 --- when it's just after the end of the inner range (e.g. the 'end' keyword of the function)
 --- @param query_string string query to match
 --- @param query_group string group from where to search query
---- @param pos integer[]
+--- @param pos [integer, integer]
 --- @param bufnr integer
 --- @param opts? { lookahead?: boolean; lookbehind?: boolean }
 --- @return integer?
---- @return integer[]?
---- @return unknown?
+--- @return Range4?
+--- @return TSNode?
 function utils.textobject_at_point(query_string, query_group, pos, bufnr, opts)
   query_group = query_group or 'textobjects'
   opts = opts or {}
@@ -860,7 +918,7 @@ local islist = vim.islist
 
 
 ---Get the preview location
----@param location any
+---@param location lsp.Location|lsp.LocationLink
 ---@param context integer[]|integer
 ---@return integer?
 ---@return integer?
@@ -932,9 +990,18 @@ local function flatten_results(results_lsp, context)
   return {}
 end
 
+---Create preview in floating window
+---@param query_string string
+---@param query_group string
+---@param context integer|integer[]
+---@return fun()
 function LspInterop.make_preview_location_callback(query_string, query_group, context)
   query_group = query_group or 'textobjects'
   context = context or 0
+  ---Callback for lsp method request
+  ---@param err lsp.ResponseError|nil
+  ---@param method string
+  ---@param result lsp.Location|lsp.Location[]|lsp.LocationLink[]|nil
   local callback = function(err, method, result)
     if err then
       error(tostring(err))
@@ -947,6 +1014,7 @@ function LspInterop.make_preview_location_callback(query_string, query_group, co
     if islist(result) then
       result = result[1]
     end
+    ---@cast result lsp.Location|lsp.LocationLink
     local uri = result.uri or result.targetUri
     local range = result.range or result.targetRange
     if not uri or not range then
@@ -956,6 +1024,8 @@ function LspInterop.make_preview_location_callback(query_string, query_group, co
     local buf = vim.uri_to_bufnr(uri)
     vim.fn.bufload(buf)
 
+    --- All this expensive treesitter processing to just get a range using a query 🤡
+    --- TODO: research if there is an easier way to get the node (maybe limited to @function.inner and @function.outer)
     local _, textobject_at_definition =
       utils.textobject_at_point(query_string, query_group, { range.start.line + 1, range.start.character }, buf)
 
@@ -967,6 +1037,10 @@ function LspInterop.make_preview_location_callback(query_string, query_group, co
   end
 
   -- local signature_handler = function(err, result, handler_context, config)
+  ---Handler for buf_request_all
+  ---@param result table<integer,{err: lsp.ResponseError?, result: any, context: lsp.HandlerContext}>
+  ---@param handler_context lsp.HandlerContext
+  ---@param config? table
   local signature_handler = function(result, handler_context, config)
 
     local err = nil
