@@ -518,6 +518,23 @@ local register = function()
         end,
         complete = pack_complete_single,
       },
+      inspect = {
+        handler = function(plugins)
+          local single = plugins[1]
+          if not single then
+            return
+          end
+
+          local vim_pack = vim.pack.get({ single })[1]
+          local lib_pack = require('lib.pack').load_tbl[single]
+
+          vim.print({
+            vim_pack = vim_pack,
+            lib_pack = lib_pack,
+          })
+        end,
+        complete = pack_complete_single,
+      },
       restore = {
         handler = function(_, opts)
           local _, exists_lockfile = get_lockfile_path()
