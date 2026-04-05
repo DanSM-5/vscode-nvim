@@ -10,8 +10,8 @@ vim.g.miniindentscope_disable = is_vscode
 -- local cb = function(x) return 'https://codeberg.org/' .. x end
 -- local gl = function(x) return 'https://gitlab.net/' .. x end
 
-
-pack.load({
+---@type pack.plugin.loadSpec[]
+local plugins = {
   {
     -- Replace with register
     src = 'inkarkat/vim-ReplaceWithRegister',
@@ -215,14 +215,17 @@ pack.load({
       end,
     },
   },
-})
+}
+
+
 
 -- if running in vscode, stop loading plugins here
 if is_vscode then
+  pack.load(plugins)
   return
 end
 
-pack.load({
+vim.list_extend(plugins, {
   { src = 'rafamadriz/friendly-snippets', data = { lazy = true } },
   { src = 'nvim-tree/nvim-web-devicons', data = { lazy = true } },
   {
@@ -235,6 +238,7 @@ pack.load({
     src = 'DanSM-5/fzf-lsp.nvim',
     data = {
       lazy = true,
+      event = 'LspAttach',
       cmd = {
         'Definitions',
         'Declarations',
@@ -444,4 +448,6 @@ pack.load({
   --     end,
   --   },
   -- },
-})
+} --[[@as pack.plugin.loadSpec[] ]] )
+
+pack.load(plugins)

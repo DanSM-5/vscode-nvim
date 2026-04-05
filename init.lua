@@ -47,7 +47,8 @@ vim.g.maplocalleader = ' '
 
 require('vimstart')
 require('platform_setup')
-require('config.lazy')
+-- require('config.lazy')
+require('plugins.plugins')
 require('shared.load')
 
 -- If loading in regular nvim
