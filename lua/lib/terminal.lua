@@ -181,7 +181,6 @@ end
 ---@field pty? boolean if this is a pty terminal
 ---@field term? boolean spawns in pseudo terminal session. Implies 'pty'
 
-
 -- -@field on_stdin? fun(channelId: integer, data: string[], name: 'stdin')
 
 -- TODO: should on_end include std error?
@@ -193,7 +192,6 @@ end
 ---@field on_end? fun(lines: string[]) callback to be called at the end with full output
 ---@field ft? string custom filetype to use
 ---@field bt? string custom buftype to use
-
 
 ---@class terminal.output.window
 ---@field win integer winrn of floating window
@@ -213,7 +211,7 @@ local get_float_config = function(config)
     relative = 'editor',
     width = math.floor(vim.o.columns * 0.8),
     height = math.floor(vim.o.lines * 0.8),
-    row = math.floor((vim.o.lines * 0.2) / 2),
+    row = math.floor(vim.o.lines * 0.1),
     col = math.floor(vim.o.columns * 0.1),
     style = 'minimal',
     border = 'single',
@@ -261,13 +259,51 @@ end
 ---@param opts terminal.opts
 local function validate_opts(opts)
   opts = opts or {}
-  opts.float = opts.float or {}
-  opts.term = opts.term or {}
+  opts.float = vim.tbl_deep_extend('force', {}, opts.float or {})
+  opts.term = vim.tbl_deep_extend('force', {}, opts.term or {})
+end
+
+---Get the proper options for running the command
+---@param opts terminal.opts
+---@return string[] cmd updated to capture stdout
+local function get_cmd(opts)
+  if not opts.on_end then
+    return opts
+  end
+
+  ---@type string[]
+  local cmd
+  local is_win = vim.fn.has('win32') == 1
+  local bin = vim.fs.joinpath(vim.fn.stdpath('config'), 'bin')
+
+  if is_win then
+    cmd = {
+      -- Incantation to make sure powershell runs a script
+      -- without loading a whole profile nor blocking it.
+      vim.fn.executable('pwsh') == 1 and 'pwsh' or 'powershell',
+      '-NoLogo',
+      '-NonInteractive',
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      vim.fs.joinpath(bin, 'run.ps1'),
+    }
+  else
+    cmd = { vim.fs.joinpath(bin, 'run.sh') }
+  end
+
+  local opts_cmd = vim.islist(opts.cmd) and opts.cmd or { opts.cmd }
+  ---@cast opts_cmd string[]
+
+  vim.list_extend(cmd, opts_cmd)
+
+  return cmd
 end
 
 ---@param opts terminal.opts options for the terminal
 ---@return terminal.output output values to control float terminal
-local function float_term(opts)
+local function call_float(opts)
   validate_opts(opts)
 
   local buf, win = create_win_buf(opts)
@@ -282,11 +318,11 @@ local function float_term(opts)
     once = true,
     buffer = buf,
     group = term_autocmd_group,
-    callback = function ()
-      vim.api.nvim_buf_call(buf, function ()
+    callback = function()
+      vim.api.nvim_buf_call(buf, function()
         vim.cmd.startinsert()
       end)
-    end
+    end,
   })
 
   local id = vim.fn.jobstart(opts.cmd, {
@@ -310,6 +346,13 @@ local function float_term(opts)
     vim.cmd.checktime()
   end
 
+  local out = {
+    close = close,
+    buf = buf,
+    win = win,
+    jobId = id,
+  }
+
   vim.api.nvim_create_autocmd('TermClose', {
     once = true,
     buffer = buf,
@@ -318,12 +361,71 @@ local function float_term(opts)
     end,
   })
 
-  return {
-    close = close,
-    buf = buf,
-    win = win,
-    jobId = id,
-  }
+  return out
+end
+
+---@param opts terminal.opts options for the terminal
+---@return terminal.output output values to control float terminal
+local function float_term(opts)
+  validate_opts(opts)
+
+  --- no need to capture stdout so call float directly
+  if not opts.on_end then
+    return call_float(opts)
+  end
+
+  --- Wrap to capture stdout
+
+  -- shallow clone to avoid mutating options too much
+  ---@type terminal.opts
+  opts = vim.tbl_deep_extend('force', {}, opts)
+
+  -- Wrap command
+  opts.cmd = get_cmd(opts)
+  ---@type string
+  local tempfile = vim.fn.tempfile()
+  local on_end = opts.on_end --[[@as fun(data: string[])]]
+
+  -- Handle on_end
+  local capture_on_exit = function()
+    if not vim.uv.fs_fstat(tempfile) then
+      pcall(on_end, {})
+      return
+    end
+
+    ---@type boolean, string[]
+    local ok, lines = pcall(vim.fn.readfile, tempfile)
+    if not ok then
+      pcall(on_end, {})
+      return
+    end
+
+    -- pcall(vim.uv.fs_unlink, tempfile)
+    pcall(os.remove, tempfile)
+    pcall(on_end, lines)
+  end
+
+  -- Override term.on_exit if exists
+  if opts.term.on_exit then
+    local opts_on_exit = opts.term.on_exit
+    opts.term.on_exit = function(...)
+      ---@diagnostic disable-next-line
+      opts_on_exit(...)
+      capture_on_exit()
+    end
+  else
+    opts.term.on_exit = function()
+      capture_on_exit()
+    end
+  end
+
+  -- Inject environment with path to output file to read at the end
+  opts.term.env = vim.tbl_deep_extend('force', opts.term.env or {}, {
+    CMD_OUTPUT = tempfile,
+  })
+
+  -- Call float with injected opts
+  return call_float(opts)
 end
 
 return {
