@@ -24,6 +24,7 @@ local terminal_const = {
   name = 'lib_term',
   term_win = 'term_win',
   term_buf = 'term_buf',
+  float_name = 'float term',
 }
 
 local function safe_set_win_option(win, name, value)
@@ -192,6 +193,7 @@ end
 ---@field on_end? fun(lines: string[]) callback to be called at the end with full output
 ---@field ft? string custom filetype to use
 ---@field bt? string custom buftype to use
+---@field name? string name to be used in buffer
 
 ---@class terminal.output.window
 ---@field win integer winrn of floating window
@@ -311,6 +313,7 @@ local function call_float(opts)
   ---@cast term_opts terminal.jobstart.int_opts
 
   set_options(opts, { win = win, buf = buf })
+  pcall(vim.api.nvim_buf_set_name, buf, opts.name or terminal_const.float_name)
 
   local term_autocmd_group = vim.api.nvim_create_augroup(('float_term_%d_%d'):format(win, buf), { clear = true })
 
@@ -388,7 +391,7 @@ local function float_term(opts)
 
   -- Handle on_end
   local capture_on_exit = function()
-    if not vim.uv.fs_fstat(tempfile) then
+    if not vim.uv.fs_stat(tempfile) then
       pcall(on_end, {})
       return
     end
