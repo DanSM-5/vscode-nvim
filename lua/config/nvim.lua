@@ -160,6 +160,7 @@ vim.api.nvim_create_autocmd('VimEnter', {
     vim.list_extend(highlights, {
       vim.g.get_hi_entry('Normal'),
       vim.g.get_hi_entry('SignColumn'),
+      vim.g.get_hi_entry('FloatBorder'),
     })
 
     ---@type theme.toggle.entry[]

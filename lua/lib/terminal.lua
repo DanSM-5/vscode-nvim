@@ -28,11 +28,11 @@ local terminal_const = {
 }
 
 local function safe_set_win_option(win, name, value)
-  pcall(vim.api.nvim_set_option_value, name, value, { win = win })
+  pcall(vim.api.nvim_set_option_value, name, value, { win = win, scope = 'local' })
 end
 
 local function safe_set_buf_option(buf, name, value)
-  pcall(vim.api.nvim_set_option_value, name, value, { buf = buf })
+  pcall(vim.api.nvim_set_option_value, name, value, { buf = buf, scope = 'local' })
 end
 
 ---@param opts? terminal.open_terminal
@@ -216,8 +216,8 @@ local get_float_config = function(config)
     row = math.floor(vim.o.lines * 0.1),
     col = math.floor(vim.o.columns * 0.1),
     style = 'minimal',
-    border = 'single',
-  }, config)
+    border = 'rounded',
+  } --[[@as vim.api.keyset.win_config]] , config)
 
   return new_config
 end
@@ -236,7 +236,8 @@ end
 ---Set options on terminal
 ---@param opts terminal.opts
 ---@param out terminal.output.window
-local function set_options(opts, out)
+---@param is_float? boolean
+local function set_options(opts, out, is_float)
   local buf, win = out.buf, out.win
 
   -- Set buffer and window variables
@@ -251,10 +252,43 @@ local function set_options(opts, out)
   safe_set_buf_option(buf, 'modifiable', false)
   safe_set_buf_option(buf, 'filetype', opts.ft or terminal_const.filetype)
 
-  safe_set_win_option(win, 'wrap', false)
+  safe_set_win_option(win, 'wrap', true)
   safe_set_win_option(win, 'number', false)
+  safe_set_win_option(win, 'spell', false)
+  safe_set_win_option(win, 'foldenable', false)
   safe_set_win_option(win, 'relativenumber', false)
   safe_set_win_option(win, 'signcolumn', 'no')
+  safe_set_win_option(win, 'conceallevel', 3)
+  safe_set_win_option(win, 'colorcolumn', '')
+
+
+  local is_transparent = vim.api.nvim_get_hl(0, { name = 'Normal' }).bg == nil
+  if is_float and is_transparent then
+    -- Make float transparent as well
+    safe_set_win_option(win, 'winhighlight', 'NormalFloat:Normal')
+  end
+
+  -- TODO: Add backdrop when there is background
+  --
+  --   if has_bg and self.opts.backdrop and self.opts.backdrop < 100 and vim.o.termguicolors then
+  --   self.backdrop_buf = vim.api.nvim_create_buf(false, true)
+  --   self.backdrop_win = vim.api.nvim_open_win(self.backdrop_buf, false, {
+  --     relative = 'editor',
+  --     width = vim.o.columns,
+  --     height = vim.o.lines,
+  --     row = 0,
+  --     col = 0,
+  --     style = 'minimal',
+  --     focusable = false,
+  --     zindex = self.opts.zindex - 1,
+  --   })
+  --   vim.api.nvim_set_hl(0, 'FloatingBackdrop', { bg = "#000000", default = true })
+  --   local utils = require('utils.nvim')
+  --   utils.wo(self.backdrop_win, 'winhighlight', 'Normal:FloatingBackdrop')
+  --   utils.wo(self.backdrop_win, 'winblend', self.opts.backdrop)
+  --   vim.bo[self.backdrop_buf].buftype = 'nofile'
+  --   vim.bo[self.backdrop_buf].filetype = 'float_backdrop'
+  -- end
 end
 
 ---Validate options
@@ -312,7 +346,7 @@ local function call_float(opts)
   local term_opts = vim.tbl_deep_extend('force', opts.term or {}, { pty = true, term = true })
   ---@cast term_opts terminal.jobstart.int_opts
 
-  set_options(opts, { win = win, buf = buf })
+  set_options(opts, { win = win, buf = buf }, true)
   pcall(vim.api.nvim_buf_set_name, buf, opts.name or terminal_const.float_name)
 
   local term_autocmd_group = vim.api.nvim_create_augroup(('float_term_%d_%d'):format(win, buf), { clear = true })
