@@ -9,6 +9,10 @@ local github_fmt = 'https://github.com/%s'
 -- local group = vim.api.nvim_create_augroup('pack-load-cmd', { clear = true })
 local lazy_start = 'LazyStart'
 
+---Table containing plugins not loaded yet
+---@type table<string, { load: fun(); clear: fun(); data: pack.data.specInt }?>
+local load_tbl = {}
+
 -- local group = vim.api.nvim_create_augroup('LoadPluginAutoCmd', { clear = true })
 
 local pack_group = vim.api.nvim_create_augroup('pack_group', { clear = true })
@@ -17,13 +21,13 @@ local pack_group = vim.api.nvim_create_augroup('pack_group', { clear = true })
 ---@class pack.build.data
 ---@field active boolean Whether plugin was added via vim.pack.add
 ---@field kind 'install' | 'update' | 'delete' kind of package change
----@field spec pack.plugin.loadSpec
+---@field spec vim.pack.PlugData
 ---@field path string
 
 -- Needed for completion when adding a spec to the array of plugins
 ---@alias pack.load.event vim.api.keyset.events|'LazyStart'
 ---@alias pack.load.events pack.load.event|pack.load.event[]
----@alias pack.load.build_hook string|string[]|fun(data: pack.build.data)
+---@alias pack.load.build_hook string|string[]|fun(data: vim.pack.PlugData)
 
 ---@class pack.plugin.cmd_opts
 ---@field cmd string Command trigger
@@ -87,15 +91,25 @@ if not loaded then
   })
 
   ---Build hook function
-  ---@param data pack.build.data
+  ---@param data vim.pack.PlugData
   ---@param buildType 'buildPre'|'build'
   local function build_hook(data, buildType)
+    local spec = load_tbl[data.spec.name]
+    if not spec then
+      vim.notify(('[:Pack] could not found spec for "%s"'):format(data.spec.name))
+      return
+    end
+
     ---@type pack.load.build_hook?
-    local hook = data.spec.data[buildType]
+    local hook = spec.data[buildType]
 
     -- No hook, skip
     if not hook then
       return
+    end
+
+    if not data.active then
+      spec.load()
     end
 
     -- Delegate build to caller
@@ -132,7 +146,7 @@ if not loaded then
   vim.api.nvim_create_autocmd('PackChanged', {
     group = pack_group,
     callback = function(args)
-      ---@type pack.build.data
+      ---@type vim.pack.PlugData
       local data = args.data
       if vim.tbl_contains({ 'install', 'update' }, data.kind) then
         build_hook(data, 'build')
@@ -142,7 +156,7 @@ if not loaded then
   vim.api.nvim_create_autocmd('PackChangedPre', {
     group = pack_group,
     callback = function(args)
-      ---@type pack.build.data
+      ---@type vim.pack.PlugData
       local data = args.data
       if vim.tbl_contains({ 'install', 'update' }, data.kind) then
         build_hook(data, 'buildPre')
@@ -165,10 +179,6 @@ local function run_cb(cb, plugin, cb_type)
     )
   end
 end
-
----Table containing plugins not loaded yet
----@type table<string, { load: fun(); clear: fun() }?>
-local load_tbl = {}
 
 --- Ensure plugin entries match the spec
 ---@param plugins (string|pack.plugin.loadSpec)[]
@@ -290,7 +300,9 @@ local function load(plugins)
         load_tbl[plugin.spec.name] = nil
       end
 
-      load_tbl[plugin.spec.name] = { load = do_load, clear = do_clear }
+      -- Store useful refs
+      load_tbl[plugin.spec.name] = { load = do_load, clear = do_clear, data = data }
+      -- Use for build hook if needed
 
       -- Event trigger
       if data.event then
@@ -374,13 +386,13 @@ local function load(plugins)
               nargs = cmd_args.nargs,
               range = cmd_args.range ~= 0 and { cmd_args.line1, cmd_args.line2 } or nil,
               count = cmd_args.count ~= -1 and cmd_args.count or nil,
-              reg = cmd_args.reg,
+              -- reg = cmd_args.reg,
             }
 
             -- Then call the command
             vim.api.nvim_cmd(_cmd, {})
           end, {
-            nargs = cmd_opts.nargs,
+            nargs = cmd_opts.nargs or '*',
             range = cmd_opts.range,
             bang = cmd_opts.bang,
             count = cmd_opts.count,
