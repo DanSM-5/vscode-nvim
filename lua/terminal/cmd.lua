@@ -406,6 +406,35 @@ local register = function()
       },
     }
 
+    ---Complete single plugin
+    ---@param arg_lead string
+    ---@param cmd string
+    ---@return string[]
+    local function pack_complete_single(arg_lead, cmd)
+      local sections = vim.split(cmd, ' ', { plain = true })
+      if #sections > 3 then
+        return {}
+      end
+
+      return require('lib.pack').complete_packages(arg_lead)
+    end
+
+    ---Get spec for single plugin
+    ---@param plugins string[]
+    ---@return vim.pack.PlugData|nil
+    local function pack_get_single_spec(plugins)
+      -- Assume that only a single plugin will arrive here
+      local plugin_name = plugins[1]
+      local plugin_specs = vim.pack.get({ plugin_name })
+      local spec = plugin_specs[1]
+
+      if not spec or not spec.path or not vim.uv.fs_stat(spec.path) then
+        return
+      end
+
+      return spec
+    end
+
     ---@type table<string, pack.cmd.subcmd | nil>
     local pack_subcmds = {
       update = {
@@ -449,11 +478,54 @@ local register = function()
           return require('lib.pack').complete_packages(...)
         end,
       },
+      explore = {
+        handler = function (plugins)
+          local spec = pack_get_single_spec(plugins)
+
+          if not spec then
+            return
+          end
+
+          ---@type (string?)|string[]
+          local shell = os.getenv('SHELL')
+
+          if not shell then
+            -- likely windows 😅
+            if vim.fn.has('win32') == 1 then
+              shell = vim.fn.executable('pwsh') == 1 and 'pwsh' or 'powershell'
+            else
+              -- shell = '/bin/bash'
+              shell = { '/usr/bin/env', 'bash' }
+            end
+          end
+
+          require('lib.terminal').float_term({
+            cmd = shell,
+            term = { cwd = spec.path }
+          })
+        end,
+        complete = pack_complete_single,
+      },
+      log = {
+        handler = function(plugins)
+          local spec = pack_get_single_spec(plugins)
+
+          if not spec then
+            return
+          end
+
+          require('lib.git_preview').fshow(spec.path)
+        end,
+        complete = pack_complete_single,
+      },
       restore = {
         handler = function(_, opts)
           local _, exists_lockfile = get_lockfile_path()
           if not exists_lockfile then
-            return vim.notify('[:Pack] Cannot restore because there is no lockfile "nvim-pack-lock.json"', vim.log.levels.ERROR)
+            return vim.notify(
+              '[:Pack] Cannot restore because there is no lockfile "nvim-pack-lock.json"',
+              vim.log.levels.ERROR
+            )
           end
 
           if opts.force then
