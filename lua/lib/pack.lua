@@ -9,8 +9,8 @@ local github_fmt = 'https://github.com/%s'
 -- local group = vim.api.nvim_create_augroup('pack-load-cmd', { clear = true })
 local lazy_start = 'LazyStart'
 
----Table containing plugins not loaded yet
----@type table<string, { load: fun(); clear: fun(); data: pack.data.specInt }?>
+---Table containing plugins data for internal use
+---@type table<string, { load: fun(); clear: fun(); data: pack.data.specInt; loaded: boolean }?>
 local load_tbl = {}
 
 -- local group = vim.api.nvim_create_augroup('LoadPluginAutoCmd', { clear = true })
@@ -21,13 +21,15 @@ local pack_group = vim.api.nvim_create_augroup('pack_group', { clear = true })
 ---@class pack.build.data
 ---@field active boolean Whether plugin was added via vim.pack.add
 ---@field kind 'install' | 'update' | 'delete' kind of package change
----@field spec vim.pack.PlugData
+---@field spec { src: string, name: string, version: string|vim.VersionRange|nil, data: pack.plugin.loadSpec }
 ---@field path string
+
+function a() end
 
 -- Needed for completion when adding a spec to the array of plugins
 ---@alias pack.load.event vim.api.keyset.events|'LazyStart'
 ---@alias pack.load.events pack.load.event|pack.load.event[]
----@alias pack.load.build_hook string|string[]|fun(data: vim.pack.PlugData)
+---@alias pack.load.build_hook string|string[]|fun(data: pack.build.data)
 
 ---@class pack.plugin.cmd_opts
 ---@field cmd string Command trigger
@@ -91,7 +93,7 @@ if not loaded then
   })
 
   ---Build hook function
-  ---@param data vim.pack.PlugData
+  ---@param data pack.build.data
   ---@param buildType 'buildPre'|'build'
   local function build_hook(data, buildType)
     local spec = load_tbl[data.spec.name]
@@ -132,7 +134,8 @@ if not loaded then
     hook = vim.islist(hook) and hook or vim.split(hook --[[@as string]], ' ', { plain = true, trimempty = true })
     ---@cast hook string[]
     vim.schedule(function()
-      local package_name = vim.fn.fnamemodify(data.spec.src, ':t')
+      -- local package_name = vim.fn.fnamemodify(data.spec.src, ':t')
+      local package_name = data.spec.name
       vim.notify(('Building %s...'):format(package_name), vim.log.levels.INFO)
       vim.system(hook, { cwd = data.path }, function(result)
         local success = result.code == 0
@@ -146,7 +149,7 @@ if not loaded then
   vim.api.nvim_create_autocmd('PackChanged', {
     group = pack_group,
     callback = function(args)
-      ---@type vim.pack.PlugData
+      ---@type pack.build.data
       local data = args.data
       if vim.tbl_contains({ 'install', 'update' }, data.kind) then
         build_hook(data, 'build')
@@ -156,7 +159,7 @@ if not loaded then
   vim.api.nvim_create_autocmd('PackChangedPre', {
     group = pack_group,
     callback = function(args)
-      ---@type vim.pack.PlugData
+      ---@type pack.build.data
       local data = args.data
       if vim.tbl_contains({ 'install', 'update' }, data.kind) then
         build_hook(data, 'buildPre')
@@ -195,6 +198,9 @@ local function preprocess(plugins)
     if matches == 0 then
       plugin.src = github_fmt:format(vim.trim(plugin.src))
     end
+
+    -- Ensure all plugins have data
+    plugin.data = plugin.data or {}
   end
 
   return plugins
@@ -297,12 +303,11 @@ local function load(plugins)
 
         -- cleanup state
         package_loaded = true
-        load_tbl[plugin.spec.name] = nil
+        load_tbl[plugin.spec.name].loaded = true
       end
 
       -- Store useful refs
-      load_tbl[plugin.spec.name] = { load = do_load, clear = do_clear, data = data }
-      -- Use for build hook if needed
+      load_tbl[plugin.spec.name] = { load = do_load, clear = do_clear, data = data, loaded = false }
 
       -- Event trigger
       if data.event then
@@ -526,10 +531,12 @@ end
 ---Get iter with pack's package names
 ---@return string[]
 local function get_pack_names()
-  return vim.iter(vim.pack.get()):map(function(pack)
-    return pack.spec.name
-  end)
-  :totable()
+  return vim
+    .iter(vim.pack.get())
+    :map(function(pack)
+      return pack.spec.name
+    end)
+    :totable()
 end
 
 ---@type table<fun(), any>
@@ -568,8 +575,9 @@ local get_pack_names_memo = memoized(300000, get_pack_names)
 ---@return string[]
 local function complete_packages(arg_lead)
   arg_lead = arg_lead or ''
-  local names =  get_pack_names_memo()
-  return vim.iter(names)
+  local names = get_pack_names_memo()
+  return vim
+    .iter(names)
     :filter(function(name)
       return vim.startswith(name, arg_lead)
     end)
