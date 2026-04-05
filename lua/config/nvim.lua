@@ -401,7 +401,7 @@ vim.diagnostic.config({
   virtual_text = true,
   jump = {
     on_jump = function(_, bufnr)
-      vim.diagnostics.open_float({
+      vim.diagnostic.open_float({
         bufnr = bufnr,
         scope = 'cursor',
         focus = false,
