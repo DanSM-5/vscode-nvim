@@ -68,6 +68,7 @@ if vim.fn.has('nvim-0.11.0') == 1 then
   vim.keymap.del('x', 'gra')
   vim.keymap.del('n', 'gri')
   vim.keymap.del('n', 'grt')
+  vim.keymap.del('n', 'grx')
   -- vim.keymap.del('n', 'gO')
 end
 if vim.fn.has('nvim-0.12.0') == 1 then
