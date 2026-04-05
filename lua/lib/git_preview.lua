@@ -25,7 +25,11 @@ local function fshow(dir)
     script_cmd = { script_preview .. '.sh' }
   end
 
-  require('lazy.util').float_term(script_cmd, { cwd = cwd })
+  -- require('lazy.util').float_term(script_cmd, { cwd = cwd })
+  require('lib.terminal').float_term({
+    cmd = script_cmd,
+    term = { cwd = cwd },
+  })
 end
 
 ---Open git log in a floating terminal buffer
@@ -33,9 +37,16 @@ end
 local function git_log(dir)
   local cwd = dir or require('lib.fs').git_path()
 
-  require('lazy.util').float_term({
+  -- require('lazy.util').float_term({
+  --   'git', 'log', '--oneline', '--decorate', '--graph',
+  -- }, { cwd = cwd })
+
+  require('lib.terminal').float_term({
+    cmd = {
     'git', 'log', '--oneline', '--decorate', '--graph',
-  }, { cwd = cwd })
+    },
+    term = { cwd = cwd },
+  })
 end
 
 return {
