@@ -13,10 +13,6 @@ vim.g.miniindentscope_disable = is_vscode
 ---@type pack.plugin.loadSpec[]
 local plugins = {
   {
-    -- Replace with register
-    src = 'inkarkat/vim-ReplaceWithRegister',
-  },
-  {
     -- Improve '*' and '#'
     src = 'haya14busa/vim-asterisk',
   },
@@ -31,10 +27,16 @@ local plugins = {
   {
     -- Allow moving in pascal/camel case, snake case and kebab case
     src = 'bkad/CamelCaseMotion',
+    data = {
+      event = 'LazyStart',
+    },
   },
   {
     -- Allow replacing text using motions without storing deleted text
     src = 'inkarkat/vim-ReplaceWithRegister',
+    data = {
+      event = 'LazyStart',
+    },
   },
   {
     -- Git integration

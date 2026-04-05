@@ -11,8 +11,6 @@ vim.g.miniindentscope_disable = is_vscode
 
 ---@type (LazyPluginSpec|string)[]|
 return {
-  -- Replace with register
-  'inkarkat/vim-ReplaceWithRegister',
   -- Improve '*' and '#'
   'haya14busa/vim-asterisk',
   -- Copy to register motions
