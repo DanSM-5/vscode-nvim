@@ -523,17 +523,53 @@ local function pack_restore(plugins)
   vim.pack.update(nil, { target = 'lockfile' })
 end
 
+---Get iter with pack's package names
+---@return string[]
+local function get_pack_names()
+  return vim.iter(vim.pack.get()):map(function(pack)
+    return pack.spec.name
+  end)
+  :totable()
+end
+
+---@type table<fun(), any>
+local cache = {}
+
+---Get momeoized value
+---@generic T : fun()
+---@param time integer ms to cache
+---@param fn T function to memoize
+---@return T
+local function memoized(time, fn)
+  -- TODO: validate args as part of the memo
+  return function(...)
+    local stored = cache[fn]
+    if stored then
+      return stored
+    end
+
+    local output = fn(...)
+    cache[fn] = output
+    local timer = vim.uv.new_timer() --[[@as uv.uv_timer_t]]
+    timer:start(time, 0, function()
+      timer:stop()
+      cache[fn] = nil
+    end)
+
+    return output
+  end
+end
+
+-- Cache package names for 5 minutes
+local get_pack_names_memo = memoized(300000, get_pack_names)
+
 ---Complete the package name
 ---@param arg_lead string
 ---@return string[]
 local function complete_packages(arg_lead)
   arg_lead = arg_lead or ''
-
-  return vim
-    .iter(vim.pack.get())
-    :map(function(pack)
-      return pack.spec.name
-    end)
+  local names =  get_pack_names_memo()
+  return vim.iter(names)
     :filter(function(name)
       return vim.startswith(name, arg_lead)
     end)
