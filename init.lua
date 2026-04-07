@@ -3,6 +3,9 @@
 -- `:h stdpath`
 vim.env.NVIM_APPNAME = 'vscode-nvim'
 
+-- enable cache loader
+vim.loader.enable(true)
+
 -- Variables that affect environment
 -- $XDG_CONFIG_HOME
 -- $XDG_DATA_HOME
