@@ -24,8 +24,6 @@ local pack_group = vim.api.nvim_create_augroup('pack_group', { clear = true })
 ---@field spec { src: string, name: string, version: string|vim.VersionRange|nil, data: pack.plugin.loadSpec }
 ---@field path string
 
-function a() end
-
 -- Needed for completion when adding a spec to the array of plugins
 ---@alias pack.load.event vim.api.keyset.events|'LazyStart'
 ---@alias pack.load.events pack.load.event|pack.load.event[]
