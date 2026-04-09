@@ -73,7 +73,7 @@ local lf = function(dir, fullscreen)
         local on_no_selection = function()
           if fullscreen then
             -- Needed to remove "[Process exited 0]"
-            vim.fn.feedkeys('i')
+            pcall(vim.api.nvim_buf_delete, buf, { force = true })
             return
           end
 
