@@ -190,7 +190,7 @@ end
 ---@field cmd string|string[] command to execute
 ---@field term? terminal.jobstart.opts
 ---@field float? vim.api.keyset.win_config
----@field on_end? fun(lines: string[]) callback to be called at the end with full output
+---@field on_end? fun(lines: string[]) callback to be called at the end with full stdout
 ---@field ft? string custom filetype to use
 ---@field bt? string custom buftype to use
 ---@field name? string name to be used in buffer
@@ -451,9 +451,7 @@ local function float_term(opts)
       capture_on_exit()
     end
   else
-    opts.term.on_exit = function()
-      capture_on_exit()
-    end
+    opts.term.on_exit = capture_on_exit
   end
 
   -- Inject environment with path to output file to read at the end
