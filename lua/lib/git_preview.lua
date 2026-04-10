@@ -1,7 +1,9 @@
 
 ---Open fshow script in a floating terminal window
 ---@param dir? string
-local function fshow(dir)
+---@param opts? terminal.jobstart.opts
+local function fshow(dir, opts)
+  opts = opts or {}
   -- TODO: Consider make the fshow script a standalone script in path "user-scripts"
   -- rather than a utility script.
   local cwd = dir or require('lib.fs').git_path()
@@ -25,10 +27,12 @@ local function fshow(dir)
     script_cmd = { script_preview .. '.sh' }
   end
 
+  opts.cwd = cwd
+
   -- require('lazy.util').float_term(script_cmd, { cwd = cwd })
   require('lib.terminal').float_term({
     cmd = script_cmd,
-    term = { cwd = cwd },
+    term = opts,
   })
 end
 
