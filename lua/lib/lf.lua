@@ -65,6 +65,7 @@ local lf = function(dir, fullscreen)
     -- Name the buffer
     vim.api.nvim_buf_set_name(buf, 'LF Select')
     vim.fn.jobstart({ 'lf', '-selection-path=' .. temp }, {
+      term = true,
       cwd = cwd,
       on_exit = function(jobId, code, evt)
         -- NOTE: when closing without selection we need to
