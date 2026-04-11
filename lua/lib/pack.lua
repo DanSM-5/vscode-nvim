@@ -9,8 +9,11 @@ local github_fmt = 'https://github.com/%s'
 -- local group = vim.api.nvim_create_augroup('pack-load-cmd', { clear = true })
 local lazy_start = 'LazyStart'
 
+---@alias pack.load.plug { load: fun(); clear: fun(); data: pack.data.specInt; loaded: boolean; name: string; }
 ---Table containing plugins data for internal use
----@type table<string, { load: fun(); clear: fun(); data: pack.data.specInt; loaded: boolean }?>
+---@alias pack.load.tbl table<string, pack.load.plug?>
+
+---@type pack.load.tbl
 local load_tbl = {}
 
 -- local group = vim.api.nvim_create_augroup('LoadPluginAutoCmd', { clear = true })
@@ -305,7 +308,7 @@ local function load(plugins)
       end
 
       -- Store useful refs
-      load_tbl[plugin.spec.name] = { load = do_load, clear = do_clear, data = data, loaded = false }
+      load_tbl[plugin.spec.name] = { load = do_load, clear = do_clear, data = data, loaded = false, name = plugin.spec.name }
 
       -- Event trigger
       if data.event then

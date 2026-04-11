@@ -1,53 +1,56 @@
+-- Ref: https://github.com/vgalovic/dotcraft/blob/main/home/.config/nvim/after/plugin/pack_ui.lua
+-- Ref: https://github.com/vgalovic/dotcraft/blob/09b1d3070868ced0dfe5ae2b430530a92e6a6552/home/.config/nvim/after/plugin/pack_ui.lua
+
 local icons = {
-  diagnostics = {
-    debug = ' ',
-    error = ' ',
-    hint = ' ',
-    info = ' ',
-    prefix = '●',
-    trace = '󰴽 ',
-    warn = ' ',
-  },
-  git = {
-    branch = '',
-
-    line_add = '▕▏',
-    line_change = '▕▏',
-    line_delete = '▁▁',
-
-    status_add = '+',
-    status_change = '~',
-    status_delete = '-',
-  },
-  mason = {
-    package_installed = '',
-    package_pending = '',
-    package_uninstalled = '',
-  },
+  -- diagnostics = {
+  --   debug = ' ',
+  --   error = ' ',
+  --   hint = ' ',
+  --   info = ' ',
+  --   prefix = '●',
+  --   trace = '󰴽 ',
+  --   warn = ' ',
+  -- },
+  -- git = {
+  --   branch = '',
+  --
+  --   line_add = '▕▏',
+  --   line_change = '▕▏',
+  --   line_delete = '▁▁',
+  --
+  --   status_add = '+',
+  --   status_change = '~',
+  --   status_delete = '-',
+  -- },
+  -- mason = {
+  --   package_installed = '',
+  --   package_pending = '',
+  --   package_uninstalled = '',
+  -- },
   pack = {
     loaded = '●',
     not_loaded = '○',
     to_cleanup = '×',
   },
-  file = {
-    brewfile = '',
-    config = '󱁻',
-    history = '',
-    kitty = '󰄛',
-    fish = '',
-  },
-  filetype = {
-    log = '',
-    nvim_pack = '󰏖',
-    pager = '',
-    sh = '',
-    tmTheme = '',
-    undotree = '',
-    verilog = '',
-  },
-  starter = {
-    lightning_bolt = '󱐋',
-  },
+  -- file = {
+  --   brewfile = '',
+  --   config = '󱁻',
+  --   history = '',
+  --   kitty = '󰄛',
+  --   fish = '',
+  -- },
+  -- filetype = {
+  --   log = '',
+  --   nvim_pack = '󰏖',
+  --   pager = '',
+  --   sh = '',
+  --   tmTheme = '',
+  --   undotree = '',
+  --   verilog = '',
+  -- },
+  -- starter = {
+  --   lightning_bolt = '󱐋',
+  -- },
 }
 
 --
@@ -118,7 +121,7 @@ local state = {
 
 -- Cache of path => installed git tag (false = no tag found)
 local tag_cache = {}
-local config_cache = nil -- parsed config plugins
+-- local config_cache = nil -- parsed config plugins
 
 -- ============================================================
 --  VERSION / GIT HELPERS
@@ -187,6 +190,29 @@ end
 -- ============================================================
 --  CONFIG PARSING (DETECT USED PLUGINS)
 -- ============================================================
+
+local function get_clean_defs()
+  package.loaded['plugins.definitions'] = nil
+  return require('plugins.definitions').plugins
+end
+
+local function get_lookup_tbl()
+  -- Build lookup table for defined plugins plugins
+  local def_plugins = get_clean_defs()
+  local conf_lookup = {} ---@type table<string, boolean>
+  for _, dp in ipairs(def_plugins) do
+    local name = ''
+    if dp.name then
+      name = dp.name ---@type string
+    else
+      local src_segments = vim.split(dp.src,'/', { plain = true, trimempty = true })
+      name = src_segments[#src_segments]
+    end
+    conf_lookup[name] = true
+  end
+
+  return conf_lookup
+end
 
 -- Extract plugin names from file content
 -- local function strip_comments(content)
@@ -317,21 +343,18 @@ end
 -- Build lines and highlights for the buffer
 local function build_content()
   local plugins = vim.pack.get(nil, { info = false })
-  -- local conf_plugins = get_plugin_names()
-  local conf_plugins = require('lib.pack').load_tbl
-  local loaded = {}
-  local not_loaded = {}
-  local to_cleanup = {}
+  local load_tbl = require('lib.pack').load_tbl
+  local loaded = {} ---@type vim.pack.Spec[]
+  local not_loaded = {} ---@type vim.pack.Spec[]
+  local to_cleanup = {} ---@type vim.pack.Spec[]
 
-  -- Build lookup table for config plugins
-  local conf_lookup = {}
-  for _, name in ipairs(conf_plugins) do
-    conf_lookup[name] = true
-  end
+  -- Build lookup table for defined plugins plugins
+  local conf_lookup = get_lookup_tbl()
 
   for _, p in ipairs(plugins) do
     local name = p.spec.name
-    if p.active then
+    local pack_plug = load_tbl[name] ---@type pack.load.plug
+    if pack_plug.loaded then
       table.insert(loaded, p)
     elseif conf_lookup[name] then
       table.insert(not_loaded, p)
@@ -619,20 +642,17 @@ local function setup_keymaps()
   vim.keymap.set('n', 'X', function()
     -- Get all plugins
     local all_plugins = vim.pack.get(nil, { info = false })
+    local load_tbl = require('lib.pack').load_tbl
 
     -- Build a lookup table for config plugins
-    -- local conf_plugins = get_plugin_names()
-    local conf_plugins = require('lib.pack').load_tbl
-    local conf_lookup = {}
-    for _, name in ipairs(conf_plugins) do
-      conf_lookup[name] = true
-    end
+    local conf_lookup = get_lookup_tbl()
 
     -- Filter for "to cleanup": inactive AND not in config
     local to_clean = {}
     for _, p in ipairs(all_plugins) do
       local name = p.spec.name
-      if not p.active and not conf_lookup[name] then
+      local pack_plug = load_tbl[name] ---@type pack.load.plug
+      if not pack_plug.loaded and not conf_lookup[name] then
         table.insert(to_clean, name)
       end
     end
