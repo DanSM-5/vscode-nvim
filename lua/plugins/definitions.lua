@@ -451,7 +451,7 @@ end
 -- return collection of loaded plugins
 return {
   load = function ()
-    local pack = require('lib.pack')
+    local pack = require('lib.pack.core')
     pack.load(plugins)
   end,
   plugins = plugins,

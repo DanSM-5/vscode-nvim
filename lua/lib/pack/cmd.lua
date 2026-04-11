@@ -72,7 +72,7 @@ local function pack_complete_single(arg_lead, cmd)
     return {}
   end
 
-  return require('lib.pack').complete_packages(arg_lead)
+  return require('lib.pack.core').complete_packages(arg_lead)
 end
 
 ---Get spec for single plugin
@@ -97,13 +97,13 @@ local pack_subcmds = {
     handler = function(plugins, opts)
       -- If there are plugins follow the regular path
       if plugins and #plugins > 0 then
-        return require('lib.pack').update(plugins, opts)
+        return require('lib.pack.core').update(plugins, opts)
       end
 
       -- update all if forced
       if opts.force then
-        -- require('lib.pack').update(plugins, { force = true })
-        return require('lib.pack').update(plugins, opts)
+        -- require('lib.pack.core').update(plugins, { force = true })
+        return require('lib.pack.core').update(plugins, opts)
       end
 
       -- otherwise confirm first
@@ -112,26 +112,26 @@ local pack_subcmds = {
 
       if choice == 1 then
         vim.notify('[:Pack] Updating everything.', vim.log.levels.INFO)
-        return require('lib.pack').update(nil, opts)
+        return require('lib.pack.core').update(nil, opts)
       else
         vim.notify('Update aborted.', vim.log.levels.WARN)
       end
     end,
     complete = function(...)
-      return require('lib.pack').complete_packages(...)
+      return require('lib.pack.core').complete_packages(...)
     end,
   },
   install = {
     handler = function(plugins)
-      return require('lib.pack').install(plugins)
+      return require('lib.pack.core').install(plugins)
     end,
   },
   delete = {
     handler = function(...)
-      return require('lib.pack').delete(...)
+      return require('lib.pack.core').delete(...)
     end,
     complete = function(...)
-      return require('lib.pack').complete_packages(...)
+      return require('lib.pack.core').complete_packages(...)
     end,
   },
   explore = {
@@ -182,7 +182,7 @@ local pack_subcmds = {
       end
 
       local vim_pack = vim.pack.get({ single })[1]
-      local lib_pack = require('lib.pack').load_tbl[single]
+      local lib_pack = require('lib.pack.core').load_tbl[single]
 
       vim.print({
         vim_pack = vim_pack,
@@ -202,7 +202,7 @@ local pack_subcmds = {
       end
 
       if opts.force then
-        return require('lib.pack').restore()
+        return require('lib.pack.core').restore()
       end
 
       -- otherwise confirm first
@@ -211,7 +211,7 @@ local pack_subcmds = {
 
       if choice == 1 then
         vim.notify('[:Pack] Restoring to current lockfile values.', vim.log.levels.INFO)
-        return require('lib.pack').restore()
+        return require('lib.pack.core').restore()
       else
         vim.notify('[:Pack] Restore aborted.', vim.log.levels.WARN)
       end
@@ -267,7 +267,7 @@ end
 ---@param info vim.api.keyset.create_user_command.command_args
 local function cmd(info)
   if #info.fargs == 0 then
-    require('lib.pack-ui').open()
+    require('lib.pack.ui').open()
     return
   end
 

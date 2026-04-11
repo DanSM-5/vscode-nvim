@@ -343,7 +343,7 @@ end
 -- Build lines and highlights for the buffer
 local function build_content()
   local plugins = vim.pack.get(nil, { info = false })
-  local load_tbl = require('lib.pack').load_tbl
+  local load_tbl = require('lib.pack.core').load_tbl
   local loaded = {} ---@type vim.pack.Spec[]
   local not_loaded = {} ---@type vim.pack.Spec[]
   local to_cleanup = {} ---@type vim.pack.Spec[]
@@ -642,7 +642,7 @@ local function setup_keymaps()
   vim.keymap.set('n', 'X', function()
     -- Get all plugins
     local all_plugins = vim.pack.get(nil, { info = false })
-    local load_tbl = require('lib.pack').load_tbl
+    local load_tbl = require('lib.pack.core').load_tbl
 
     -- Build a lookup table for config plugins
     local conf_lookup = get_lookup_tbl()
@@ -698,7 +698,7 @@ local function setup_keymaps()
     local choice = vim.fn.confirm(string.format('Delete plugin %s?', name), '&Yes\n&No', 2, 'Question')
     if choice == 1 then
       close()
-      local pack = require('lib.pack')
+      local pack = require('lib.pack.core')
       local del_ok, err = pcall(pack.delete, { name })
       if del_ok then
         vim.notify(string.format('vim.pack: removed %s', name), vim.log.levels.INFO)
@@ -753,7 +753,7 @@ local function setup_keymaps()
       return
     end
 
-    local spec = require('lib.pack-cmd').pack_get_single_spec({ name })
+    local spec = require('lib.pack.cmd').pack_get_single_spec({ name })
     if not spec then
       return
     end
@@ -790,7 +790,7 @@ local function setup_keymaps()
       return
     end
 
-    local spec = require('lib.pack-cmd').pack_get_single_spec({ name })
+    local spec = require('lib.pack.cmd').pack_get_single_spec({ name })
     if not spec then
       return
     end
@@ -810,8 +810,8 @@ local function setup_keymaps()
       return
     end
 
-    local vim_pack = require('lib.pack-cmd').pack_get_single_spec({ name })
-    local lib_pack = require('lib.pack').load_tbl[name]
+    local vim_pack = require('lib.pack.cmd').pack_get_single_spec({ name })
+    local lib_pack = require('lib.pack.core').load_tbl[name]
 
     vim.print({
       vim_pack = vim_pack,

@@ -343,7 +343,7 @@ local register = function()
     })
 
     vim.api.nvim_create_user_command('Pack', function(info)
-      return require('lib.pack-cmd').cmd(info)
+      return require('lib.pack.cmd').cmd(info)
     end, {
       desc = '[Pack] Helpers for using vim.pack',
       nargs = '*',
@@ -351,7 +351,7 @@ local register = function()
       bar = true,
       force = true,
       complete = function (...)
-        return require('lib.pack-cmd').complete_pack_cmd(...)
+        return require('lib.pack.cmd').complete_pack_cmd(...)
       end,
     })
   end
