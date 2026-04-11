@@ -518,6 +518,13 @@ end
 local function pack_delete(plugins, opts)
   opts = vim.tbl_deep_extend('force', { force = false }, opts or {})
   vim.pack.del(plugins, opts)
+  for _, plugin in ipairs(plugins) do
+    local p = load_tbl[plugin]
+    if p then
+      pcall(p.clear)
+      load_tbl[plugin] = nil
+    end
+  end
 end
 
 ---Restore plugins to match lockfile
