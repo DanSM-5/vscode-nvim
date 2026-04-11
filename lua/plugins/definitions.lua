@@ -224,7 +224,7 @@ local plugins = {
 if not is_vscode then
   vim.list_extend(plugins, {
     { src = 'rafamadriz/friendly-snippets', data = { lazy = true } },
-    { src = 'nvim-tree/nvim-web-devicons', data = { lazy = true } },
+    { src = 'nvim-tree/nvim-web-devicons', data = { lazy = true, ft = 'netrw' } },
     {
       src = 'psliwka/vim-smoothie',
       data = {
