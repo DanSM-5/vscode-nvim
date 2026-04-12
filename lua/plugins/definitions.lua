@@ -297,6 +297,12 @@ if not is_vscode then
 
           -- Set mappings
           gitsigns.setup({
+            -- Enable debug logs
+            -- debug_mode = true,
+
+            -- enable word diff highlights
+            word_diff = true,
+
             -- Show before diagnostics
             sign_priority = 11, -- defaults to 6
             on_attach = function(bufnr)
