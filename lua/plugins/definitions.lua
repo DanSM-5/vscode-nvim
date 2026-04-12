@@ -14,6 +14,9 @@ local plugins = {
   {
     -- Improve '*' and '#'
     src = 'haya14busa/vim-asterisk',
+    data = {
+      event = 'LazyStart',
+    },
   },
   {
     -- Copy to register motions
@@ -67,6 +70,7 @@ local plugins = {
     -- Add `Repeatable` command to improve ergonomics of vim-repeat
     src = 'kreskij/Repeatable.vim',
     data = {
+      deps = { 'vim-repeat' },
       cmd = 'Repeatable',
     },
   },
@@ -223,14 +227,19 @@ local plugins = {
 -- if running in vscode, stop loading plugins here
 if not is_vscode then
   vim.list_extend(plugins, {
+    -- Fetch friendly snippets. Currently used for lsp basics_ls but never loaded.
+    -- Keep the `lazy = true`.
     { src = 'rafamadriz/friendly-snippets', data = { lazy = true } },
+    -- Get icons for filetypes
     { src = 'nvim-tree/nvim-web-devicons', data = { lazy = true, ft = 'netrw' } },
+    -- Smooth scroll up/down (shift-up/shift-down)
     {
       src = 'psliwka/vim-smoothie',
       data = {
         event = 'LazyStart',
       },
     },
+    -- Fzf functions for lsp actions
     {
       src = 'DanSM-5/fzf-lsp.nvim',
       data = {
@@ -269,6 +278,7 @@ if not is_vscode then
         end,
       },
     },
+    -- Show signs on git changes like gitgutter
     {
       src = 'lewis6991/gitsigns.nvim',
       version = 'fcfa7a989',
@@ -369,6 +379,7 @@ if not is_vscode then
         end,
       },
     },
+    -- Fzf built-in vim plugin
     {
       src = 'junegunn/fzf',
       data = {
@@ -376,12 +387,14 @@ if not is_vscode then
         name = 'fzf',
       },
     },
+    -- Fzf functions for vim
     {
       src = 'junegunn/fzf.vim',
       data = {
         event = 'LazyStart',
       },
     },
+    -- Wrapper to adjust commentstring using treesiter
     {
       src = 'folke/ts-comments.nvim',
       data = {
