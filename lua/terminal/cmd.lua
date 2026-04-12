@@ -355,6 +355,18 @@ local register = function()
       end,
     })
   end
+
+  vim.api.nvim_create_user_command('Restart', function()
+    local tmp = os.tmpname()
+    vim.cmd.mksession({ bang = true, args = { tmp } })
+    vim.cmd.restart({ args = { 'source', tmp } })
+  end, {
+    force = true,
+    bang = true,
+    bar = true,
+    desc = '[Restart] Restart nvim and recover opened windows and buffers',
+    nargs = 0,
+  })
 end
 
 return {
