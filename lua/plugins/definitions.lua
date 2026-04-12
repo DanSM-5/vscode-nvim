@@ -110,7 +110,7 @@ local plugins = {
     src = 'nvim-treesitter/nvim-treesitter-textobjects',
     version = 'main',
     data = {
-      event = 'LazyStart',
+      -- event = 'LazyStart',
       deps = {
         'nvim-treesitter',
       },
@@ -235,7 +235,7 @@ if not is_vscode then
       src = 'DanSM-5/fzf-lsp.nvim',
       data = {
         lazy = true,
-        event = 'LspAttach',
+        -- event = 'LspAttach',
         cmd = {
           'Definitions',
           'Declarations',

@@ -33,6 +33,21 @@ local ref_jump = function(forward, client_id)
   })({ forward = forward })
 end
 
+local function try_load_fzf_lsp()
+  local fzflsp = require('lib.pack.core').load_tbl['fzf-lsp.nvim']
+  if not fzflsp then
+    error('fzf_lsp not loaded')
+  end
+
+  -- Load fzflsp
+  if not fzflsp.loaded then
+    pcall(fzflsp.load)
+  end
+
+  --
+  return require('fzf_lsp')
+end
+
 ---Setup keymaps for lsp
 ---@param client vim.lsp.Client
 ---@param bufnr number
@@ -87,7 +102,7 @@ local set_lsp_keys = function(client, bufnr)
   -- Buffer local mappings.
   -- See `:help vim.lsp.*` for documentation on any of the below functions
   set_map('n', 'gD', function()
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.declaration_call()
       return
@@ -97,7 +112,7 @@ local set_lsp_keys = function(client, bufnr)
     vim.lsp.buf.declaration()
   end, '[Lsp]: Go to declaration')
   set_map('n', 'gd', function()
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.definition_call()
       return
@@ -108,7 +123,7 @@ local set_lsp_keys = function(client, bufnr)
   set_map('n', '<space>ds', function()
     vim.cmd.split()
 
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.definition_call()
       return
@@ -119,7 +134,7 @@ local set_lsp_keys = function(client, bufnr)
   set_map('n', '<space>dv', function()
     vim.cmd.vsplit()
 
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.definition_call()
       return
@@ -131,7 +146,7 @@ local set_lsp_keys = function(client, bufnr)
     vim.lsp.buf.hover({ border = 'rounded' })
   end, '[Lsp]: Hover action')
   set_map('n', '<space>i', function()
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.implementation_call()
       return
@@ -148,7 +163,7 @@ local set_lsp_keys = function(client, bufnr)
     vim.print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
   end, '[Lsp]: List workspaces')
   set_map('n', '<space>D', function ()
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.type_definition_call()
       return
@@ -158,7 +173,7 @@ local set_lsp_keys = function(client, bufnr)
   set_map('n', '<space>rn', vim.lsp.buf.rename, '[Lsp]: Rename symbol')
   set_map('n', '<f2>', vim.lsp.buf.rename, '[Lsp]: Rename symbol')
   set_map('n', '<space>ca', function ()
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.code_action_call()
       return
@@ -167,7 +182,7 @@ local set_lsp_keys = function(client, bufnr)
     vim.lsp.buf.code_action()
   end, '[Lsp]: Code Actions')
   set_map('n', 'gr', function()
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.references_call()
       return
@@ -187,7 +202,7 @@ local set_lsp_keys = function(client, bufnr)
     vim.cmd.write()
   end, '[Lsp]: Format buffer')
   set_map('n', '<space>ci', function()
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.incoming_calls_call()
       return
@@ -196,7 +211,7 @@ local set_lsp_keys = function(client, bufnr)
     vim.lsp.buf.incoming_calls()
   end, '[Lsp]: Incoming Calls')
   set_map('n', '<space>co', function()
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.outgoing_calls_call()
       return
@@ -205,7 +220,7 @@ local set_lsp_keys = function(client, bufnr)
     vim.lsp.buf.outgoing_calls()
   end, '[Lsp]: Outgoing Calls')
   set_map('n', '<space>sw', function()
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.workspace_symbol_call({ query = '' })
       return
@@ -215,7 +230,7 @@ local set_lsp_keys = function(client, bufnr)
   end, '[Lsp] Open workspace symbols')
   set_map('n', '<space>sW', function()
     local query = vim.fn.expand('<cword>')
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.workspace_symbol_call({ query = query })
       return
@@ -224,7 +239,7 @@ local set_lsp_keys = function(client, bufnr)
     vim.lsp.buf.workspace_symbol(query)
   end, '[Lsp] Open workspace symbols')
   set_map('n', '<space>sd', function()
-    local ok, fzflsp = pcall(require, 'fzf_lsp')
+    local ok, fzflsp = pcall(try_load_fzf_lsp)
     if ok then
       fzflsp.document_symbol_call()
       return
