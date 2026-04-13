@@ -31,12 +31,13 @@ return {
   log_level = vim.lsp.protocol.MessageType.Warning,
   settings = {
     Lua = {
-      codelens = { enable = true },
+      codeLens = { enable = true },
       signatureHelp = { enable = true },
       hint = {
         enable = true,
         paramName = 'All',
         paramType = true,
+        semicolon = 'Enable',
       },
       completion = {
         enable = true,
