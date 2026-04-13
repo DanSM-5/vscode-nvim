@@ -499,6 +499,7 @@ if vim.fn.has('nvim-0.12.0') == 1 then
   -- Fill chars to hide numbers between folds
   vim.opt.fillchars:append({ foldinner = ' ' })
   vim.o.foldcolumn = 'auto'
+  vim.lsp.codelens.enable(true)
 
   -- Ref: https://www.reddit.com/r/neovim/comments/1o4eo6s/new_difftool_command_added_to_neovim/
   -- vim.cmd([[packadd! nvim.difftoll]])
