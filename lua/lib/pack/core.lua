@@ -308,7 +308,8 @@ local function load(plugins)
       end
 
       -- Store useful refs
-      load_tbl[plugin.spec.name] = { load = do_load, clear = do_clear, data = data, loaded = false, name = plugin.spec.name }
+      load_tbl[plugin.spec.name] =
+        { load = do_load, clear = do_clear, data = data, loaded = false, name = plugin.spec.name }
 
       -- Event trigger
       if data.event then
