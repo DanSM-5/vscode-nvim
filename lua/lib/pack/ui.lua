@@ -192,7 +192,7 @@ end
 -- ============================================================
 
 local function get_clean_defs()
-  package.loaded['plugins.definitions'] = nil
+  require('lib.reload').reload_module('plugins.definitions')
   return require('plugins.definitions').plugins
 end
 
