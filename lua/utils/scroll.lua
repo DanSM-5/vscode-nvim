@@ -7,7 +7,7 @@
 -- Ref: https://stackoverflow.com/questions/47040925/microsoft-vs-code-jump-10-lines-vertically-at-once/48568520#48568520
 
 
-local throttle = require('utils.throttle').throttle
+local throttle = require('utils.stdlib').throttle
 -- How many lines to move each key press
 local jumpStep = 8
 -- throttle delay
@@ -34,7 +34,7 @@ local delay = 50 -- or 40
 --   return line + 1
 -- end
 
--- local upScrollCallback =  throttle(delay, function ()
+-- local upScrollCallback =  throttle(function ()
 --   -- Current cursor line
 --   local current = getCurrentLine()
 
@@ -71,9 +71,9 @@ local delay = 50 -- or 40
 --   -- else
 --   --   vscode.call('cursorMove', { args = { to = 'viewPortCenter', value = jumpStep }})
 --   -- end
--- end)
+-- end, delay)
 
--- local downScrollCallback = throttle(delay, function ()
+-- local downScrollCallback = throttle(function ()
 --   -- Current cursor line
 --   local current = getCurrentLine()
 --   -- Total lines (end of file)
@@ -118,7 +118,7 @@ local delay = 50 -- or 40
 --   -- else
 --   --   vscode.call('cursorMove', { args = { to = 'viewPortCenter', value = jumpStep }})
 --   -- end
--- end)
+-- end, delay)
 
 ---Initialize the scroll object
 ---@param opts? { jumpStep: integer; delay: integer }
@@ -254,7 +254,7 @@ end
 
 -- registerScroll({ jumpStep = jumpStep })
 
-local scroll_down = throttle(delay, function ()
+local scroll_down = throttle(function ()
   local ctrl_d = vim.api.nvim_replace_termcodes('<C-d>', true, true, true)
   vim.fn.feedkeys(ctrl_d, 'normal')
   require('vscode').eval([[
@@ -262,9 +262,9 @@ local scroll_down = throttle(delay, function ()
       to: 'down', by: 'halfPage',
     });
   ]])
-end)
+end, delay)
 
-local scroll_up = throttle(delay, function ()
+local scroll_up = throttle(function ()
   local ctrl_u = vim.api.nvim_replace_termcodes('<C-u>', true, true, true)
   vim.fn.feedkeys(ctrl_u, 'normal')
   require('vscode').eval([[
@@ -272,7 +272,7 @@ local scroll_up = throttle(delay, function ()
       to: 'up', by: 'halfPage',
     });
   ]])
-end)
+end, delay)
 
 return {
   registerScroll = registerScroll,
