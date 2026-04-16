@@ -1,6 +1,12 @@
 -- Collection of utility functions
 -- There must not be imports on the top level of this script
 
+-- Ensure this exist -- 5.1 compatibility
+table.pack = table.pack or function(...)
+  return { n = select('#', ...), ... }
+end
+table.unpack = table.unpack or unpack
+
 -- luajit windows detection
 -- local is_win = jit.os:find('Windows')
 
@@ -11,8 +17,12 @@
 ---@return T[]
 local function array_concat(t1, t2)
   local result = {}
-  for _, v in ipairs(t1) do table.insert(result, v) end
-  for _, v in ipairs(t2) do table.insert(result, v) end
+  for _, v in ipairs(t1) do
+    table.insert(result, v)
+  end
+  for _, v in ipairs(t2) do
+    table.insert(result, v)
+  end
   return result
 end
 
@@ -25,7 +35,7 @@ local function split(inputstr, sep)
     sep = '%s'
   end
   local t = {}
-  for str in string.gmatch(inputstr, '([^'..sep..']+)') do
+  for str in string.gmatch(inputstr, '([^' .. sep .. ']+)') do
     table.insert(t, str)
   end
   return t
@@ -37,7 +47,7 @@ end
 ---@return T New table with same keys and values from the original
 local function shallow_clone(t)
   local t2 = {}
-  for k,v in pairs(t) do
+  for k, v in pairs(t) do
     t2[k] = v
   end
   return t2
@@ -50,9 +60,11 @@ end
 local function dump(o)
   if type(o) == 'table' then
     local s = '{ '
-    for k,v in pairs(o) do
-      if type(k) ~= 'number' then k = '"'..k..'"' end
-      s = s .. '['..k..'] = ' .. dump(v) .. ','
+    for k, v in pairs(o) do
+      if type(k) ~= 'number' then
+        k = '"' .. k .. '"'
+      end
+      s = s .. '[' .. k .. '] = ' .. dump(v) .. ','
     end
     return s .. '} '
   else
@@ -129,7 +141,7 @@ end
 ---@param marker string|nil Name used to identify the rook of a project. If nil `.git` is used.
 ---@param initial string|nil Initial path to use as the base of the search. If nil, use current buffer path.
 ---@return string|nil path string when found or nil
-local find_root_dir = function (marker, initial)
+local find_root_dir = function(marker, initial)
   local project_base_identifier = marker or '.git'
   local path = initial and vim.fn.fnamemodify(initial, ':p:h') or vim.fn.expand('%:p:h')
   return vim.fs.dirname(vim.fs.find(project_base_identifier, {
@@ -144,7 +156,7 @@ end
 ---@param marker string|nil Name used to identify the rook of a project. If nil `.git` is used.
 ---@param initial string|nil Initial path to use as the base of the search. If nil, use current buffer path.
 ---@return string path It should always return a string
-local get_root_dir = function (marker, initial)
+local get_root_dir = function(marker, initial)
   local found = find_root_dir(marker, initial)
   return found and found or (initial or vim.fn.expand('%:p:h'))
 end
@@ -239,29 +251,62 @@ local function write_file(file, contents)
   fd:close()
 end
 
----@generic F: fun()
----@param ms number
----@param fn F
----@return F
-local function throttle(ms, fn)
-  ---@type Async
-  local async
-  local pending = false
+---Simple setTimeout
+---@async
+---@param callback fun() function to run on each interval
+---@param time integer interval to run the function
+---@return uv.uv_timer_t timer instance
+local function setTimeout(callback, time)
+  local timer = assert(vim.uv.new_timer())
+  timer:start(time, 0, function()
+    timer:stop()
+    timer:close()
+    callback()
+  end)
+  return timer
+end
 
-  return function()
-    if async and async:running() then
-      pending = true
+--- Simple setInterval
+---@async
+---@param callback fun() function to run on each interval
+---@param time integer interval to run the function
+---@return uv.uv_timer_t timer instance
+local function setInterval(callback, time)
+  local timer = assert(vim.uv.new_timer())
+  timer:start(time, time, function()
+    callback()
+  end)
+  return timer
+end
+
+--- Simple clear timer
+---@async
+---@param timer uv.uv_timer_t timer to clear
+local function clearTimer(timer)
+  timer:stop()
+  timer:close()
+end
+
+---Throttle function
+---@async
+---@generic F: fun()
+---@param fn F Function to thorttle
+---@param time integer Time to throttle in ms
+---@return F Function throttled
+local function throttle(fn, time)
+  ---@type uv.uv_timer_t|nil
+  local timer = nil
+
+  return function(...)
+    if timer then
       return
     end
-    ---@async
-    async = require('utils.async').new(function()
-      repeat
-        pending = false
-        fn()
-        async:sleep(ms)
 
-      until not pending
-    end)
+    local args = table.pack(...)
+    timer = setTimeout(function()
+      timer = nil
+      fn(table.unpack(args), 1, args.n)
+    end, time)
   end
 end
 
@@ -379,7 +424,7 @@ end
 ---Get a Collection of key-value pairs from a table
 ---@generic K, V
 ---@param tbl table<K, V>
----@return [K, V][] 
+---@return [K, V][]
 local function entries(tbl)
   ---@type [`K`, `V`][]
   local out_table = {}
@@ -392,11 +437,10 @@ local function entries(tbl)
   return out_table
 end
 
-
 ---Get a Collection of key-value pairs from a table
 ---@generic K
 ---@param tbl table<K, unknown>
----@return K[] 
+---@return K[]
 local function keys(tbl)
   ---@type `K`[]
   local out_table = {}
@@ -412,7 +456,7 @@ end
 ---Get a Collection of key-value pairs from a table
 ---@generic V
 ---@param tbl table<unknown, V>
----@return V[] 
+---@return V[]
 local function values(tbl)
   ---@type `V`[]
   local out_table = {}
@@ -460,14 +504,14 @@ end
 --- @param c string|integer Characted value
 --- @return string Hexadecimal representation of character
 local char_to_hex = function(c)
-  return string.format("%02X", string.byte(c))
+  return string.format('%02X', string.byte(c))
 end
 
 --- Transform char to hex prefixed with %
 --- @param c string|integer Characted value
 --- @return string Hexadecimal representation of character prefixed with %
 local encode_char_uri = function(c)
-  return '%'..char_to_hex(c)
+  return '%' .. char_to_hex(c)
 end
 
 ---Encode function for URIs
@@ -479,15 +523,15 @@ local function encodeURI(url, opts)
     return
   end
   opts = opts or { encode_spaces = false }
-  url = url:gsub("\n", "\r\n")
+  url = url:gsub('\n', '\r\n')
   -- For more conservative enconding that encodes "_", "-", ".", "~"
   -- url = url:gsub("([^%w ])", char_to_hex)
   -- To be closer to RFC 3986, section 2.3: https://tools.ietf.org/html/rfc3986#section-2.3
-  url = url:gsub("([^%w _%%%-%.~])", encode_char_uri)
+  url = url:gsub('([^%w _%%%-%.~])', encode_char_uri)
   if opts.encode_spaces then
-    url = url:gsub(" ", encode_char_uri)
+    url = url:gsub(' ', encode_char_uri)
   else
-    url = url:gsub(" ", "+")
+    url = url:gsub(' ', '+')
   end
   return url
 end
@@ -507,8 +551,8 @@ local decodeURI = function(url)
   if url == nil then
     return
   end
-  url = url:gsub("+", " ")
-  url = url:gsub("%%(%x%x)", hex_to_char)
+  url = url:gsub('+', ' ')
+  url = url:gsub('%%(%x%x)', hex_to_char)
   return url
 end
 
@@ -533,7 +577,7 @@ local function create_finally(block, on_end)
     end
   end
 
-  return function (...)
+  return function(...)
     return _finally(pcall(block, ...))
   end
 end
@@ -550,22 +594,20 @@ local function finally(block, on_end)
       on_end()
       return ...
     else
-      on_end( (...) )
-      error( (...), 0 )
+      on_end((...))
+      error((...), 0)
     end
   end
 
-  return _finally(pcall( block ))
+  return _finally(pcall(block))
 end
-
 
 ---@generic T
 ---@param t T[] Table to check
 ---@param value T|fun(v: T): boolean Value to compare or predicate function reference
 ---@return boolean `true` if `t` contains `value`
 local function contains(t, value)
-
-             --- @generic T
+  --- @generic T
   local pred --- @type fun(v: T): boolean
   if type(value) == 'function' then
     pred = value
@@ -611,7 +653,7 @@ end
 ---]]
 ---```
 ---@return table<string, any>
-local get_dynamic_object = function ()
+local get_dynamic_object = function()
   local meta = {}
   function meta.__index(t, k)
     if rawget(t, k) == nil then
@@ -620,6 +662,7 @@ local get_dynamic_object = function ()
 
     return rawget(t, k)
   end
+
   meta.self = meta
 
   return meta
@@ -628,7 +671,7 @@ end
 ---Check if a given directory is a git directory
 ---@param dir string The initial directory
 ---@return boolean git_repo
-local is_git_dir = function (dir)
+local is_git_dir = function(dir)
   local found = find_root_dir('.git', dir)
   return found ~= nil
 end
@@ -670,4 +713,7 @@ return {
   create_finally = create_finally,
   finally = finally,
   get_dynamic_object = get_dynamic_object,
+  setTimeout = setTimeout,
+  setInterval = setInterval,
+  clearTimer = clearTimer,
 }
