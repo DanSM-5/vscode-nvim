@@ -259,6 +259,7 @@ if not is_vscode then
           'RangeCodeActions',
           'Diagnostics',
           'DiagnosticsAll',
+          'Snippets',
         },
         config = function()
           vim.g.fzf_lsp_pretty = 1
