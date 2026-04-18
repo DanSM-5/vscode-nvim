@@ -12,7 +12,10 @@ return {
   end,
   root_markers = { '.git' },
   workspace_required = false,
-  ---@type rg.settings.user
+  ---@type rg.settings
   settings = {
+    rg = {
+      debounce = 500,
+    }
   },
 }
