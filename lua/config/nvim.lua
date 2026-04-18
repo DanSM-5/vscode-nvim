@@ -64,7 +64,7 @@ vim.api.nvim_create_autocmd('UIEnter', {
   callback = function()
     coroutine.resume(coroutine.create(vim.schedule_wrap(function()
       local lsp_servers = {}
-      local ignore_servers = { 'cmp2lsp' }
+      local ignore_servers = {}
       for _, file in ipairs(vim.api.nvim_get_runtime_file('after/lsp/*', true)) do
         local name = vim.fn.fnamemodify(file, ':t:r')
         if vim.tbl_contains(ignore_servers, name) then
