@@ -36,7 +36,7 @@ vim.api.nvim_create_autocmd('LspDetach', {
 
 ---Show documentation for item
 ---@param item lsp.CompletionItem
----@param param { selected: integer }
+---@param info { selected: integer }
 ---@return boolean
 local function show_docs(item, info)
   local docs = vim.tbl_get(item, 'documentation', 'value') or vim.tbl_get(item, 'documentation') --[[@as string|nil]]
