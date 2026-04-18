@@ -1,5 +1,57 @@
+--- Module to handle auto completion of lsp servers
+--- This helper also allows to add multiple lsp clients to a
+--- single buffer and prioritize which resolves the documentation
+
+---@class complete.client.data
+---@field client_id integer
+---@field name string
+---@field priority integer
+
+---@type table<integer, complete.client.data[]>
+local complete_clients = {}
 ---@type table<integer, integer>
-local complete_bufs = {}
+local complete_autocmds = {}
+
+local complete_group = vim.api.nvim_create_augroup('complete_group', { clear = true })
+vim.api.nvim_create_autocmd('LspDetach', {
+  group = complete_group,
+  desc = '[complete] unregister clients from buffers',
+  callback = function(info)
+    local buf = info.buf
+    if complete_clients[buf] == nil then
+      return
+    end
+
+    local client_id = info.data.client_id
+    local complete_list = complete_clients[buf]
+    complete_clients[buf] = vim
+      .iter(complete_list)
+      :filter(function(cl)
+        ---@cast cl complete.client.data
+        return cl.client_id ~= client_id
+      end)
+      :totable()
+  end,
+})
+
+---Show documentation for item
+---@param item lsp.CompletionItem
+---@param param { selected: integer }
+---@return boolean
+local function show_docs(item, info)
+  local docs = vim.tbl_get(item, 'documentation', 'value') or vim.tbl_get(item, 'documentation') --[[@as string|nil]]
+  if not docs or type(docs) ~= 'string' then
+    return false
+  end
+  local win = vim.api.nvim__complete_set(info['selected'], { info = docs })
+  if win.winid and vim.api.nvim_win_is_valid(win.winid) then
+    vim.api.nvim_win_set_config(win.winid, { border = 'rounded' })
+    vim.treesitter.start(win.bufnr, 'markdown')
+    vim.wo[win.winid].conceallevel = 3
+    return true
+  end
+  return false
+end
 
 ---Configure lsp completion
 ---@param client vim.lsp.Client Client id
@@ -89,80 +141,102 @@ local configure = function(client, buffer, opts)
   ---]]
 
   ---[[Code required to add documentation popup for an item
-  if complete_bufs[buffer] ~= nil then
-    pcall(vim.api.nvim_del_autocmd, complete_bufs[buffer])
+
+  if complete_clients[buffer] == nil then
+    local entry = {
+      client_id = client.id,
+      name = client.name,
+      priority = client.name == 'rg_ls' and 1000 or 101,
+    } --[[@as complete.client.data]]
+    local list = { entry }
+    complete_clients[buffer] = list
+  else
+    local list = complete_clients[buffer]
+    local priority_weight = client.name == 'rg_ls' and 1000 or 100
+    table.insert(list, {
+      client_id = client.id,
+      name = client.name,
+      priority = (#list + 1) + priority_weight,
+    } --[[@as complete.client.data]])
+    table.sort(list, function(lhs, rhs)
+      return lhs.priority < rhs.priority
+    end)
+    complete_clients[buffer] = list
   end
 
   ---@type function()
   local _cancel_prev = function() end
 
-  local client_id = client.id
-  complete_bufs[buffer] = vim.api.nvim_create_autocmd('CompleteChanged', {
+  if complete_autocmds[buffer] then
+    pcall(vim.api.nvim_del_autocmd, complete_clients[buffer])
+  end
+  complete_autocmds[buffer] = vim.api.nvim_create_autocmd('CompleteChanged', {
     buffer = buffer,
     callback = function()
       _cancel_prev()
-      local info = vim.fn.complete_info({ 'selected' })
+      local info = vim.fn.complete_info({ 'selected' }) ---@type { selected: integer }
       local completionItem = vim.tbl_get(vim.v.completed_item, 'user_data', 'nvim', 'lsp', 'completion_item')
       if nil == completionItem then
         return
       end
 
+      -- If item already included documentation field without being resolved
+      -- if show_docs(completionItem) then return end
+
       --- SAMPLE WITH vim.lps.buf_request_all ---
 
-      -- _cancel_prev = vim.lsp.buf_request_all(
-      --   buffer,
-      --   vim.lsp.protocol.Methods.completionItem_resolve,
-      --   completionItem,
-      --   function(results, ctx, config)
-      --     local docs = vim.tbl_get(results[client_id] or {}, 'result', 'documentation', 'value')
-      --     if nil == docs then
-      --       return
-      --     end
-      --
-      --     local winData = vim.api.nvim__complete_set(info['selected'], { info = docs })
-      --     if not winData.winid or not vim.api.nvim_win_is_valid(winData.winid) then
-      --       return
-      --     end
-      --
-      --     vim.api.nvim_win_set_config(winData.winid, { border = 'rounded' })
-      --     vim.treesitter.start(winData.bufnr, 'markdown')
-      --     vim.wo[winData.winid].conceallevel = 3
-      --   end
-      -- )
-
-      --- SAMPLE WITH client:request ---
-
-      local req_client = vim.lsp.get_client_by_id(client_id)
-      if not req_client then return end
-
-      local _, reqid = client:request(
+      _cancel_prev = vim.lsp.buf_request_all(
+        buffer,
         vim.lsp.protocol.Methods.completionItem_resolve,
         completionItem,
-        function(err, item, ctx)
-          ---@cast item lsp.CompletionItem
-          if not item then
-            return
-          end
+        function(results, ctx, config)
+          ---@cast results table<integer, { err?: lsp.ResponseError; result: lsp.CompletionItem; context: lsp.HandlerContext }>
+          -- local docs = vim.tbl_get(results[client_id] or {}, 'result', 'documentation', 'value')
+          -- if nil == docs then
+          --   return
+          -- end
 
-          -- local docs = vim.tbl_get(item or {}, 'documentation', 'value')
-          local docs = (item and item.documentation and type(item.documentation) == 'string') and (item.documentation --[[@as string]]) or item.documentation.value --[[@as string]]
-          if not docs then return end
-          local win = vim.api.nvim__complete_set(info['selected'], { info = docs })
-          if win.winid and vim.api.nvim_win_is_valid(win.winid) then
-            vim.api.nvim_win_set_config(win.winid, { border = 'rounded' })
-            vim.treesitter.start(win.bufnr, 'markdown')
-            vim.wo[win.winid].conceallevel = 3
+          local list = complete_clients[buffer]
+          for _, cinfo in ipairs(list) do
+            ---@type lsp.CompletionItem
+            local res = vim.tbl_get(results[cinfo.client_id] or {}, 'result')
+            if res and show_docs(res, info) then
+              return
+            end
           end
         end
       )
 
-      _cancel_prev = function()
-        local c = vim.lsp.get_client_by_id(client_id)
-        if not c or not reqid then return end
-        pcall(function()
-          c:cancel_request(reqid)
-        end)
-      end
+      --- SAMPLE WITH client:request ---
+
+      -- local req_client = vim.lsp.get_client_by_id(client_id)
+      -- if not req_client then
+      --   return
+      -- end
+      --
+      -- local _, reqid = client:request(
+      --   vim.lsp.protocol.Methods.completionItem_resolve,
+      --   completionItem,
+      --   function(err, item, ctx)
+      --     ---@cast item lsp.CompletionItem
+      --     if not item then
+      --       return
+      --     end
+      --
+      --     show_docs(item)
+      --   end,
+      --   buffer
+      -- )
+      --
+      -- _cancel_prev = function()
+      --   local c = vim.lsp.get_client_by_id(client_id)
+      --   if not c or not reqid then
+      --     return
+      --   end
+      --   pcall(function()
+      --     c:cancel_request(reqid)
+      --   end)
+      -- end
 
       --- SAMPLE WITH sample of textDocument_completion ---
 
@@ -207,7 +281,6 @@ local configure = function(client, buffer, opts)
       -- vim.treesitter.start(winData.bufnr, 'markdown')
       -- vim.wo[winData.winid].conceallevel = 3
 
-
       --- SAMPLE WITH buf_request ---
 
       -- _, cancel_prev = vim.lsp.buf_request(
@@ -235,4 +308,6 @@ end
 
 return {
   configure = configure,
+  complete_clients = complete_clients,
+  complete_autocmds = complete_autocmds,
 }
