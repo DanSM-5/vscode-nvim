@@ -275,8 +275,6 @@ function rg.create_server(user_settings)
                           label = label,
                           data = { label = label },
                           kind = 1, -- Item kind 1 is 'Text'
-                          -- Create all items with docs
-                          documentation = doc_cache[label],
                         }
                         table.insert(items, item)
                         seen[label] = true
@@ -346,13 +344,6 @@ function rg.create_server(user_settings)
       ---@return integer
       ['completionItem/resolve'] = function(params, callback)
         local item = params
-        local has_value = vim.tbl_get(item, 'documentation', 'value') ---@type string
-        -- Item already has a resolved documentation
-        if has_value then
-          callback(nil, item)
-          return true, 4
-        end
-
         local label = item.data and item.data.label or item.label
         if doc_cache[label] then
           item.documentation = doc_cache[label]
