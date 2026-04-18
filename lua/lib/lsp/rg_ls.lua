@@ -8,6 +8,7 @@
 ---@field keyword_length integer minimum number of characters before starting a search
 ---@field rg_cmd string the command to use for ripgrep (defaults to 'rg')
 ---@field cache_ttl integer seconds to keep result in cache
+---@field pattern string pattern to search matches with ripgrep
 
 ---@class rg.settings.user
 ---@field context_before? integer lines for documentation preview before
@@ -19,6 +20,7 @@
 ---@field keyword_length? integer minimum number of characters before starting a search
 ---@field rg_cmd? string the command to use for ripgrep (defaults to 'rg')
 ---@field cache_ttl? integer seconds to keep result in cache
+---@field pattern? string pattern to search matches with ripgrep
 
 ---@alias rg.doc_cache table<string, { value: string; kind: string }>
 ---@alias rg.word_cache table<string, { time: integer; docs: rg.doc_cache; items: lsp.CompletionItem[] }>
@@ -41,6 +43,7 @@ local default_settings = {
   keyword_length = 3,
   rg_cmd = 'rg',
   cache_ttl = 60,
+  pattern ='[\\w_-]+',
 }
 
 local triggerCharacters = vim.split('abcdefghijklmnopqrstuvwxyz', '')
@@ -316,7 +319,7 @@ function rg.create_server(user_settings)
             for _, flag in ipairs(settings.rg_flags) do
               table.insert(cmd, flag)
             end
-            table.insert(cmd, word .. '[\\w_-]+')
+            table.insert(cmd, word .. settings.pattern)
             table.insert(cmd, '.')
 
             log('cmd: ' .. table.concat(cmd, ' '))
