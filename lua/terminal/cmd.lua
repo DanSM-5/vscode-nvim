@@ -351,7 +351,7 @@ local register = function()
       bar = true,
       force = true,
       complete = function (...)
-        return require('lib.pack.cmd').complete_pack_cmd(...)
+        return require('lib.pack.cmd').complete(...)
       end,
     })
   end

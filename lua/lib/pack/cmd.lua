@@ -292,6 +292,6 @@ return {
   pack_get_single_spec = pack_get_single_spec,
   pack_lockfile_subcmds = pack_lockfile_subcmds,
   pack_subcmds = pack_subcmds,
-  complete_pack_cmd = complete_pack_cmd,
+  complete = complete_pack_cmd,
   cmd = cmd,
 }
