@@ -255,25 +255,6 @@ local function complete_lsp_cmd(param, cmd, pos)
   return {}
 end
 
-vim.api.nvim_create_user_command('Lsp', function(info)
-  local sub = info.fargs[1]
-  local subcmd = lsp_subcmds[sub]
-
-  if subcmd == nil then
-    vim.notify(('[:Lsp] unknown subcmd "%s"'):format(sub))
-    return
-  end
-
-  -- subcmd.handler()
-end, {
-  desc = '[:Lsp] missing options from `:lsp` command',
-  nargs = '+',
-  bang = true,
-  bar = true,
-  force = true,
-  complete = complete_lsp_cmd,
-})
-
 ---Command handler for Lsp command
 ---@param info vim.api.keyset.create_user_command.command_args
 local function cmd(info)
