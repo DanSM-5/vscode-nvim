@@ -1,3 +1,7 @@
+---@class rg.settings.decorations
+---@field after string|nil string to add after the content appended as a string. Default " <--"
+---@field below string|nil char to use below the match. Default "─"
+
 ---@class rg.settings.base
 ---@field context_before integer lines for documentation preview before
 ---@field context_after integer lines for documentation preview after
@@ -9,6 +13,7 @@
 ---@field rg_cmd string the command to use for ripgrep (defaults to 'rg')
 ---@field cache_ttl integer seconds to keep result in cache
 ---@field pattern string pattern to search matches with ripgrep
+---@field decorations? rg.settings.decorations additional decorations for documentation preview
 
 ---@class rg.settings.user
 ---@field context_before? integer lines for documentation preview before
@@ -21,6 +26,8 @@
 ---@field rg_cmd? string the command to use for ripgrep (defaults to 'rg')
 ---@field cache_ttl? integer seconds to keep result in cache
 ---@field pattern? string pattern to search matches with ripgrep
+---@field ext_associations? table<string, string> add/override associations for markdown code blocks
+---@field decorations? rg.settings.decorations additional decorations for documentation preview
 
 ---@alias rg.doc_cache table<string, { value: string; kind: string }>
 ---@alias rg.word_cache table<string, { time: integer; docs: rg.doc_cache; items: lsp.CompletionItem[] }>
@@ -46,10 +53,120 @@ local default_settings = {
   keyword_length = 3,
   rg_cmd = 'rg',
   cache_ttl = 60,
-  pattern ='[\\w_-]+',
+  pattern = '[\\w_-]+',
+  decorations = {
+    after = ' <--',
+    below = '─',
+  },
+}
+-- Default trigger chars
+local triggerCharacters = vim.split('abcdefghijklmnopqrstuvwxyz', '')
+
+--- For markdown code fence
+local extension_to_lang = {
+  default = 'text', -- when no idea 🤷‍♂️
+
+  -- Programming Languages
+  ['py'] = 'python',
+  ['js'] = 'javascript',
+  ['mjs'] = 'javascript',
+  ['ts'] = 'typescript',
+  ['tsx'] = 'tsx',
+  ['jsx'] = 'jsx',
+  ['rb'] = 'ruby',
+  ['cpp'] = 'cpp',
+  ['hpp'] = 'cpp',
+  ['c'] = 'c',
+  ['h'] = 'c',
+  ['cs'] = 'csharp',
+  ['vim'] = 'vim',
+  ['java'] = 'java',
+  ['go'] = 'go',
+  ['rs'] = 'rust',
+  ['lua'] = 'lua',
+  ['php'] = 'php',
+  ['swift'] = 'swift',
+  ['kt'] = 'kotlin',
+  ['dart'] = 'dart',
+  ['ex'] = 'elixir',
+  ['exs'] = 'elixir',
+  ['erl'] = 'erlang',
+  ['hs'] = 'haskell',
+  ['clj'] = 'clojure',
+  ['scala'] = 'scala',
+
+  -- Web / Markup
+  ['html'] = 'html',
+  ['css'] = 'css',
+  ['scss'] = 'scss',
+  ['less'] = 'less',
+  ['md'] = 'markdown',
+  ['mdx'] = 'tsx',
+  ['xml'] = 'xml',
+  ['svg'] = 'xml',
+
+  -- Config / Data
+  ['json'] = 'json',
+  ['jsonc'] = 'jsonc',
+  ['yaml'] = 'yaml',
+  ['yml'] = 'yaml',
+  ['toml'] = 'toml',
+  ['ini'] = 'ini',
+  ['sql'] = 'sql',
+
+  -- Scripts / Shell
+  ['sh'] = 'bash',
+  ['bash'] = 'bash',
+  ['zsh'] = 'bash',
+  ['ps1'] = 'powershell',
+  ['bat'] = 'batch',
+  ['cmd'] = 'batch',
+  ['vbs'] = 'vbs',
+
+  -- Infrastructure
+  ['dockerfile'] = 'dockerfile', -- Special case for filenames
+  ['tf'] = 'hcl', -- Terraform
+  ['makefile'] = 'makefile',
+
+  -- Git related
+  ['git'] = 'git',
+  ['patch'] = 'diff',
+  ['diff'] = 'diff',
+  ['gitignore'] = 'ignore',
+  ['gitconfig'] = 'gitconfig',
+  ['gitattributes'] = 'gitattributes',
+  ['gitmodules'] = 'gitconfig', -- Uses same syntax as .gitconfig
+  ['mailmap'] = 'text',
 }
 
-local triggerCharacters = vim.split('abcdefghijklmnopqrstuvwxyz', '')
+---Get language of the file
+---@param file string
+local function get_lang(file)
+  local ext = vim.fs.ext(file)
+
+  -- Probably a dotfile (e.g. ".gitignore") or
+  -- a file without extension (e.g. "Dockerfile")
+  if ext == '' then
+    ext = vim.fs.basename(file)
+    if vim.startswith(ext, '.') then
+      ext = ext:gsub(vim.pesc('.'), '')
+    end
+  end
+
+  -- Could not find suitable extension
+  if ext == '' then
+    return extension_to_lang.default
+  end
+
+  ext = string.lower(ext)
+  return extension_to_lang[ext] or extension_to_lang.default
+end
+
+local function update_file_associations(tbl)
+  for ext, lang in pairs(tbl) do
+    extension_to_lang[ext] = lang
+  end
+end
 
 local function get_word_before_cursor(line_text, character)
   local before_cursor = line_text:sub(1, character)
@@ -57,12 +174,14 @@ local function get_word_before_cursor(line_text, character)
 end
 
 --- Create an in-process LSP server function compatible with vim.lsp.start({ cmd = ... })
----@param user_settings? rg.settings.user
+---@param user_settings rg.settings.user
 ---@return fun(dispatchers: vim.lsp.rpc.Dispatchers): vim.lsp.rpc.PublicClient
 function rg_ls.create_server(user_settings)
   ---@type rg.settings.base
   local settings = vim.tbl_deep_extend('force', default_settings, user_settings or {})
+  settings.decorations = vim.tbl_deep_extend('force', default_settings.decorations, user_settings.decorations or {})
   local message_id = 0
+  update_file_associations(user_settings.ext_associations or {})
 
   return function(dispatchers)
     local closing = false
@@ -259,7 +378,7 @@ function rg_ls.create_server(user_settings)
                   if not m.data or not m.data.lines or not m.data.lines.text then
                     return nil
                   end
-                  m.data.lines.text = m.data.lines.text:gsub('\n', '')
+                  m.data.lines.text = m.data.lines.text:gsub('\n', ''):gsub('\r', '')
                   return m
                 end
 
@@ -269,9 +388,9 @@ function rg_ls.create_server(user_settings)
                     for _, submatch in ipairs(message.data.submatches) do
                       local label = submatch.match.text
                       if label and not seen[label] then
-                        local path = message.data.path.text
+                        local path = message.data.path.text --[[@as string]]
                         local line_n = vim.tbl_get(message, 'data', 'line_number') or 0 ---@type number
-                        local doc_lines = { path, ('line: %d'):format(line_n), '', '```' }
+                        local doc_lines = { path, ('line: %d'):format(line_n), '', '```' .. get_lang(path) }
                         local doc_body = {}
 
                         if context_before > 0 then
@@ -283,7 +402,22 @@ function rg_ls.create_server(user_settings)
                           end
                         end
 
-                        table.insert(doc_body, message.data.lines.text .. ' <--')
+                        local decorations = settings.decorations or {}
+                        local dec_below, dec_after = decorations.below, decorations.after
+
+                        table.insert(
+                          doc_body,
+                          ('%s%s'):format(message.data.lines.text, (dec_after and dec_after or ''))
+                        )
+                        if dec_below and dec_below ~= '' then
+                          table.insert(
+                            doc_body,
+                            ('%s%s'):format(
+                              string.rep(' ', submatch.start),
+                              string.rep(dec_below, submatch['end'] - submatch.start)
+                            )
+                          )
+                        end
 
                         if context_after > 0 then
                           for k = current + 1, current + context_after do
@@ -424,7 +558,7 @@ function rg_ls.create_server(user_settings)
           cleanup()
           dispatchers.on_exit(0, 0)
         elseif method == '$/cancelRequest' then
-          -- It can only cancel 'textDocument/completion' as it 
+          -- It can only cancel 'textDocument/completion' as it
           -- the only async method. All other will resolve synchornously
           if last_asyn_req.id == params.id then
             pcall(vim.fn.jobstop, last_asyn_req.job_id)
@@ -432,7 +566,6 @@ function rg_ls.create_server(user_settings)
           end
         end
       end,
-
 
       is_closing = function()
         return closing
@@ -454,7 +587,7 @@ end
 function rg_ls.start_server(user_settings)
   local client_id = vim.lsp.start({
     name = lsp_name,
-    cmd = rg_ls.create_server(user_settings),
+    cmd = rg_ls.create_server(user_settings or {}),
     root_dir = vim.fn.getcwd(),
   })
 
