@@ -108,12 +108,16 @@ local lsp_subcmds = {
         return {}
       end
 
-      ---@type integer[]
+      ---@type string[]
       local non_attached_buffers = vim
         .iter(vim.api.nvim_list_bufs())
         :filter(function(buf)
           ---@cast buf integer
-          return not client.attached_buffers[buf]
+          return not client.attached_buffers[buf] and vim.bo[buf].buflisted
+        end)
+        :map(function (buf)
+          ---@cast buf integer
+          return tostring(buf)
         end)
         :totable()
 
@@ -164,12 +168,16 @@ local lsp_subcmds = {
         return {}
       end
 
-      ---@type integer[]
+      ---@type string[]
       local attached_buffers = vim
         .iter(vim.tbl_keys(client.attached_buffers))
         :filter(function(buf)
           ---@cast buf integer
           return client.attached_buffers[buf]
+        end)
+        :map(function (buf)
+          ---@cast buf integer
+          return tostring(buf)
         end)
         :totable()
 
