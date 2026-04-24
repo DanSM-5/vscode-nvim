@@ -154,21 +154,21 @@ local configure = function(client, buffer, opts)
     local entry = {
       client_id = client.id,
       name = client.name,
-      priority = client.name == 'rg_ls' and 1000 or 101,
+      priority = 101 -- client.name == 'rg_ls' and 1000 or 101,
     } --[[@as complete.client.data]]
     local list = { entry }
     complete_clients[buffer] = list
   else
     local list = complete_clients[buffer]
-    local priority_weight = client.name == 'rg_ls' and 1000 or 100
+    -- local priority_weight = client.name == 'rg_ls' and 1000 or 100
     table.insert(list, {
       client_id = client.id,
       name = client.name,
-      priority = (#list + 1) + priority_weight,
+      priority = (#list + 1) -- + priority_weight,
     } --[[@as complete.client.data]])
-    table.sort(list, function(lhs, rhs)
-      return lhs.priority < rhs.priority
-    end)
+    -- table.sort(list, function(lhs, rhs)
+    --   return lhs.priority < rhs.priority
+    -- end)
     complete_clients[buffer] = list
   end
 
@@ -183,68 +183,87 @@ local configure = function(client, buffer, opts)
     callback = function()
       _cancel_prev()
       local info = vim.fn.complete_info({ 'selected' }) ---@type { selected: integer }
+      -- vim.print(vim.v.completed_item)
       local completionItem = vim.tbl_get(vim.v.completed_item, 'user_data', 'nvim', 'lsp', 'completion_item')
-      if nil == completionItem then
+      local client_id = vim.tbl_get(vim.v.completed_item, 'user_data', 'nvim', 'lsp', 'client_id')
+
+      -- completionItem:
+      -- {
+      --   abbr = "nvim_set_current_win",
+      --   info = "",
+      --   kind = "Text",
+      --   menu = "",
+      --   user_data = {
+      --     nvim = {
+      --       lsp = {
+      --         client_id = 6,
+      --         completion_item = {
+      --           data = {
+      --             label = "nvim_set_current_win"
+      --           },
+      --           kind = 1,
+      --           label = "nvim_set_current_win"
+      --         }
+      --       }
+      --     }
+      --   },
+      --   word = "nvim_set_current_win"
+      -- }
+
+      if nil == completionItem or not client_id then
         return
       end
 
-      -- If item already included documentation field without being resolved
-      -- if show_docs(completionItem) then return end
-
       --- SAMPLE WITH vim.lps.buf_request_all ---
 
-      _cancel_prev = vim.lsp.buf_request_all(
-        buffer,
-        vim.lsp.protocol.Methods.completionItem_resolve,
-        completionItem,
-        function(results, ctx, config)
-          ---@cast results table<integer, { err?: lsp.ResponseError; result: lsp.CompletionItem; context: lsp.HandlerContext }>
-          -- local docs = vim.tbl_get(results[client_id] or {}, 'result', 'documentation', 'value')
-          -- if nil == docs then
-          --   return
-          -- end
-
-          local list = complete_clients[buffer]
-          for _, cinfo in ipairs(list) do
-            ---@type lsp.CompletionItem
-            local res = vim.tbl_get(results[cinfo.client_id] or {}, 'result')
-            if res and show_docs(res, info) then
-              return
-            end
-          end
-        end
-      )
+      -- _cancel_prev = vim.lsp.buf_request_all(
+      --   buffer,
+      --   vim.lsp.protocol.Methods.completionItem_resolve,
+      --   completionItem,
+      --   function(results, ctx, config)
+      --     ---@cast results table<integer, { err?: lsp.ResponseError; result: lsp.CompletionItem; context: lsp.HandlerContext }>
+      --     -- local docs = vim.tbl_get(results[client_id] or {}, 'result', 'documentation', 'value')
+      --     -- if nil == docs then
+      --     --   return
+      --     -- end
+      --
+      --     local res = vim.tbl_get(results[client_id] or {}, 'result') --[[@as lsp.CompletionItem]]
+      --     if res and show_docs(res, info) then
+      --       return
+      --     end
+      --   end
+      -- )
 
       --- SAMPLE WITH client:request ---
 
-      -- local req_client = vim.lsp.get_client_by_id(client_id)
-      -- if not req_client then
-      --   return
-      -- end
-      --
-      -- local _, reqid = client:request(
-      --   vim.lsp.protocol.Methods.completionItem_resolve,
-      --   completionItem,
-      --   function(err, item, ctx)
-      --     ---@cast item lsp.CompletionItem
-      --     if not item then
-      --       return
-      --     end
-      --
-      --     show_docs(item)
-      --   end,
-      --   buffer
-      -- )
-      --
-      -- _cancel_prev = function()
-      --   local c = vim.lsp.get_client_by_id(client_id)
-      --   if not c or not reqid then
-      --     return
-      --   end
-      --   pcall(function()
-      --     c:cancel_request(reqid)
-      --   end)
-      -- end
+      local req_client = vim.lsp.get_client_by_id(client_id)
+      if not req_client then
+        return
+      end
+
+      local _, reqid = req_client:request(
+        vim.lsp.protocol.Methods.completionItem_resolve,
+        completionItem,
+        function(err, item, ctx)
+          ---@cast item lsp.CompletionItem
+          if not item then
+            return
+          end
+
+          show_docs(item, info)
+        end,
+        buffer
+      )
+
+      _cancel_prev = function()
+        local c = vim.lsp.get_client_by_id(client_id)
+        if not c or not reqid then
+          return
+        end
+        pcall(function()
+          c:cancel_request(reqid)
+        end)
+      end
 
       --- SAMPLE WITH sample of textDocument_completion ---
 
