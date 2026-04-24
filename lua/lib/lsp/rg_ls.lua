@@ -229,7 +229,7 @@ function rg_ls.create_server(user_settings)
         elseif params.rootPath and not (params.rootPath == vim.NIL) then
           root_dir = params.rootPath --[[@as string]]
         end
-        -- message_id = message_id + 1
+        message_id = message_id + 1
 
         callback(nil, {
           capabilities = {
@@ -544,7 +544,7 @@ function rg_ls.create_server(user_settings)
         if handlers[method] then
           return handlers[method](params, callback, notify_reply_callback)
         end
-        -- message_id = message_id + 1
+        message_id = message_id + 1
         callback({ code = 1, message = ('Method "%s" not supported'):format(method) }, nil, message_id)
         notify_reply_callback(message_id)
         return false, message_id
