@@ -21,7 +21,7 @@
       "src": "https://github.com/junegunn/fzf"
     },
     "fzf-lsp.nvim": {
-      "rev": "daaaa832cc994eef09281f189a4c72214b951ac1",
+      "rev": "7338fd4c58ca06a8b59a92eb090b29614723898a",
       "src": "https://github.com/DanSM-5/fzf-lsp.nvim"
     },
     "fzf.vim": {
