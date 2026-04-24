@@ -28,7 +28,10 @@
 ---@class rg.settings
 ---@field rg rg.settings.user
 
-local rg = {}
+---@alias rg.lsp.request.callback fun(err?: lsp.ResponseError, result: any, request_id: integer)
+---@alias rg.lsp.notify.callback fun(request_id: integer)
+
+local rg_ls = {}
 
 local lsp_name = 'rg_ls'
 local lsp_version = '0.0.1'
@@ -56,9 +59,10 @@ end
 --- Create an in-process LSP server function compatible with vim.lsp.start({ cmd = ... })
 ---@param user_settings? rg.settings.user
 ---@return fun(dispatchers: vim.lsp.rpc.Dispatchers): vim.lsp.rpc.PublicClient
-function rg.create_server(user_settings)
+function rg_ls.create_server(user_settings)
   ---@type rg.settings.base
   local settings = vim.tbl_deep_extend('force', default_settings, user_settings or {})
+  local message_id = 0
 
   return function(dispatchers)
     local closing = false
@@ -69,7 +73,12 @@ function rg.create_server(user_settings)
     local request_seq = 0
     local word_cache = {} ---@type rg.word_cache
     local root_dir = nil ---@type string|nil
+    local last_asyn_req = {
+      id = 0,
+      job_id = 0,
+    }
 
+    ---Cleanup timer and ongoing job if any
     local function cleanup()
       if timer and not timer:is_closing() then
         timer:stop()
@@ -90,12 +99,19 @@ function rg.create_server(user_settings)
     end
 
     local handlers = {
+      ---initialize handler
+      ---@param params lsp.InitializeParams
+      ---@param callback rg.lsp.request.callback
+      ---@return boolean if request was successful
+      ---@return integer message_id of the request
       ['initialize'] = function(params, callback)
-        if params.rootUri then
-          root_dir = vim.uri_to_fname(params.rootUri)
-        elseif params.rootPath then
-          root_dir = params.rootPath
+        if params.rootUri and not (params.rootUri == vim.NIL) then
+          root_dir = vim.uri_to_fname(params.rootUri --[[@as string]])
+        elseif params.rootPath and not (params.rootPath == vim.NIL) then
+          root_dir = params.rootPath --[[@as string]]
         end
+        -- message_id = message_id + 1
+
         callback(nil, {
           capabilities = {
             completionProvider = {
@@ -111,35 +127,50 @@ function rg.create_server(user_settings)
             name = lsp_name,
             version = lsp_version,
           },
-        })
-        return true, 1
+        }, message_id)
+        return true, message_id
       end,
 
+      ---shutdown handler
+      ---@param params {}
+      ---@param callback rg.lsp.request.callback
+      ---@return boolean if request was successful
+      ---@return integer message_id of the request
       ['shutdown'] = function(params, callback)
         closing = true
         cleanup()
-        callback(nil, nil)
-        return true, 2
+        message_id = message_id + 1
+        callback(nil, nil, message_id)
+        return true, message_id
       end,
 
-      ['textDocument/completion'] = function(params, callback)
+      ---textDocument/Completion handler
+      ---@param params lsp.TextDocumentPositionParams
+      ---@param callback rg.lsp.request.callback
+      ---@param notify rg.lsp.notify.callback
+      ---@return boolean if request was successful
+      ---@return integer message_id of the request
+      ['textDocument/completion'] = function(params, callback, notify)
         local uri = params.textDocument.uri
         local bufnr = vim.uri_to_bufnr(uri)
         local line = params.position.line
         local character = params.position.character
 
         local buf_lines = vim.api.nvim_buf_get_lines(bufnr, line, line + 1, false)
+        message_id = message_id + 1
         if not buf_lines or #buf_lines == 0 then
-          callback(nil, { isIncomplete = false, items = {} })
-          return
+          callback(nil, { isIncomplete = false, items = {} }, message_id)
+          notify(message_id)
+          return true, message_id
         end
 
         local word = get_word_before_cursor(buf_lines[1], character)
         log("completion word: '" .. word .. "' (length: " .. #word .. ')')
 
         if #word < settings.keyword_length then
-          callback(nil, { isIncomplete = false, items = {} })
-          return
+          callback(nil, { isIncomplete = false, items = {} }, message_id)
+          notify(message_id)
+          return true, message_id
         end
 
         if settings.cache_ttl > 0 then
@@ -147,8 +178,9 @@ function rg.create_server(user_settings)
           if cached and (uv.now() - cached.time) < settings.cache_ttl * 1000 then
             log('cache hit for: ' .. word)
             doc_cache = cached.docs
-            callback(nil, { isIncomplete = false, items = cached.items })
-            return true, 3
+            callback(nil, { isIncomplete = false, items = cached.items }, message_id)
+            notify(message_id)
+            return true, message_id
           end
         end
 
@@ -176,6 +208,8 @@ function rg.create_server(user_settings)
             local context_before = settings.context_before
             local context_after = settings.context_after
 
+            ---Send request response
+            ---@param result { isIncomplete: boolean; items: lsp.CompletionItem[] }
             local function respond(result)
               if not responded and current_seq == request_seq then
                 responded = true
@@ -194,7 +228,9 @@ function rg.create_server(user_settings)
                     time = now,
                   }
                 end
-                callback(nil, result)
+                callback(nil, result, message_id)
+                notify(message_id)
+                return
               end
             end
 
@@ -332,45 +368,71 @@ function rg.create_server(user_settings)
             })
 
             if running_job_id <= 0 then
+              last_asyn_req.job_id = running_job_id
               log('failed to start rg (job id: ' .. tostring(running_job_id) .. ')')
               respond({ isIncomplete = false, items = {} })
             end
           end)
         )
-        return true, 3
+        last_asyn_req.id = message_id
+        last_asyn_req.job_id = 0
+        return true, message_id
       end,
 
       ---Lsp handler for completionItem/resolve
       ---@param params lsp.CompletionItem
-      ---@param callback fun(err?: lsp.ResponseError, result?: lsp.CompletionItem)
-      ---@return boolean
-      ---@return integer
-      ['completionItem/resolve'] = function(params, callback)
+      ---@param callback fun(err?: lsp.ResponseError, result?: lsp.CompletionItem, message_id: integer)
+      ---@param notify rg.lsp.notify.callback
+      ---@return boolean if request was successful
+      ---@return integer message_id of the request
+      ['completionItem/resolve'] = function(params, callback, notify)
         local item = params
         local label = item.data and item.data.label or item.label
         if doc_cache[label] then
           item.documentation = doc_cache[label]
         end
-        callback(nil, item)
-        return true, 4
+        message_id = message_id + 1
+        callback(nil, item, message_id)
+        notify(message_id)
+        return true, message_id
       end,
     }
 
     return {
+      ---Lsp request handler
+      ---@param method vim.lsp.protocol.Method
+      ---@param params any
+      ---@param callback rg.lsp.request.callback
+      ---@param notify_reply_callback rg.lsp.notify.callback
+      ---@return boolean if request was successful
+      ---@return integer message_id of the request
       request = function(method, params, callback, notify_reply_callback)
         if handlers[method] then
-          return handlers[method](params, callback)
+          return handlers[method](params, callback, notify_reply_callback)
         end
-        callback(nil, nil)
-        return true, 5
+        -- message_id = message_id + 1
+        callback({ code = 1, message = ('Method "%s" not supported'):format(method) }, nil, message_id)
+        notify_reply_callback(message_id)
+        return false, message_id
       end,
 
+      ---Handle client notifications
+      ---@param method 'exit'|'$/cancelRequest'|string
+      ---@param params { id: number; }
       notify = function(method, params)
         if method == 'exit' then
           cleanup()
           dispatchers.on_exit(0, 0)
+        elseif method == '$/cancelRequest' then
+          -- It can only cancel 'textDocument/completion' as it 
+          -- the only async method. All other will resolve synchornously
+          if last_asyn_req.id == params.id then
+            pcall(vim.fn.jobstop, last_asyn_req.job_id)
+            running_job_id = 0
+          end
         end
       end,
+
 
       is_closing = function()
         return closing
@@ -389,10 +451,10 @@ end
 --- to start the server from anywhere
 ---@param user_settings? rg.settings.user
 ---@return integer? client_id
-function rg.start_server(user_settings)
+function rg_ls.start_server(user_settings)
   local client_id = vim.lsp.start({
     name = lsp_name,
-    cmd = rg.create_server(user_settings),
+    cmd = rg_ls.create_server(user_settings),
     root_dir = vim.fn.getcwd(),
   })
 
@@ -426,10 +488,10 @@ end
 ---@param dispatchers vim.lsp.rpc.Dispatchers
 ---@param config vim.lsp.ClientConfig
 ---@returns vim.lsp.rpc.PublicClient
-function rg.register(dispatchers, config)
+function rg_ls.register(dispatchers, config)
   local settings = vim.tbl_get(config, 'settings', 'rg') or {} --[[@as rg.settings.user]]
-  local publicClient = rg.create_server(settings)
+  local publicClient = rg_ls.create_server(settings)
   return publicClient(dispatchers)
 end
 
-return rg
+return rg_ls
