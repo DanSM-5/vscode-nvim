@@ -22,15 +22,23 @@ vim.api.nvim_create_autocmd('LspDetach', {
       return
     end
 
-    local client_id = info.data.client_id
+    local client_id = info.data.client_id --[[@as integer]]
     local complete_list = complete_clients[buf]
-    complete_clients[buf] = vim
+    complete_list = vim
       .iter(complete_list)
       :filter(function(cl)
         ---@cast cl complete.client.data
         return cl.client_id ~= client_id
       end)
       :totable()
+
+    complete_clients[buf] = complete_list
+
+    -- Cleanup autocmd on buffer if no more lsp clients attached
+    if #complete_list == 0 and complete_autocmds[buf] then
+      pcall(vim.api.nvim_del_autocmd, complete_autocmds[buf])
+      complete_autocmds[buf] = nil
+    end
   end,
 })
 
@@ -168,7 +176,7 @@ local configure = function(client, buffer, opts)
   local _cancel_prev = function() end
 
   if complete_autocmds[buffer] then
-    pcall(vim.api.nvim_del_autocmd, complete_clients[buffer])
+    pcall(vim.api.nvim_del_autocmd, complete_autocmds[buffer])
   end
   complete_autocmds[buffer] = vim.api.nvim_create_autocmd('CompleteChanged', {
     buffer = buffer,
