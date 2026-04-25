@@ -2,10 +2,10 @@
 -- There must not be imports on the top level of this script
 
 -- Ensure this exist -- 5.1 compatibility
-table.pack = table.pack or function(...)
+local pack = table.pack or function(...)
   return { n = select('#', ...), ... }
 end
-table.unpack = table.unpack or unpack
+local unpack = table.unpack or unpack
 
 -- luajit windows detection
 -- local is_win = jit.os:find('Windows')
@@ -302,10 +302,10 @@ local function throttle(fn, time)
       return
     end
 
-    local args = table.pack(...)
+    local args = pack(...)
     timer = setTimeout(function()
       timer = nil
-      fn(table.unpack(args), 1, args.n)
+      fn(unpack(args), 1, args.n)
     end, time)
   end
 end
