@@ -95,12 +95,7 @@ local lf = function(dir, fullscreen)
 
         local ok_names, names = pcall(vim.fn.readfile, temp)
 
-        if not ok_names then
-          on_no_selection()
-          return
-        end
-
-        if #names == 0 then
+        if not ok_names or #names == 0 then
           on_no_selection()
           return
         end
@@ -117,9 +112,9 @@ local lf = function(dir, fullscreen)
 
         for i = 1, #names do
           if i == 1 then
-            vim.fn.execute('edit ' .. vim.fn.fnameescape(names[i]))
+            vim.cmd.edit(vim.fn.fnameescape(names[i]))
           else
-            vim.fn.execute('argadd ' .. vim.fn.fnameescape(names[i]))
+            vim.cmd.argadd(vim.fn.fnameescape(names[i]))
           end
         end
       end,
