@@ -716,4 +716,6 @@ return {
   setTimeout = setTimeout,
   setInterval = setInterval,
   clearTimer = clearTimer,
+  pack = pack,
+  unpack = unpack,
 }
