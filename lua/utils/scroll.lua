@@ -7,7 +7,7 @@
 -- Ref: https://stackoverflow.com/questions/47040925/microsoft-vs-code-jump-10-lines-vertically-at-once/48568520#48568520
 
 
-local throttle = require('utils.stdlib').throttle
+local throttle = require('lib.std').throttle
 -- How many lines to move each key press
 local jumpStep = 8
 -- throttle delay

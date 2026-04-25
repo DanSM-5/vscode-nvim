@@ -19,7 +19,7 @@ local ts_modules_callback = function(module, state, switch)
 
   local manager = require('treesitter-modules.core.manager')
   local modules = manager.modules
-  local target_mod = require('utils.stdlib').find(function(mod)
+  local target_mod = require('lib.std').find(function(mod)
     return mod.name() == module
   end, modules)
 
@@ -95,7 +95,7 @@ end
 local ts_modules_switch = function(module, state)
   local manager = require('treesitter-modules.core.manager')
   local modules = manager.modules
-  local target_mod = require('utils.stdlib').find(function(mod)
+  local target_mod = require('lib.std').find(function(mod)
     return mod.name() == module
   end, modules)
 
