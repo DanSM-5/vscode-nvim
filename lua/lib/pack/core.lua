@@ -541,7 +541,7 @@ end
 ---@return string[]
 local function get_pack_names()
   return vim
-    .iter(vim.pack.get())
+    .iter(vim.pack.get(nil, { info = false }))
     :map(function(pack)
       return pack.spec.name
     end)
