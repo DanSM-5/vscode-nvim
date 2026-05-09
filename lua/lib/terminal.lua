@@ -62,6 +62,7 @@ end
 ---@field ft? string custom filetype to use
 ---@field bt? string custom buftype to use
 ---@field name? string name to be used in buffer
+---@field keep? boolean keep buffer/window open after the process exits (user handles closing)
 
 ---@class terminal.win_opts
 ---@field cmd string|string[] command to execute
@@ -71,6 +72,7 @@ end
 ---@field ft? string custom filetype to use
 ---@field bt? string custom buftype to use
 ---@field name? string name to be used in buffer
+---@field keep? boolean keep buffer/window open after the process exits (user handles closing)
 
 ---@class terminal.output.window
 ---@field win integer winrn of floating window
@@ -273,6 +275,12 @@ local function call_float(opts)
     once = true,
     buffer = buf,
     callback = function()
+      if opts.keep then
+        -- Leave terminal mode so the user can read the output and
+        -- decide when to close the buffer/window themselves.
+        pcall(vim.cmd.stopinsert)
+        return
+      end
       close()
     end,
   })
@@ -464,6 +472,12 @@ local function call_win(opts)
     once = true,
     buffer = buf,
     callback = function()
+      if opts.keep then
+        -- Leave terminal mode so the user can read the output and
+        -- decide when to close the buffer/window themselves.
+        pcall(vim.cmd.stopinsert)
+        return
+      end
       close()
     end,
   })
