@@ -102,6 +102,7 @@ end
 --- that it spans the full textobject when `range_override` is provided.
 ---@param location lsp.Location|lsp.LocationLink
 ---@param range_override Range4?
+---@return integer? bufnr
 ---@return integer? winid
 local function open_preview(location, range_override)
   local uri = location.targetUri or location.uri
@@ -129,8 +130,18 @@ local function open_preview(location, range_override)
 
   local contents = api.nvim_buf_get_lines(bufnr, start_line, end_line + 1, false)
   local filetype = api.nvim_get_option_value('filetype', { buf = bufnr })
-  local _, winid = vim.lsp.util.open_floating_preview(contents, filetype, float_opts)
-  return winid
+  local preview_buf, winid = vim.lsp.util.open_floating_preview(contents, filetype, float_opts)
+
+  -- `open_floating_preview` only enables vim regex syntax; force tree-sitter
+  -- highlighting on the preview buffer. Setting the filetype also fires
+  -- `FileType` autocmds (LSP attach is not desired here, but TS highlight is).
+  if preview_buf and api.nvim_buf_is_valid(preview_buf) then
+    api.nvim_set_option_value('filetype', filetype, { buf = preview_buf })
+    local lang = vim.treesitter.language.get_lang(filetype) or filetype
+    pcall(vim.treesitter.start, preview_buf, lang)
+  end
+
+  return preview_buf, winid
 end
 
 --- Pick the first usable result from a `vim.lsp.buf_request_all` payload.
@@ -197,7 +208,7 @@ function M.peek_definition_code(query_string, query_group, lsp_request)
       query_group
     )
 
-    floating_win = open_preview(location, override)
+    _, floating_win = open_preview(location, override)
   end))
 end
 
