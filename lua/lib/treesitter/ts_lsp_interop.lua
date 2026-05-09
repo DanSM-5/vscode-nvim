@@ -9,6 +9,13 @@
 
 local api = vim.api
 
+--- Local stand-in for the soon-to-be-removed `Range4` alias from nvim core.
+--- Same shape: `{ start_row, start_col, end_row, end_col }`, all 0-indexed,
+--- end-exclusive on the column.
+--- TODO(nvim 0.13): re-validate every boundary that converts to/from this
+--- alias once `Range4` is gone (see casts inside `smallest_textobject_range`).
+---@alias ts_lsp_interop.Range4 [integer, integer, integer, integer]
+
 local TsLspInterop = {}
 
 ---Window id of the last opened floating preview, kept so subsequent calls can
@@ -16,8 +23,8 @@ local TsLspInterop = {}
 ---@type integer?
 local floating_win
 
---- Return true when the given Range4 strictly covers (row, col).
----@param range Range4
+--- Return true when the given range strictly covers (row, col).
+---@param range ts_lsp_interop.Range4
 ---@param row integer 0-indexed
 ---@param col integer 0-indexed
 ---@return boolean
@@ -29,8 +36,8 @@ local function range_covers(range, row, col)
   return true
 end
 
---- Byte length of a Range4, used to pick the smallest containing match.
----@param range Range4
+--- Byte length of a range, used to pick the smallest containing match.
+---@param range ts_lsp_interop.Range4
 ---@param bufnr integer
 ---@return integer
 local function range_byte_length(bufnr, range)
@@ -49,7 +56,7 @@ end
 ---@param pos [integer, integer] 0-indexed (row, col)
 ---@param capture_name string capture without the leading `@`
 ---@param query_group string typically `'textobjects'`
----@return Range4?
+---@return ts_lsp_interop.Range4?
 local function smallest_textobject_range(bufnr, pos, capture_name, query_group)
   local parser = vim.treesitter.get_parser(bufnr, nil, { error = false })
   if not parser then return nil end
@@ -76,13 +83,19 @@ local function smallest_textobject_range(bufnr, pos, capture_name, query_group)
 
     for _, match, metadata in query:iter_matches(root, bufnr, 0, -1) do
       for id in pairs(target_ids) do
+        ---@type ts_lsp_interop.Range4?
         local range
         if metadata[id] and metadata[id].range then
-          range = metadata[id].range
+          -- `metadata[id].range` is typed as `Range4` by nvim; cast across the
+          -- boundary so the rest of the module only deals with the local alias.
+          -- TODO(nvim 0.13): re-validate this cast — `Range4` is scheduled for
+          -- removal; check what type `metadata[id].range` is annotated as.
+          range = metadata[id].range --[[@as ts_lsp_interop.Range4]]
         else
           local nodes = match[id]
           if nodes and nodes[#nodes] then
-            range = { nodes[#nodes]:range() }
+            local sr, sc, er, ec = nodes[#nodes]:range()
+            range = { sr, sc, er, ec }
           end
         end
         if range and range_covers(range, row, col) then
@@ -101,7 +114,7 @@ end
 --- Open a floating preview showing the contents of `location`, expanded so
 --- that it spans the full textobject when `range_override` is provided.
 ---@param location lsp.Location|lsp.LocationLink
----@param range_override Range4?
+---@param range_override ts_lsp_interop.Range4?
 ---@return integer? bufnr
 ---@return integer? winid
 local function open_preview(location, range_override)
