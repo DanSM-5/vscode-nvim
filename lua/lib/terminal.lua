@@ -1,21 +1,4 @@
----@alias terminal.descriptor_callback_fn fun(jobId: integer, data: string[], name: string)
-
----@class terminal.open_terminal
----@field cwd? string Directory to start lf from
----@field fullscreen? boolean Open on fullscreen
----@field cmd string[] command to run in terminal
----@field env? table<string, string> environment variables to set
----@field ft? string filetype for buffer
----@field bt? string buftype for buffer
----@field name? string name for buffer
----@field on_exit? terminal.descriptor_callback_fn
----@field on_stdout? terminal.descriptor_callback_fn
----@field on_stderr? terminal.descriptor_callback_fn
----@field stderr_buffered? boolean
----@field stdout_buffered? boolean
----@field stdin? 'pipe'|'null'
----@field clear_env? boolean
-
+--- Constants for the terminal module
 local terminal_const = {
   interactive = 'interactive_term',
   static = 'static_term',
@@ -54,7 +37,7 @@ end
 
 -- TODO: should on_end include std error?
 
----@class terminal.opts
+---@class terminal.float_opts
 ---@field cmd string|string[] command to execute
 ---@field term? terminal.jobstart.opts
 ---@field float? vim.api.keyset.win_config
@@ -102,7 +85,7 @@ local get_float_config = function(config)
 end
 
 ---Options for creating terminal buffer
----@param opts terminal.opts
+---@param opts terminal.float_opts
 ---@return integer winrn
 ---@return integer bufnr
 local function create_win_buf(opts)
@@ -113,7 +96,7 @@ local function create_win_buf(opts)
 end
 
 ---Set options on terminal
----@param opts terminal.opts
+---@param opts terminal.float_opts
 ---@param out terminal.output.window
 ---@param is_float? boolean
 local function set_options(opts, out, is_float)
@@ -169,16 +152,16 @@ local function set_options(opts, out, is_float)
   -- end
 end
 
----Validate options
----@param opts terminal.opts
-local function validate_opts(opts)
+---Validate options for float_term
+---@param opts terminal.float_opts
+local function validate_float_opts(opts)
   opts = opts or {}
   opts.float = vim.tbl_deep_extend('force', {}, opts.float or {})
   opts.term = vim.tbl_deep_extend('force', {}, opts.term or {})
 end
 
 ---Get the proper options for running the command
----@param opts terminal.opts
+---@param opts terminal.float_opts
 ---@return string[] cmd updated to capture stdout
 local function get_cmd(opts)
   if not opts.on_end then
@@ -217,10 +200,10 @@ local function get_cmd(opts)
   return cmd
 end
 
----@param opts terminal.opts options for the terminal
+---@param opts terminal.float_opts options for the terminal
 ---@return terminal.output output values to control float terminal
 local function call_float(opts)
-  validate_opts(opts)
+  validate_float_opts(opts)
 
   local buf, win = create_win_buf(opts)
   local term_opts = vim.tbl_deep_extend('force', opts.term or {}, { pty = true, term = true })
@@ -288,10 +271,10 @@ local function call_float(opts)
   return out
 end
 
----@param opts terminal.opts options for the terminal
+---@param opts terminal.float_opts options for the terminal
 ---@return terminal.output output values to control float terminal
 local function float_term(opts)
-  validate_opts(opts)
+  validate_float_opts(opts)
 
   --- no need to capture stdout so call float directly
   if not opts.on_end then
@@ -301,7 +284,7 @@ local function float_term(opts)
   --- Wrap to capture stdout
 
   -- shallow clone to avoid mutating options too much
-  ---@type terminal.opts
+  ---@type terminal.float_opts
   opts = vim.tbl_deep_extend('force', {}, opts)
 
   -- Wrap command
@@ -400,7 +383,7 @@ local function call_win(opts)
   local term_opts = vim.tbl_deep_extend('force', opts.term or {}, { pty = true, term = true })
   ---@cast term_opts terminal.jobstart.int_opts
 
-  ---@type terminal.opts
+  ---@type terminal.float_opts
   local set_opts = { cmd = opts.cmd, ft = opts.ft, bt = opts.bt, name = opts.name }
   set_options(set_opts, { win = win, buf = buf }, false)
   pcall(vim.api.nvim_buf_set_name, buf, opts.name or terminal_const.win_name)
@@ -502,7 +485,7 @@ local function win_term(opts)
   opts = vim.tbl_deep_extend('force', {}, opts)
 
   -- Wrap command (get_cmd only reads opts.cmd / opts.on_end)
-  opts.cmd = get_cmd(opts --[[@as terminal.opts]])
+  opts.cmd = get_cmd(opts --[[@as terminal.float_opts]])
   ---@type string
   local tempfile = vim.fn.tempfile()
   local on_end = opts.on_end --[[@as fun(data: string[])]]
