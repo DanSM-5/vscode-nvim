@@ -16,7 +16,6 @@
 ---@field stdin? 'pipe'|'null'
 ---@field clear_env? boolean
 
-local terminal_type = 'interactive_terminal'
 local terminal_const = {
   interactive = 'interactive_term',
   static = 'static_term',
@@ -24,7 +23,8 @@ local terminal_const = {
   name = 'lib_term',
   term_win = 'term_win',
   term_buf = 'term_buf',
-  float_name = 'float term',
+  float_name = 'float_term',
+  win_name = 'win_term',
 }
 
 local function safe_set_win_option(win, name, value)
@@ -33,138 +33,6 @@ end
 
 local function safe_set_buf_option(buf, name, value)
   pcall(vim.api.nvim_set_option_value, name, value, { buf = buf, scope = 'local' })
-end
-
----@param opts? terminal.open_terminal
-local function interactive_term(opts)
-  opts = opts or {}
-
-  if (not opts.cmd) or #opts.cmd == 0 then
-    return
-  end
-
-  -- Store current buffer reference for navigating back
-  local curr_buf = vim.api.nvim_get_current_buf()
-  local buf = vim.api.nvim_create_buf(false, true)
-  ---@type nil|integer
-  local temporaryTabId = nil
-  ---@type boolean
-  local fullscreen = opts.fullscreen ~= nil and opts.fullscreen or false
-  -- Priorities
-  -- repository > buffer dir > home directory
-  local cwd = ''
-  local dir = opts.cwd
-  if dir == '.' or dir == '%' then
-    -- dot (.) and buffer (%) expand to current dir
-    cwd = vim.fn.expand('%:p:h')
-  elseif dir == '~' then
-    -- tilda (~) expand to home
-    cwd = vim.fn.expand('~')
-  elseif dir ~= nil then
-    -- get absolute path always in case it passed relative
-    cwd = vim.fn.fnamemodify(dir, ':p:h')
-  end
-  -- Check if cwd is assinged, if not try to guess a suitable directory
-  cwd = cwd or require('lib.fs').git_path() or vim.fn.expand('%:p:h')
-  if not vim.fn.isdirectory(cwd) then
-    -- Try find root of git directory by .git file/dir
-    cwd = require('lib.std').find_root('.git') --[[@as string]]
-    if cwd == nil then
-      -- Fallback to home
-      cwd = vim.fn.expand('~')
-    end
-  end
-  safe_set_buf_option(buf, 'filetype', opts.ft or terminal_type)
-  safe_set_buf_option(buf, 'buf', opts.bt or terminal_type)
-
-  -- Enable insert mode on open
-  vim.api.nvim_create_autocmd('BufEnter', {
-    buffer = buf,
-    callback = function()
-      vim.cmd.startinsert()
-    end,
-  })
-
-  -- For cleanup (if needed)
-  -- vim.api.nvim_create_autocmd('TermClose', {
-  --   once = true,
-  --   buffer = buf,
-  --   callback = function ()
-  --     -- Term specific cleanup
-  --     -- vim.fn.feedkeys('i')
-  --   end
-  -- })
-
-  if fullscreen then
-    -- Open new tab to ensure fullscreen
-    vim.cmd.tabnew()
-    temporaryTabId = vim.api.nvim_get_current_tabpage()
-  end
-
-  -- Apend buffer in current window
-  vim.api.nvim_win_set_buf(0, buf)
-
-  -- Run termopen on the context of the created buffer
-  vim.api.nvim_buf_call(buf, function()
-    -- Name the buffer
-    pcall(vim.api.nvim_buf_set_name, buf, opts.name or ('terminal: %s'):format(opts.cmd[1]))
-    vim.fn.jobstart(opts.cmd, {
-      cwd = cwd,
-      env = opts.env,
-      clear_env = opts.clear_env,
-      term = true,
-      on_exit = function(jobId, data, name)
-        -- local on_close = function()
-        --   if fullscreen then
-        --     -- Needed to remove "[Process exited 0]"
-        --     vim.fn.feedkeys('i')
-        --     return
-        --   end
-        --
-        --   -- Check if buffer from where LF open is still available
-        --   -- and go back to it. Fallback to :bnext otherwise.
-        --   if vim.api.nvim_buf_is_loaded(curr_buf) then
-        --     vim.cmd.buffer(curr_buf)
-        --   else
-        --     vim.cmd.bnext()
-        --   end
-        -- end
-
-        -- Decide if it should close the tab
-        if
-          fullscreen
-          and type(temporaryTabId) == 'number'
-          and vim.api.nvim_tabpage_is_valid(temporaryTabId)
-          and vim.api.nvim_get_current_tabpage() == temporaryTabId
-          and #(vim.api.nvim_list_tabpages()) > 1
-        then
-          vim.cmd.tabclose()
-        end
-
-        if opts.on_exit then
-          opts.on_exit(jobId, data, name)
-        else
-          if fullscreen then
-            -- Needed to remove "[Process exited 0]"
-            vim.api.nvim_input('<esc>')
-            return
-          end
-
-          -- Check if buffer from where terminal was opened is still available
-          -- and go back to it. Fallback to :bnext otherwise.
-          if vim.api.nvim_buf_is_loaded(curr_buf) then
-            vim.cmd.buffer(curr_buf)
-          else
-            vim.cmd.bnext()
-          end
-        end
-      end,
-      on_stderr = opts.on_stderr,
-      on_stdout = opts.on_stdout,
-      stderr_buffered = opts.stderr_buffered,
-      stdout_buffered = opts.stdout_buffered,
-    })
-  end)
 end
 
 ---@class terminal.jobstart.opts
@@ -195,6 +63,15 @@ end
 ---@field bt? string custom buftype to use
 ---@field name? string name to be used in buffer
 
+---@class terminal.win_opts
+---@field cmd string|string[] command to execute
+---@field term? terminal.jobstart.opts
+---@field fullscreen? boolean open the terminal in a new tabpage with a single window
+---@field on_end? fun(lines: string[]) callback to be called at the end with full stdout
+---@field ft? string custom filetype to use
+---@field bt? string custom buftype to use
+---@field name? string name to be used in buffer
+
 ---@class terminal.output.window
 ---@field win integer winrn of floating window
 ---@field buf integer bufnr of floating window
@@ -217,7 +94,7 @@ local get_float_config = function(config)
     col = math.floor(vim.o.columns * 0.1),
     style = 'minimal',
     border = 'rounded',
-  } --[[@as vim.api.keyset.win_config]] , config)
+  } --[[@as vim.api.keyset.win_config]], config)
 
   return new_config
 end
@@ -260,7 +137,6 @@ local function set_options(opts, out, is_float)
   safe_set_win_option(win, 'signcolumn', 'no')
   safe_set_win_option(win, 'conceallevel', 3)
   safe_set_win_option(win, 'colorcolumn', '')
-
 
   local is_transparent = vim.api.nvim_get_hl(0, { name = 'Normal' }).bg == nil
   if is_float and is_transparent then
@@ -329,7 +205,9 @@ local function get_cmd(opts)
     cmd = { vim.fs.joinpath(bin, 'run.sh') }
   end
 
-  local opts_cmd = vim.islist(opts.cmd) and opts.cmd or { opts.cmd }
+  local opts_cmd = vim.islist(opts.cmd) and opts.cmd or {
+    vim.split(opts.cmd, ' ', { plain = true, trimempty = true })
+  }
   ---@cast opts_cmd string[]
 
   vim.list_extend(cmd, opts_cmd)
@@ -463,8 +341,164 @@ local function float_term(opts)
   return call_float(opts)
 end
 
+---Create the window/buffer for win_term according to the rules:
+--- - if fullscreen: open new tabpage with single window
+--- - else if there is only one window in current tabpage: open vertical split
+--- - else: use current focused window
+---@param opts terminal.win_opts
+---@return integer buf
+---@return integer win
+local function create_win(opts)
+  if opts.fullscreen then
+    vim.cmd.tabnew()
+  else
+    local wins = vim.api.nvim_tabpage_list_wins(0)
+    if #wins == 1 then
+      vim.cmd.vsplit()
+    end
+  end
+
+  local buf = vim.api.nvim_create_buf(false, true)
+  local win = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_buf(win, buf)
+  return buf, win
+end
+
+---Validate options for win_term
+---@param opts terminal.win_opts
+local function validate_win_opts(opts)
+  opts = opts or {}
+  opts.term = vim.tbl_deep_extend('force', {}, opts.term or {})
+end
+
+---@param opts terminal.win_opts options for the terminal
+---@return terminal.output output values to control the terminal
+local function call_win(opts)
+  validate_win_opts(opts)
+
+  local buf, win = create_win(opts)
+  local term_opts = vim.tbl_deep_extend('force', opts.term or {}, { pty = true, term = true })
+  ---@cast term_opts terminal.jobstart.int_opts
+
+  ---@type terminal.opts
+  local set_opts = { cmd = opts.cmd, ft = opts.ft, bt = opts.bt, name = opts.name }
+  set_options(set_opts, { win = win, buf = buf }, false)
+  pcall(vim.api.nvim_buf_set_name, buf, opts.name or terminal_const.win_name)
+
+  local term_autocmd_group = vim.api.nvim_create_augroup(('win_term_%d_%d'):format(win, buf), { clear = true })
+
+  vim.api.nvim_create_autocmd('TermOpen', {
+    once = true,
+    buffer = buf,
+    group = term_autocmd_group,
+    callback = function()
+      vim.api.nvim_buf_call(buf, function()
+        vim.cmd.startinsert()
+      end)
+    end,
+  })
+
+  local id = vim.fn.jobstart(opts.cmd, {
+    cwd = term_opts.cwd,
+    env = term_opts.env,
+    clear_env = term_opts.clear_env,
+    pty = term_opts.pty,
+    term = term_opts.term,
+    on_stderr = term_opts.on_stderr,
+    on_stdout = term_opts.on_stdout,
+    stdin = term_opts.stdin,
+    stdout_buffered = term_opts.stdout_buffered,
+    stderr_buffered = term_opts.stderr_buffered,
+    on_exit = term_opts.on_exit,
+  })
+
+  local function close()
+    pcall(vim.fn.jobstop, id)
+    pcall(vim.api.nvim_win_close, win, true)
+    pcall(vim.api.nvim_clear_autocmds, { group = term_autocmd_group })
+    vim.cmd.checktime()
+  end
+
+  local out = {
+    close = close,
+    buf = buf,
+    win = win,
+    jobId = id,
+  }
+
+  vim.api.nvim_create_autocmd('TermClose', {
+    once = true,
+    buffer = buf,
+    callback = function()
+      close()
+    end,
+  })
+
+  return out
+end
+
+---@param opts terminal.win_opts options for the terminal
+---@return terminal.output output values to control the terminal
+local function win_term(opts)
+  validate_win_opts(opts)
+
+  --- no need to capture stdout so call directly
+  if not opts.on_end then
+    return call_win(opts)
+  end
+
+  --- Wrap to capture stdout
+
+  -- shallow clone to avoid mutating options too much
+  ---@type terminal.win_opts
+  opts = vim.tbl_deep_extend('force', {}, opts)
+
+  -- Wrap command (get_cmd only reads opts.cmd / opts.on_end)
+  opts.cmd = get_cmd(opts --[[@as terminal.opts]])
+  ---@type string
+  local tempfile = vim.fn.tempfile()
+  local on_end = opts.on_end --[[@as fun(data: string[])]]
+
+  -- Handle on_end
+  local capture_on_exit = function()
+    if not vim.uv.fs_stat(tempfile) then
+      pcall(on_end, {})
+      return
+    end
+
+    ---@type boolean, string[]
+    local ok, lines = pcall(vim.fn.readfile, tempfile)
+    if not ok then
+      pcall(on_end, {})
+      return
+    end
+
+    pcall(os.remove, tempfile)
+    pcall(on_end, lines)
+  end
+
+  -- Override term.on_exit if exists
+  if opts.term.on_exit then
+    local opts_on_exit = opts.term.on_exit
+    opts.term.on_exit = function(...)
+      ---@diagnostic disable-next-line
+      opts_on_exit(...)
+      capture_on_exit()
+    end
+  else
+    opts.term.on_exit = capture_on_exit
+  end
+
+  -- Inject environment with path to output file to read at the end
+  opts.term.env = vim.tbl_deep_extend('force', opts.term.env or {}, {
+    CMD_OUTPUT = tempfile,
+  })
+
+  return call_win(opts)
+end
+
 return {
-  interactive_term = interactive_term,
   get_float_config = get_float_config,
   float_term = float_term,
+  win_term = win_term,
 }
