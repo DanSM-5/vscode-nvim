@@ -353,8 +353,11 @@ local function create_win(opts)
   if opts.fullscreen then
     vim.cmd.tabnew()
   else
-    local wins = vim.api.nvim_tabpage_list_wins(0)
-    if #wins == 1 then
+    -- winlayout returns e.g. {'leaf', 1019} for a single visible window,
+    -- or {'row'|'col', { ... }} when there are splits. Unlike
+    -- nvim_tabpage_list_wins, it ignores floating windows.
+    local layout = vim.fn.winlayout()
+    if layout[1] == 'leaf' then
       vim.cmd.vsplit()
     end
   end
