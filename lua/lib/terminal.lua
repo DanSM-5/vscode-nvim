@@ -347,9 +347,13 @@ end
 --- - else if there is only one window in current tabpage: open vertical split
 --- - else: use current focused window
 ---@param opts terminal.win_opts
----@return integer buf
----@return integer win
+---@return integer buf newly created scratch buffer
+---@return integer win window the buffer is displayed in
+---@return integer? prev_buf previous buffer of the reused window (only when reusing an existing split)
 local function create_win(opts)
+  ---@type integer?
+  local prev_buf = nil
+
   if opts.fullscreen then
     vim.cmd.tabnew()
   else
@@ -359,13 +363,17 @@ local function create_win(opts)
     local layout = vim.fn.winlayout()
     if layout[1] == 'leaf' then
       vim.cmd.vsplit()
+    else
+      -- Reusing the currently focused window: remember its buffer so we
+      -- can restore it once the terminal closes (preserving layout).
+      prev_buf = vim.api.nvim_win_get_buf(0)
     end
   end
 
   local buf = vim.api.nvim_create_buf(false, true)
   local win = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(win, buf)
-  return buf, win
+  return buf, win, prev_buf
 end
 
 ---Validate options for win_term
@@ -380,7 +388,7 @@ end
 local function call_win(opts)
   validate_win_opts(opts)
 
-  local buf, win = create_win(opts)
+  local buf, win, prev_buf = create_win(opts)
   local term_opts = vim.tbl_deep_extend('force', opts.term or {}, { pty = true, term = true })
   ---@cast term_opts terminal.jobstart.int_opts
 
@@ -418,8 +426,29 @@ local function call_win(opts)
 
   local function close()
     pcall(vim.fn.jobstop, id)
-    pcall(vim.api.nvim_buf_delete, buf, { force = true })
-    pcall(vim.api.nvim_win_close, win, true)
+
+    if prev_buf and vim.api.nvim_win_is_valid(win) then
+      -- Reused an existing split: keep the window, restore the previous
+      -- buffer if it still exists, otherwise fall back to the next buffer
+      -- in the buffer list. Either way the window must remain.
+      if vim.api.nvim_buf_is_valid(prev_buf) then
+        pcall(vim.api.nvim_win_set_buf, win, prev_buf)
+      else
+        local scratch = vim.api.nvim_create_buf(true, false)
+        pcall(vim.api.nvim_win_set_buf, win, scratch)
+        vim.api.nvim_win_call(win, function()
+          -- Try to move to a real existing buffer; ignore errors when
+          -- there is none to switch to.
+          pcall(vim.cmd, 'silent! bnext')
+          pcall(vim.api.nvim_buf_delete, scratch, { force = true })
+        end)
+      end
+      pcall(vim.api.nvim_buf_delete, buf, { force = true })
+    else
+      pcall(vim.api.nvim_buf_delete, buf, { force = true })
+      pcall(vim.api.nvim_win_close, win, true)
+    end
+
     pcall(vim.api.nvim_clear_autocmds, { group = term_autocmd_group })
     vim.cmd.checktime()
   end
