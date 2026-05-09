@@ -2,13 +2,15 @@
 ---@param dir? string Directory to start lf from
 ---@param fullscreen? boolean Open on fullscreen
 local lf = function(dir, fullscreen)
-  -- Store current buffer reference for navigating back
-  local curr_buf = vim.api.nvim_get_current_buf()
+  local terminal = require('lib.terminal')
+
+  -- Remember the window we came from so we can return to it (and edit
+  -- the selected files there) when lf exits. This is the window that
+  -- existed BEFORE win_term creates / picks one to host the terminal.
+  local origin_win = vim.api.nvim_get_current_win()
   local temp = vim.fn.tempname()
-  local buf = vim.api.nvim_create_buf(false, true)
-  ---@type nil|integer
-  local temporaryTabId = nil
-  -- Priorities
+
+  -- Priorities:
   -- repository > buffer dir > home directory
   local cwd = ''
   if dir == '.' or dir == '%' then
@@ -21,7 +23,7 @@ local lf = function(dir, fullscreen)
     -- get absolute path always in case it passed relative
     cwd = vim.fn.fnamemodify(dir, ':p:h')
   end
-  -- Check if cwd is assinged, if not try to guess a suitable directory
+  -- Check if cwd is assigned, if not try to guess a suitable directory
   cwd = cwd or require('lib.fs').git_path() or vim.fn.expand('%:p:h')
   if not vim.fn.isdirectory(cwd) then
     -- Try find root of git directory by .git file/dir
@@ -31,95 +33,57 @@ local lf = function(dir, fullscreen)
       cwd = vim.fn.expand('~')
     end
   end
-  pcall(vim.api.nvim_set_option_value, 'filetype', 'lf_buffer', { buf = buf })
 
-  -- Enable insert mode on open
-  vim.api.nvim_create_autocmd('BufEnter', {
-    buffer = buf,
-    callback = function()
-      vim.cmd.startinsert()
-    end,
-  })
-
-  -- For cleanup (if needed)
-  -- vim.api.nvim_create_autocmd('TermClose', {
-  --   once = true,
-  --   buffer = buf,
-  --   callback = function ()
-  --     -- Term specific cleanup
-  --     -- vim.fn.feedkeys('i')
-  --   end
-  -- })
-
-  if fullscreen then
-    -- Open new tab to ensure fullscreen
-    vim.cmd.tabnew()
-    temporaryTabId = vim.api.nvim_get_current_tabpage()
-  end
-
-  -- Apend buffer in current window
-  vim.api.nvim_win_set_buf(0, buf)
-
-  -- Run termopen on the context of the created buffer
-  vim.api.nvim_buf_call(buf, function()
-    -- Name the buffer
-    vim.api.nvim_buf_set_name(buf, 'LF Select')
-    vim.fn.jobstart({ 'lf', '-selection-path=' .. temp }, {
-      term = true,
+  -- Delegate window/buffer management to win_term so that:
+  --   - fullscreen opens in a new tabpage (closed on exit)
+  --   - a single-window tabpage gets a vertical split (closed on exit)
+  --   - otherwise the focused window is reused and the previous buffer
+  --     restored on exit (preserving the layout)
+  terminal.win_term({
+    cmd = { 'lf', '-selection-path=' .. temp },
+    fullscreen = fullscreen,
+    name = 'LF Select',
+    ft = 'lf_buffer',
+    term = {
       cwd = cwd,
-      on_exit = function(jobId, code, evt)
-        -- NOTE: when closing without selection we need to
-        -- move to a different buffer to avoid afecting
-        -- the window layout.
-        local on_no_selection = function()
-          if fullscreen then
-            -- Needed to remove "[Process exited 0]"
-            pcall(vim.api.nvim_buf_delete, buf, { force = true })
+      on_exit = function()
+        -- Defer to the main loop: by the time this runs, win_term's
+        -- TermClose handler has already disposed the terminal window
+        -- (either closing it or restoring the previous buffer).
+        vim.schedule(function()
+          local ok_readable, readable = pcall(vim.fn.filereadable, temp)
+          if not ok_readable or readable == 0 then
             return
           end
 
-          -- Check if buffer from where LF open is still available
-          -- and go back to it. Fallback to :bnext otherwise.
-          if vim.api.nvim_buf_is_loaded(curr_buf) then
-            vim.cmd.buffer(curr_buf)
-          else
-            vim.cmd.bnext()
+          local ok_names, names = pcall(vim.fn.readfile, temp)
+          pcall(os.remove, temp)
+
+          if not ok_names or #names == 0 then
+            -- No selection: nothing else to do, win_term already
+            -- handled the layout restoration.
+            return
           end
-        end
 
-        local ok_fileredable = pcall(vim.fn.filereadable, temp)
-        if not ok_fileredable then
-          on_no_selection()
-          return
-        end
-
-        local ok_names, names = pcall(vim.fn.readfile, temp)
-
-        if not ok_names or #names == 0 then
-          on_no_selection()
-          return
-        end
-
-        if
-          fullscreen
-          and type(temporaryTabId) == 'number'
-          and vim.api.nvim_tabpage_is_valid(temporaryTabId)
-          and vim.api.nvim_get_current_tabpage() == temporaryTabId
-          and #(vim.api.nvim_list_tabpages()) > 1
-        then
-          vim.cmd.tabclose()
-        end
-
-        for i = 1, #names do
-          if i == 1 then
-            vim.cmd.edit(vim.fn.fnameescape(names[i]))
-          else
-            vim.cmd.argadd(vim.fn.fnameescape(names[i]))
+          -- Open the selected files in the window we came from. It
+          -- may have been preserved (fullscreen / vsplit cases) or
+          -- replaced with the previous buffer (reused-window case);
+          -- either way, the selected file overrides it.
+          if vim.api.nvim_win_is_valid(origin_win) then
+            pcall(vim.api.nvim_set_current_win, origin_win)
           end
-        end
+
+          for i = 1, #names do
+            if i == 1 then
+              vim.cmd.edit(vim.fn.fnameescape(names[i]))
+            else
+              vim.cmd.argadd(vim.fn.fnameescape(names[i]))
+            end
+          end
+        end)
       end,
-    })
-  end)
+    },
+  })
 end
 
 return {
