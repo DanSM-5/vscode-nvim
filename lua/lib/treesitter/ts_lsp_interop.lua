@@ -74,8 +74,7 @@ local function smallest_textobject_range(bufnr, pos, capture_name, query_group)
     local rsrow, _, rerow, _ = root:range()
     if row < rsrow or row > rerow then return end
 
-    -- Look here!
-    for _, match, metadata in query:iter_matches(root, bufnr, 0, -1, { all = true }) do
+    for _, match, metadata in query:iter_matches(root, bufnr, 0, -1) do
       for id in pairs(target_ids) do
         local range
         if metadata[id] and metadata[id].range then
