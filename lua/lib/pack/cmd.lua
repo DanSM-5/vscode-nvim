@@ -217,6 +217,38 @@ local pack_subcmds = {
       end
     end,
   },
+  profile = {
+    handler = function()
+      local argv = vim.v.argv
+      local path
+      for i, arg in ipairs(argv) do
+        if arg == '--startuptime' then
+          path = argv[i + 1]
+          break
+        end
+      end
+
+      if not path then
+        vim.notify(
+          '[:Pack] No --startuptime flag passed on nvim launch. Relaunch nvim with `--startuptime <file>` to profile.',
+          vim.log.levels.WARN
+        )
+        return
+      end
+
+      if not vim.uv.fs_stat(path) then
+        vim.notify(
+          ('[:Pack] Startuptime file "%s" does not exist. Relaunch nvim with `--startuptime <file>` to profile.'):format(
+            path
+          ),
+          vim.log.levels.WARN
+        )
+        return
+      end
+
+      vim.cmd.edit(path)
+    end,
+  },
   lockfile = {
     handler = function(options)
       local selection = options[1]
