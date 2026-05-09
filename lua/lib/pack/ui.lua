@@ -394,7 +394,7 @@ local function build_content()
   add(sep, 'PackUiSeparator')
 
   -- Action bar
-  local bar = ' [U]pdate All  [u] Update  [X] Clean  [D]elete  [L] Log  [?] Help'
+  local bar = ' [U]pdate All  [u] Update  [X] Clean  [D]elete  [L] Log  [P]rofile  [?] Help'
   add(bar)
   -- Highlight the bracket keys (gmatch () captures are 1-based;
   -- the end capture points one past the match, which is exactly
@@ -413,6 +413,7 @@ local function build_content()
     add('   X            Clean to-cleanup plugins', 'PackUiHelp')
     add('   D            Delete plugin under cursor (non-active only)', 'PackUiHelp')
     add('   L            Open update log file', 'PackUiHelp')
+    add('   P            Open --startuptime profile file', 'PackUiHelp')
     add('   <CR>         Toggle plugin details', 'PackUiHelp')
     add('   ]]           Jump to next plugin', 'PackUiHelp')
     add('   [[           Jump to previous plugin', 'PackUiHelp')
@@ -717,6 +718,39 @@ local function setup_keymaps()
     else
       vim.notify('vim.pack: no log file yet', vim.log.levels.INFO)
     end
+  end, opts)
+
+  -- Open startuptime profile file
+  vim.keymap.set('n', 'P', function()
+    local argv = vim.v.argv
+    local path
+    for i, arg in ipairs(argv) do
+      if arg == '--startuptime' then
+        path = argv[i + 1]
+        break
+      end
+    end
+
+    if not path then
+      vim.notify(
+        '[:Pack] No --startuptime flag passed on nvim launch. Relaunch nvim with `--startuptime <file>` to profile.',
+        vim.log.levels.WARN
+      )
+      return
+    end
+
+    if not vim.uv.fs_stat(path) then
+      vim.notify(
+        ('[:Pack] Startuptime file "%s" does not exist. Relaunch nvim with `--startuptime <file>` to profile.'):format(
+          path
+        ),
+        vim.log.levels.WARN
+      )
+      return
+    end
+
+    close()
+    vim.cmd.edit(path)
   end, opts)
 
   -- Toggle details
