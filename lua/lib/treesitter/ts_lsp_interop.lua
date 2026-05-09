@@ -9,7 +9,7 @@
 
 local api = vim.api
 
-local M = {}
+local TsLspInterop = {}
 
 ---Window id of the last opened floating preview, kept so subsequent calls can
 ---focus it instead of opening a new one (matches the previous behaviour).
@@ -74,6 +74,7 @@ local function smallest_textobject_range(bufnr, pos, capture_name, query_group)
     local rsrow, _, rerow, _ = root:range()
     if row < rsrow or row > rerow then return end
 
+    -- Look here!
     for _, match, metadata in query:iter_matches(root, bufnr, 0, -1, { all = true }) do
       for id in pairs(target_ids) do
         local range
@@ -169,7 +170,7 @@ end
 ---@param query_string string capture name, must start with `@`
 ---@param query_group? string defaults to `'textobjects'`
 ---@param lsp_request? string defaults to `'textDocument/definition'`
-function M.peek_definition_code(query_string, query_group, lsp_request)
+function TsLspInterop.peek_definition_code(query_string, query_group, lsp_request)
   query_group = query_group or 'textobjects'
   lsp_request = lsp_request or 'textDocument/definition'
   assert(query_string:sub(1, 1) == '@', 'query_string must start with "@"')
@@ -212,4 +213,4 @@ function M.peek_definition_code(query_string, query_group, lsp_request)
   end))
 end
 
-return M
+return TsLspInterop
