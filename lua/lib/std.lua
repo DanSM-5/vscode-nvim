@@ -302,11 +302,10 @@ local function throttle(fn, time)
       return
     end
 
-    local args = pack(...)
     timer = setTimeout(function()
       timer = nil
-      fn(unpack(args), 1, args.n)
     end, time)
+    fn(...)
   end
 end
 
