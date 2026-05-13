@@ -68,7 +68,7 @@ local lsp_subcmds = {
   },
   attach = {
     handler = function(params)
-      local name, bufstr = params[1], params[2]
+      local name, buf_or_name = params[1], params[2]
       if not name then
         vim.notify('[:Lsp attach] missing required param "name"', vim.log.levels.WARN)
         return
@@ -79,8 +79,16 @@ local lsp_subcmds = {
         return
       end
 
+      ---@type string|integer
+      local defined_buf_or_name = buf_or_name or vim.api.nvim_get_current_buf()
+      local converted = tonumber(defined_buf_or_name) --[[@as integer|nil]]
+
       ---@type integer
-      local bufnr = bufstr and tonumber(bufstr) or vim.api.nvim_get_current_buf()
+      local bufnr = converted and converted or vim.fn.bufnr(defined_buf_or_name --[[@as string]], 0)
+      if bufnr == -1 or not vim.api.nvim_buf_is_valid(bufnr) then
+        return -- invalid buffer
+      end
+
       local success = vim.lsp.buf_attach_client(bufnr, client.id)
       if not success then
         vim.notify(('[:Lsp attach] Unable to attach buf "%d" to client "%s"'):format(bufnr, name), vim.log.levels.WARN)
@@ -113,11 +121,11 @@ local lsp_subcmds = {
         .iter(vim.api.nvim_list_bufs())
         :filter(function(buf)
           ---@cast buf integer
-          return not client.attached_buffers[buf] and vim.bo[buf].buflisted
+          return not client.attached_buffers[buf] and vim.bo[buf].buflisted and vim.api.nvim_buf_is_valid(buf)
         end)
-        :map(function (buf)
-          ---@cast buf integer
-          return tostring(buf)
+        :map(function(buf)
+          local bufname = vim.fn.bufname(buf)
+          return vim.fs.normalize(bufname)
         end)
         :totable()
 
@@ -126,14 +134,21 @@ local lsp_subcmds = {
   },
   detach = {
     handler = function(params)
-      local name, bufstr = params[1], params[2]
+      local name, buf_or_name = params[1], params[2]
       if not name then
         vim.notify('[:Lsp detach] missing required param "name"', vim.log.levels.WARN)
         return
       end
 
+      ---@type string|integer
+      local defined_buf_or_name = buf_or_name or vim.api.nvim_get_current_buf()
+      local converted = tonumber(defined_buf_or_name) --[[@as integer|nil]]
+
       ---@type integer
-      local bufnr = bufstr and tonumber(bufstr) or vim.api.nvim_get_current_buf()
+      local bufnr = converted and converted or vim.fn.bufnr(defined_buf_or_name --[[@as string]], 0)
+      if bufnr == -1 or not vim.api.nvim_buf_is_valid(bufnr) then
+        return -- invalid buffer
+      end
 
       local client = vim.lsp.get_clients({ name = name, bufnr = bufnr })[1]
       if not client then
@@ -173,11 +188,11 @@ local lsp_subcmds = {
         .iter(vim.tbl_keys(client.attached_buffers))
         :filter(function(buf)
           ---@cast buf integer
-          return client.attached_buffers[buf]
+          return client.attached_buffers[buf] and vim.api.nvim_buf_is_valid(buf)
         end)
-        :map(function (buf)
-          ---@cast buf integer
-          return tostring(buf)
+        :map(function(buf)
+          local bufname = vim.fn.bufname(buf)
+          return vim.fs.normalize(bufname)
         end)
         :totable()
 
