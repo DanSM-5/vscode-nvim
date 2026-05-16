@@ -4,6 +4,60 @@
 ---@class lsp.cmd.subcmd
 ---@field complete? lsp.cmd.complete
 ---@field handler lsp.cmd.handler
+---@field help? string
+
+---@type table<string, lsp.cmd.subcmd | nil>
+local lsp_subcmds = {}
+
+---Helper for setting buf options safely
+---@param buf integer
+---@param name string
+---@param value string|integer|boolean|nil
+local function safe_set_buf_option(buf, name, value)
+  pcall(vim.api.nvim_set_option_value, name, value, { buf = buf, scope = 'local' })
+end
+
+---Format any conent into human readable format
+---@param ... any
+---@return string[]
+local function format_content(...)
+  local msg = {} ---@type string[]
+  for i = 1, select('#', ...) do
+    local o = select(i, ...)
+    if type(o) == 'string' then
+      table.insert(msg, o)
+    else
+      local tbl_str = vim.inspect(o, { newline = '\n', indent = '  ' })
+      local parts = vim.split(tbl_str, '\n')
+      vim.list_extend(msg, parts)
+    end
+  end
+  return msg
+end
+
+---Set options for the help buffer
+---@param buf integer bufnr for the help
+local function set_help_buf_opts(buf)
+  -- buffer options
+  safe_set_buf_option(buf, 'buftype', 'nofile')
+  safe_set_buf_option(buf, 'bufhidden', 'hide')
+  safe_set_buf_option(buf, 'swapfile', false)
+  safe_set_buf_option(buf, 'modifiable', false)
+  safe_set_buf_option(buf, 'filetype', 'lua')
+  pcall(vim.api.nvim_buf_set_name, buf, 'lsp-help')
+end
+
+---Create a help buffer
+---@param content any content for the help buffer
+---@return integer
+local function create_help_buffer(content)
+  local buf = vim.api.nvim_create_buf(false, true)
+  local parsed_content = format_content(content)
+  vim.api.nvim_buf_set_lines(buf, 0, 0, false, parsed_content)
+  set_help_buf_opts(buf)
+  return buf
+end
+
 
 ---Complete lsp name
 ---@param name string|nil
@@ -35,6 +89,111 @@ local function get_buf_active_lsp_names()
     :totable()
 end
 
+---Detach all lsp clients of the current buffer
+local function detach_all()
+  local buf = vim.api.nvim_get_current_buf()
+  local buf_clients = vim.lsp.get_clients({ bufnr = buf, name = name })
+  for _, client in ipairs(buf_clients) do
+    vim.lsp.buf_detach_client(buf, client.id)
+  end
+end
+
+---Resolve a buffer to its bufnr
+---@param buf_or_name? string|integer|nil
+---@return integer|nil bufnr of the provided identifier or the current buffer
+local function resolve_buf(buf_or_name)
+  ---@type string|integer
+  local defined_buf_or_name = buf_or_name or vim.api.nvim_get_current_buf()
+  local converted = tonumber(defined_buf_or_name) --[[@as integer|nil]]
+
+  ---@type integer
+  local bufnr = converted and converted or vim.fn.bufnr(defined_buf_or_name --[[@as string]], 0)
+  if bufnr == -1 or not vim.api.nvim_buf_is_valid(bufnr) then
+    return -- invalid buffer
+  end
+
+  return bufnr
+end
+
+---Get the list of attached buffers for detaching
+---@param client vim.lsp.Client
+---@return string[]
+local function get_attached_buf_list(client)
+  ---@type string[]
+  local attached_buffers = vim
+    .iter(vim.tbl_keys(client.attached_buffers))
+    :filter(function(buf)
+      ---@cast buf integer
+      return client.attached_buffers[buf] and vim.api.nvim_buf_is_valid(buf)
+    end)
+    :map(function(buf)
+      -- Use `vim.fn.bufname(buf)` instead of `vim.api.nvim_buf_get_name(buf)`
+      -- to get path relative to CWD
+      local bufname = vim.fn.bufname(buf)
+      return vim.fs.normalize(bufname)
+    end)
+    :totable()
+
+  return attached_buffers
+end
+
+---Get the list of detached buffers for attaching
+---@param client vim.lsp.Client
+---@return string[]
+local function get_detached_buf_list(client)
+  ---@type string[]
+  local non_attached_buffers = vim
+    .iter(vim.api.nvim_list_bufs())
+    :filter(function(buf)
+      ---@cast buf integer
+      return not client.attached_buffers[buf] and vim.bo[buf].buflisted and vim.api.nvim_buf_is_valid(buf)
+    end)
+    :map(function(buf)
+      -- Use `vim.fn.bufname(buf)` instead of `vim.api.nvim_buf_get_name(buf)`
+      -- to get path relative to CWD
+      local bufname = vim.fn.bufname(buf)
+      return vim.fs.normalize(bufname)
+    end)
+    :totable()
+
+  return non_attached_buffers
+end
+
+---Get relevant completion candidates for
+---attaching or detaching from a lsp client
+---@param mode 'attached'|'detached' Mode to get the list of attached or detached buffers
+---@param param string The command completion `arg_lead`
+---@param cmd string The full command typed
+---@return string[] completions candidates (client names / buffers)
+local function complete_lsp_att_det(mode, param, cmd)
+  local segments = vim.split(cmd, ' ', { plain = true })
+
+  -- Complete lsp name
+  if #segments <= 3 then
+    return complete_enabled_lsp_name(param)
+  end
+
+  local name = segments[3]
+
+  -- Cannot proceed without name
+  if not name then
+    return {}
+  end
+
+  -- Complete buffers
+  -- Give preference to existing client in current buffer
+  local client = get_lsp_client(name)
+  if not client then
+    return {}
+  end
+
+  if mode == 'attached' then
+    return get_attached_buf_list(client)
+  else
+    return get_detached_buf_list(client)
+  end
+end
+
 ---Complete function for active lsp configs in current buffer
 ---@param name? string
 ---@return string[] completions
@@ -51,12 +210,23 @@ local function run_lsp_cmd(cmd, params)
   vim.cmd.lsp({ args = params })
 end
 
+---Get a formatted help table
+---@return table<string, string> table containing help of all sub commands
+local function get_help_table()
+  local help_tbl = {}
+  for name, value in pairs(lsp_subcmds) do
+    help_tbl[name] = ('[Lsp %s]: %s'):format(name, value.help or 'Subcommand of `Lsp`')
+  end
+  return help_tbl
+end
+
 ---@type table<string, lsp.cmd.subcmd | nil>
-local lsp_subcmds = {
+lsp_subcmds = {
   info = {
     handler = function()
       vim.cmd.checkhealth('vim.lsp')
     end,
+    help = 'Same as `:checkhealth vim.lsp`. See `:help LspInfo`.',
   },
   log = {
     handler = function()
@@ -65,6 +235,7 @@ local lsp_subcmds = {
 
       vim.cmd.edit(log_path)
     end,
+    help = 'Open `lsp.log` file.',
   },
   attach = {
     handler = function(params)
@@ -75,18 +246,20 @@ local lsp_subcmds = {
       end
       local client = vim.lsp.get_clients({ name = name })[1]
       if not client then
-        vim.notify(('[:Lsp attach] Unable to find a client with name "%s"'):format(name), vim.log.levels.WARN)
+        vim.notify(
+          ('[:Lsp attach] Unable to find a client with name "%s". Use `Lsp start %s`'):format(name, name),
+          vim.log.levels.WARN
+        )
         return
       end
 
-      ---@type string|integer
-      local defined_buf_or_name = buf_or_name or vim.api.nvim_get_current_buf()
-      local converted = tonumber(defined_buf_or_name) --[[@as integer|nil]]
-
-      ---@type integer
-      local bufnr = converted and converted or vim.fn.bufnr(defined_buf_or_name --[[@as string]], 0)
-      if bufnr == -1 or not vim.api.nvim_buf_is_valid(bufnr) then
-        return -- invalid buffer
+      local bufnr = resolve_buf(buf_or_name)
+      if not bufnr then
+        vim.notify(
+          ('[:Lsp attach] Unable resolve buffer: "%s"'):format(tostring(buf_or_name or 'nil'), name),
+          vim.log.levels.WARN
+        )
+        return
       end
 
       local success = vim.lsp.buf_attach_client(bufnr, client.id)
@@ -95,59 +268,26 @@ local lsp_subcmds = {
       end
     end,
     complete = function(param, cmd)
-      local segments = vim.split(cmd, ' ', { plain = true })
-
-      -- Complete lsp name
-      if #segments <= 3 then
-        return complete_enabled_lsp_name(param)
-      end
-
-      local name = segments[3]
-
-      -- Cannot proceed without name
-      if not name then
-        return {}
-      end
-
-      -- Complete non-attached buffers
-      -- Give preference to existing client in current buffer
-      local client = get_lsp_client(name)
-      if not client then
-        return {}
-      end
-
-      ---@type string[]
-      local non_attached_buffers = vim
-        .iter(vim.api.nvim_list_bufs())
-        :filter(function(buf)
-          ---@cast buf integer
-          return not client.attached_buffers[buf] and vim.bo[buf].buflisted and vim.api.nvim_buf_is_valid(buf)
-        end)
-        :map(function(buf)
-          local bufname = vim.fn.bufname(buf)
-          return vim.fs.normalize(bufname)
-        end)
-        :totable()
-
-      return non_attached_buffers
+      return complete_lsp_att_det('detached', param, cmd)
     end,
+    help = 'Attach a buffer to the language server: `Lsp attach <lsp> [<buf_or_name>]`',
   },
   detach = {
     handler = function(params)
       local name, buf_or_name = params[1], params[2]
       if not name then
-        vim.notify('[:Lsp detach] missing required param "name"', vim.log.levels.WARN)
+        vim.notify('[:Lsp detach] Detaching all clients!', vim.log.levels.WARN)
+        detach_all()
         return
       end
 
-      ---@type string|integer
-      local defined_buf_or_name = buf_or_name or vim.api.nvim_get_current_buf()
-      local converted = tonumber(defined_buf_or_name) --[[@as integer|nil]]
-
-      ---@type integer
-      local bufnr = converted and converted or vim.fn.bufnr(defined_buf_or_name --[[@as string]], 0)
-      if bufnr == -1 or not vim.api.nvim_buf_is_valid(bufnr) then
-        return -- invalid buffer
+      local bufnr = resolve_buf(buf_or_name)
+      if not bufnr then
+        vim.notify(
+          ('[:Lsp attach] Unable resolve buffer: "%s"'):format(tostring(buf_or_name or 'nil'), name),
+          vim.log.levels.WARN
+        )
+        return
       end
 
       local client = vim.lsp.get_clients({ name = name, bufnr = bufnr })[1]
@@ -162,42 +302,9 @@ local lsp_subcmds = {
       vim.lsp.buf_detach_client(bufnr, client.id)
     end,
     complete = function(param, cmd)
-      local segments = vim.split(cmd, ' ', { plain = true })
-
-      -- Complete lsp name
-      if #segments <= 3 then
-        return complete_enabled_lsp_name(param)
-      end
-
-      local name = segments[3]
-
-      -- Cannot proceed without name
-      if not name then
-        return {}
-      end
-
-      -- Complete non-attached buffers
-      -- Give preference to existing client in current buffer
-      local client = get_lsp_client(name)
-      if not client then
-        return {}
-      end
-
-      ---@type string[]
-      local attached_buffers = vim
-        .iter(vim.tbl_keys(client.attached_buffers))
-        :filter(function(buf)
-          ---@cast buf integer
-          return client.attached_buffers[buf] and vim.api.nvim_buf_is_valid(buf)
-        end)
-        :map(function(buf)
-          local bufname = vim.fn.bufname(buf)
-          return vim.fs.normalize(bufname)
-        end)
-        :totable()
-
-      return attached_buffers
+      return complete_lsp_att_det('attached', param, cmd)
     end,
+    help = 'Detach a buffer from the language server: `Lsp detach [<lsp>] [<buf_or_name>]`. With no args detaches all clients from current buffer.',
   },
   enable = {
     handler = function(params)
@@ -227,6 +334,7 @@ local lsp_subcmds = {
 
       return require('lib.cmd').get_matched(configs, param or '')
     end,
+    help = 'Enable a lsp by name. Same as `:lsp enable <lsp>`. See `:help lsp-enable`.',
   },
   disable = {
     handler = function(params)
@@ -239,6 +347,7 @@ local lsp_subcmds = {
     complete = function(param)
       return complete_enabled_lsp_name(param)
     end,
+    help = 'Disable a lsp by name. Same as `:lsp disable <lsp>`. See `:help lsp-disable`.',
   },
   restart = {
     handler = function(params)
@@ -247,6 +356,7 @@ local lsp_subcmds = {
     complete = function(...)
       return complete_buf_active_lsp(...)
     end,
+    help = 'Restart clients. Same as `:lsp restart [<lsp>]`. See `:help lsp-restart`.',
   },
   stop = {
     handler = function(params)
@@ -255,6 +365,22 @@ local lsp_subcmds = {
     complete = function(...)
       return complete_buf_active_lsp(...)
     end,
+    help = 'Stop clients. Same as `:lsp stop [<lsp>]`. See `:help lsp-stop`.',
+  },
+  help = {
+    handler = function(_, opts)
+      opts = opts or {}
+      local help_tbl = get_help_table()
+      if not opts.bang then
+        vim.print(help_tbl)
+        return
+      end
+
+      local win = vim.api.nvim_get_current_win()
+      local buf = create_help_buffer(help_tbl)
+      vim.api.nvim_win_set_buf(win, buf)
+    end,
+    help = 'Print this help message.',
   },
 }
 
