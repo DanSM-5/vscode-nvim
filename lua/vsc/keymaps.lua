@@ -490,13 +490,14 @@ return {
       vscode.action('git.stage')
     end), { desc = '[VSCode] Stage buffer', noremap = true })
 
-    --NOTE: Currently not working... 😓
+    --NOTE: F*king finally, an unstage lines!!!!
+    --This should not be this F*KING HARD
     -- Hunk undo stage
     vim.keymap.set('n', '<leader>hu', repeat_action(function()
       require('utils.gitvscode').unstage_hunk_under_cursor()
     end), { desc = '[VSCode] Unstage hunk', noremap = true })
     vim.keymap.set('v', '<leader>hu', repeat_action(function()
-      vscode.call('git.unstageSelectedRanges')
+      require('utils.gitvscode').unstage_selection_vscode()
     end), { desc = '[VSCode] Unstage hunk', noremap = true })
     vim.keymap.set('n', '<leader>hU', repeat_action(function()
       vscode.action('git.unstageAll') -- All changes in repo
