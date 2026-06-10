@@ -164,7 +164,7 @@ local registerGit = function ()
         return {
           command: 'wsl',
           args: [
-            '--distro',
+            '--distribution',
             remoteData.distro,
             '--exec',
             'git',

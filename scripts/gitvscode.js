@@ -64,7 +64,7 @@ globalThis._vscode_git = {
     return {
       command: 'wsl',
       args: [
-        '--distro',
+        '--distribution',
         remoteData.distro,
         '--exec',
         'git',
