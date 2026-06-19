@@ -171,7 +171,7 @@ local todo_keywords = {
 local todos = function (keywords, fullscreen)
   local query = #keywords > 0 and keywords or todo_keywords
   ---@diagnostic disable-next-line: cast-local-type
-  query = string.format('\\b(%s):', table.concat(query, '|'))
+  query = string.format('\\b(%s)(\\([^)]*\\))?:', table.concat(query, '|'))
 
   ---@type fzf.rg.args
   local opts = {
