@@ -290,7 +290,7 @@ local function float_term(opts)
   -- Wrap command
   opts.cmd = get_cmd(opts)
   ---@type string
-  local tempfile = vim.fn.tempfile()
+  local tempfile = vim.fn.tempname()
   local on_end = opts.on_end --[[@as fun(data: string[])]]
 
   -- Handle on_end
