@@ -9,7 +9,7 @@
       "src": "https://github.com/kreskij/Repeatable.vim"
     },
     "blink.indent": {
-      "rev": "9c80820ca77218a8d28e70075d6f44a1609911fe",
+      "rev": "8b69b9262891fe81fe728fe6a52fa2a84dd5d5e0",
       "src": "https://github.com/saghen/blink.indent"
     },
     "friendly-snippets": {
@@ -17,7 +17,7 @@
       "src": "https://github.com/rafamadriz/friendly-snippets"
     },
     "fzf": {
-      "rev": "18315000185a6e6461b9b4aa4a4cb6cd164e0e35",
+      "rev": "b163463079e6254b8582b05acefcf187ec160d9b",
       "src": "https://github.com/junegunn/fzf"
     },
     "fzf-lsp.nvim": {
@@ -25,7 +25,7 @@
       "src": "https://github.com/DanSM-5/fzf-lsp.nvim"
     },
     "fzf.vim": {
-      "rev": "34a564c81f36047f50e593c1656f4580ff75ccca",
+      "rev": "d2a59a992a2455f609c0fde2ebd84427ea8f919a",
       "src": "https://github.com/junegunn/fzf.vim"
     },
     "gitsigns.nvim": {
@@ -34,33 +34,33 @@
       "version": "'fcfa7a989'"
     },
     "mini.ai": {
-      "rev": "43eb2074843950a3a25aae56a5f41362ec043bfa",
+      "rev": "25248c6aa002391936a6200f12d1466015987133",
       "src": "https://github.com/nvim-mini/mini.ai"
     },
     "nvim-surround": {
-      "rev": "19e39478ccf5fa2eefdb3595af2f2927d0ff2416",
+      "rev": "8b47db616ef658b8fc27e61db2896aa2f40134de",
       "src": "https://github.com/kylechui/nvim-surround"
     },
     "nvim-treesitter": {
-      "rev": "4916d6592ede8c07973490d9322f187e07dfefac",
+      "rev": "24977147550d53589e53b874ec75e14e4fbc304e",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
     },
     "nvim-treesitter-textobjects": {
-      "rev": "93d60a475f0b08a8eceb99255863977d3a25f310",
+      "rev": "898ee307df58f854d11cd7edd06472574d48014e",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
       "version": "'main'"
     },
     "nvim-web-devicons": {
-      "rev": "40e9d5a6cc3db11b309e39593fc7ac03bb844e38",
+      "rev": "0ca28b61a04fe7426cefbdd52c2647ef0e335b5f",
       "src": "https://github.com/nvim-tree/nvim-web-devicons"
     },
     "treesitter-modules.nvim": {
-      "rev": "dbded29dade0ff4435642530ec2b5a81730f8e1a",
+      "rev": "290eec96bfc43ed28264661dd30e894a60c4b99c",
       "src": "https://github.com/MeanderingProgrammer/treesitter-modules.nvim"
     },
     "ts-comments.nvim": {
-      "rev": "123a9fb12e7229342f807ec9e6de478b1102b041",
+      "rev": "a59d6092213447450191122c9346f309161504cb",
       "src": "https://github.com/folke/ts-comments.nvim"
     },
     "vim-ReplaceWithRegister": {
