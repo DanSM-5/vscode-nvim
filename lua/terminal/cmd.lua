@@ -1,6 +1,3 @@
--- Get this script file path
-local __file = vim.fn.substitute(debug.getinfo(1, 'S').source:match('@(.*)$'), '\\', '/', 'g')
-
 local short_path = function(path)
   local shorted = vim.fn.system('for %A in ("' .. path .. '") do @echo %~sA')
   local cleaned = shorted:gsub('\n', '')
@@ -24,26 +21,8 @@ end
 ---@param query string Query for initial search
 ---@param fullscreen boolean Whether or not to display in fullscreen
 local fzf_buffers = function(query, fullscreen)
-  local remove_list = vim.fn.substitute(vim.fn.tempname(), '\\', '/', 'g')
-
-  local repo_root = vim.fn.fnamemodify(vim.fs.find('.git', { upward = true, path = __file })[1], ':h')
-  local remove_command = ''
-
-  if vim.fn.has('win32') == 1 then
-    local gitbash = find_gitbash()
-
-    if gitbash == nil then
-      vim.notify('Cannot find gitbash', vim.log.levels.ERROR)
-      return
-    end
-
-    local drive_letter = repo_root:sub(1, 1):lower()
-    local gitbash_repo = '/' .. drive_letter .. repo_root:gsub('^[A-Za-z]:', '')
-    remove_command = gitbash .. ' ' .. gitbash_repo .. '/bin/remove_buff.sh'
-  else
-    local bin_path = repo_root .. '/bin'
-    remove_command = bin_path .. '/remove_buff.sh'
-  end
+  local remove_list = vim.fs.normalize(vim.fn.tempname())
+  local remove_command = ('echo {} >> "%s"'):format(remove_list)
 
   remove_command = remove_command .. ' {3} "' .. remove_list .. '"'
 
@@ -66,26 +45,30 @@ local fzf_buffers = function(query, fullscreen)
       'ctrl-^:toggle-preview,ctrl-s:toggle-sort',
       '--bind',
       'alt-c:clear-query,alt-f:first,alt-l:last,alt-a:select-all,alt-d:deselect-all',
+      -- '--bind',
+      -- 'ctrl-q:execute-silent(' .. remove_command .. ')+exclude+bell',
       '--bind',
-      'ctrl-q:execute-silent(' .. remove_command .. ')+exclude+bell',
+      ('ctrl-q:execute-silent(%s)+exclude+bell'):format(remove_command),
     },
     exit = function()
       ---@diagnostic disable-next-line
-      if not (vim.uv or vim.loop).fs_stat(remove_list) then
+      if not vim.uv.fs_stat(remove_list) then
         return
       end
 
-      local buffers = vim.fn.readfile(remove_list) --[[@as string[] ]]
-      if #buffers == 0 then
+      local lines = vim.fn.filereadable(remove_list) == 1 and vim.fn.readfile(remove_list) or {}
+      pcall(vim.fs.rm, remove_list)
+
+      if #lines == 0 then
         return
       end
 
-      pcall(vim.fn.delete, remove_list)
 
-      for _, buffer in ipairs(buffers) do
-        local bufnr = tonumber(buffer)
+      for _, line in ipairs(lines) do
+        local b = vim.fn.matchstr(line, '\\[\\zs[0-9]*\\ze\\]')
+        local bufnr = tonumber(b)
         if vim.fn.bufloaded(bufnr) then
-          vim.cmd('bd! ' .. buffer)
+          vim.cmd('silent! bdelete ' .. bufnr)
         end
       end
     end,
