@@ -88,6 +88,7 @@ local function fzf_rg(opts)
     fullscreen = false,
     prompt = 'RG> ',
     options = {},
+    -- template = 'rg --column --line-number --no-ignore --no-heading --color=always --smart-case --hidden --glob "!plugged" --glob "!.git" --glob "!node_modules" -- %s || true',
     template = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true',
     query = '',
     -- prevent a require if not needed
@@ -119,7 +120,7 @@ local function fzf_rg(opts)
   })
 
   -- Preview
-  if vim.fn.has('win32') then
+  if vim.fn.has('win32') == 1 then
     vim.list_extend(spec.options, {
       '--with-shell', string.format(
         '%s -NoLogo -NonInteractive -NoProfile -Command',
@@ -138,9 +139,9 @@ local function fzf_rg(opts)
 
   -- force run on directory
   local cwd = vim.fn.getcwd()
-  vim.cmd.cd(opts.directory)
+  pcall(vim.cmd.cd, opts.directory)
   pcall(vim.fn['fzf#vim#grep2'], 'rg', query, spec, opts.fullscreen and 1 or 0)
-  vim.cmd.cd(cwd)
+  pcall(vim.cmd.cd, cwd)
 end
 
 local todo_keywords = {
