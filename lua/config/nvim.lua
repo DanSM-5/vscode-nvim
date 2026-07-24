@@ -9,6 +9,36 @@ vim.api.nvim_set_hl(
   { force = true, ctermfg = 16, ctermbg = 220, fg = '#5f87d7', sp = '#5f87d7', underline = true }
 )
 
+-- Keep diagnostics distinct from slate's yellow statusline.
+vim.api.nvim_set_hl(0, 'StatusLineDiagnosticError', {
+  force = true,
+  ctermfg = 196,
+  ctermbg = 232,
+  fg = '#ff0000',
+  bg = '#300000',
+})
+vim.api.nvim_set_hl(0, 'StatusLineDiagnosticWarn', {
+  force = true,
+  ctermfg = 214,
+  ctermbg = 234,
+  fg = '#ffa500',
+  bg = '#443800',
+})
+vim.api.nvim_set_hl(0, 'StatusLineDiagnosticInfo', {
+  force = true,
+  ctermfg = 153,
+  ctermbg = 24,
+  fg = '#add8e6',
+  bg = '#285064',
+})
+vim.api.nvim_set_hl(0, 'StatusLineDiagnosticHint', {
+  force = true,
+  ctermfg = 252,
+  ctermbg = 238,
+  fg = '#d3d3d3',
+  bg = '#4a4a4a',
+})
+
 -- Highlight when yanking text
 vim.api.nvim_set_hl(0, 'HighlightYankedText', {
   link = 'IncSearch',
@@ -387,15 +417,40 @@ vim.keymap.set('n', '<space>l', vim.diagnostic.setloclist, { desc = 'LSP: Open d
 vim.keymap.set('n', '<space>q', vim.diagnostic.setqflist, { desc = 'LSP: Open diagnostic list', silent = true })
 
 -- Signs for diagnostics
-local signs = { Error = ' ', Warn = ' ', Hint = '󰠠 ', Info = ' ' }
+local signs = {
+  [vim.diagnostic.severity.ERROR] = ' ',
+  [vim.diagnostic.severity.WARN] = ' ',
+  [vim.diagnostic.severity.HINT] = '󰠠 ',
+  [vim.diagnostic.severity.INFO] = ' ',
+}
+local status_highlights = {
+  [vim.diagnostic.severity.ERROR] = 'StatusLineDiagnosticError',
+  [vim.diagnostic.severity.WARN] = 'StatusLineDiagnosticWarn',
+  [vim.diagnostic.severity.INFO] = 'StatusLineDiagnosticInfo',
+  [vim.diagnostic.severity.HINT] = 'StatusLineDiagnosticHint',
+}
+local status_severities = {
+  vim.diagnostic.severity.ERROR,
+  vim.diagnostic.severity.WARN,
+  vim.diagnostic.severity.INFO,
+  vim.diagnostic.severity.HINT,
+}
+
 vim.diagnostic.config({
   signs = {
-    text = {
-      [vim.diagnostic.severity.ERROR] = signs.Error,
-      [vim.diagnostic.severity.WARN] = signs.Warn,
-      [vim.diagnostic.severity.HINT] = signs.Hint,
-      [vim.diagnostic.severity.INFO] = signs.Info,
-    },
+    text = signs,
+  },
+  status = {
+    format = function(counts)
+      local items = {}
+      for _, severity in ipairs(status_severities) do
+        local count = counts[severity]
+        if count then
+          items[#items + 1] = ('%%#%s# %s:%d'):format(status_highlights[severity], signs[severity], count)
+        end
+      end
+      return table.concat(items, ' ') .. ' '
+    end,
   },
 
   -- Start diagnostics (virtual text) enabled
