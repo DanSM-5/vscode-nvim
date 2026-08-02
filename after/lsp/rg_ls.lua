@@ -6,7 +6,15 @@ return {
     local triggerCharacters = vim.split('abcdefghijklmnopqrstuvwxyz', '')
     require('utils.lsp_maps').set_lsp_keys(client, bufnr)
     require('utils.complete').configure(client, bufnr, { triggerCharacters = triggerCharacters })
+    require('lib.lsp.rg_ls').on_attach(client, bufnr)
   end,
+  capabilities = {
+    textDocument = {
+      references = {
+        dynamicRegistration = true,
+      },
+    },
+  },
   cmd = function(...)
     return require('lib.lsp.rg_ls').register(...)
   end,
@@ -16,6 +24,6 @@ return {
   settings = {
     rg = {
       debounce = 500,
-    }
+    },
   },
 }
