@@ -1,6 +1,32 @@
 -- Set colorscheme
 vim.cmd.colorscheme('slate')
 
+-- Replace Slate's low-contrast ANSI palette for terminal buffers.
+-- Keep this after the colorscheme because Slate resets terminal_color_0..15.
+local terminal_colors = {
+  '#282c34', -- black
+  '#e06c75', -- red
+  '#98c379', -- green
+  '#e5c07b', -- yellow
+  '#61afef', -- blue
+  '#c678dd', -- magenta
+  '#56b6c2', -- cyan
+  '#abb2bf', -- white
+  '#5c6370', -- bright black
+  '#ff7b85', -- bright red
+  '#b6e991', -- bright green
+  '#ffd689', -- bright yellow
+  '#67bbff', -- bright blue
+  '#e48aff', -- bright magenta
+  '#67dae8', -- bright cyan
+  '#abb2bf', -- bright white
+}
+
+vim.g.terminal_ansi_colors = terminal_colors
+for index, color in ipairs(terminal_colors) do
+  vim.g['terminal_color_' .. (index - 1)] = color
+end
+
 -- Color scheme overrides
 -- MatchParen ctermfg=16 ctermbg=220 guifg=#000000 guibg=#ffd700
 vim.api.nvim_set_hl(
