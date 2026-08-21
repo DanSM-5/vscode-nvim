@@ -234,8 +234,12 @@ local register = function()
 
   -- Override regular LF autocommand
   ---Create LF command to use lf binary to select files
-  vim.api.nvim_create_user_command('LF', function(opts)
-    require('lib.lf').lf(opts.fargs[1], opts.bang)
+  -- vim.api.nvim_create_user_command('LF', function(opts)
+  --   require('lib.lf').lf(opts.fargs[1], opts.bang)
+  -- end, { force = true, bar = true, nargs = '?', complete = 'dir', bang = true })
+
+  vim.api.nvim_create_user_command('Yazi', function(opts)
+    require('lib.yazi').yazi(opts.fargs[1], opts.bang)
   end, { force = true, bar = true, nargs = '?', complete = 'dir', bang = true })
 
   vim.api.nvim_create_user_command('FunctionReferences', function(cmd_opts)
