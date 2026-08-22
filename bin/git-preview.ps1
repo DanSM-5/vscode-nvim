@@ -27,7 +27,7 @@ $diff_action = "git diff --color=always {+2} | $pager"
 $copy = 'Get-Content {+f2} | Set-Clipboard'
 
 # $dirsep = if ($IsWindows -or ($env:OS -eq 'Windows_NT')) { '\' } else { '/' }
-$fzf_history = if ($env:FZF_HIST_DIR) { $env:FZF_HIST_DIR } else { "$HOME/.cache/fzf_history".Replace('\', '/') }
+$fzf_history = if ($env:FZF_HIST_DIR) { $env:FZF_HIST_DIR } else { "$HOME/.cache/fzf-history".Replace('\', '/') }
 
 function get_fzf_down_options() {
   $options = @(

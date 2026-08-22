@@ -41,7 +41,7 @@ elif [ -n "$DISPLAY" ] && command -v 'xclip' &>/dev/null; then
 fi
 
 # Setup history
-fzf_history="${FZF_HIST_DIR:-$HOME/.cache/fzf_history}"
+fzf_history="${FZF_HIST_DIR:-$HOME/.cache/fzf-history}"
 mkdir -p "$fzf_history"
 
 # Default fzf flags
