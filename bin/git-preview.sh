@@ -16,11 +16,39 @@ else
 fi
 
 preview="
-  git show --color=always {2} $preview_pager |
-    bat -p --color=always
+  sha={2}
+  if [ -n \"\$sha\" ]; then
+    git show --color=always \"\$sha\" $preview_pager |
+      bat -p --color=always
+  else
+    root=\$(git rev-parse --show-toplevel 2>/dev/null || git rev-parse --absolute-git-dir 2>/dev/null)
+    branch=\$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)
+    head=\$(git rev-parse --short HEAD 2>/dev/null)
+    upstream=\$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
+
+    printf 'Repository: %s\\n' \"\$root\"
+    if [ -n \"\$branch\" ]; then
+      printf 'HEAD:       %s (%s)\\n' \"\$branch\" \"\$head\"
+    else
+      printf 'HEAD:       detached at %s\\n' \"\$head\"
+    fi
+    [ -z \"\$upstream\" ] || printf 'Upstream:   %s\\n' \"\$upstream\"
+
+    remotes=\$(git remote -v)
+    if [ -n \"\$remotes\" ]; then
+      printf '\\nRemotes:\\n%s\\n' \"\$remotes\"
+    else
+      printf '\\nRemotes:    (none)\\n'
+    fi
+
+    printf '\\nLast commit:\\n'
+    git log -1 --color=always --date=relative \\
+      --format='%C(auto)%h%d %s%nAuthor: %an <%ae>%nDate:   %ad'
+  fi
 "
-show_action="git show --color=always {+2} | $pager"
-diff_action="git diff --color=always {+2} | $pager"
+action_shas="shas=; for sha in {+2}; do [ -z \"\$sha\" ] || shas=\"\$shas \$sha\"; done; [ -z \"\$shas\" ] ||"
+show_action="$action_shas git show --color=always \$shas | $pager"
+diff_action="$action_shas git diff --color=always \$shas | $pager"
 
 # Find clipboard utility
 copy='true'
@@ -84,5 +112,4 @@ fzf-down \
   --bind "ctrl-f:reload:$git_current_cmd" \
   --bind "ctrl-a:reload:$git_all_cmd" \
   --bind "enter:execute:$show_action" \
-  --bind "ctrl-d:execute:$diff_action" \
-  > /dev/null
+  --bind "ctrl-d:execute:$diff_action"
