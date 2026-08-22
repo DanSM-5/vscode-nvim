@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# fshow - git commit browser (enter for show, ctrl-d for diff, ` toggles sort)
+# fshow - git commit browser (enter for show, ctrl-d for diff, ctrl-s toggles sort)
 # git rev-parse HEAD > /dev/null 2>&1 || exit
 
 def_pager="less -R"
@@ -16,10 +16,11 @@ else
 fi
 
 preview="
-  grep -o \"[a-f0-9]\{7,\}\" <<< {} |
-    xargs git show --color=always $preview_pager |
-      bat -p --color=always
+  git show --color=always {2} $preview_pager |
+    bat -p --color=always
 "
+show_action="git show --color=always {+2} | $pager"
+diff_action="git diff --color=always {+2} | $pager"
 
 # Find clipboard utility
 copy='true'
@@ -27,24 +28,17 @@ copy='true'
 # better safe than sorry
 if [ "$OS" = 'Windows_NT' ]; then
   # Gitbash
-  copy="awk '{ print \$2 }' '{+f}' | pbcopy.exe"
+  copy="cat {+f2} | pbcopy.exe"
 elif [ "$OSTYPE" = 'darwin' ] || command -v 'pbcopy' &>/dev/null; then
-  copy="awk '{ print \$2 }' {+f} | pbcopy"
+  copy="cat {+f2} | pbcopy"
 # Assume linux if above didn't match
 elif [ -n "$WAYLAND_DISPLAY" ] && command -v 'wl-copy' &>/dev/null; then
-  copy="awk '{ print \$2 }' {+f} | wl-copy --foreground --type text/plain"
+  copy="cat {+f2} | wl-copy --foreground --type text/plain"
 elif [ -n "$DISPLAY" ] && command -v 'xsel' &>/dev/null; then
-  copy="awk '{ print \$2 }' {+f} | xsel -i -b"
+  copy="cat {+f2} | xsel -i -b"
 elif [ -n "$DISPLAY" ] && command -v 'xclip' &>/dev/null; then
-  copy="awk '{ print \$2 }' {+f} | xclip -i -selection clipboard"
+  copy="cat {+f2} | xclip -i -selection clipboard"
 fi
-
-# Variables
-out=
-shas=
-sha=
-q=
-k=
 
 # Setup history
 fzf_history="${FZF_HIST_DIR:-$HOME/.cache/fzf_history}"
@@ -73,41 +67,22 @@ fzf-down () {
     --header 'ctrl-d: Diff | ctrl-a: All | ctrl-f: HEAD | ctrl-y: Copy' \
     --prompt 'Commits> ' \
     --preview "$preview" \
-	  --preview-window 'right,50%,wrap-word' \
+    --preview-window 'right,50%,wrap-word' \
     --ansi --no-sort --reverse \
-    --print-query --expect=ctrl-d \
     "--history=$fzf_history/fzf-git_show" \
     --border "$@"
 }
 
-git_base_cmd="git log --graph --color=always --format='%C(auto)%h%d %s %C(black)%C(bold)%cr'"
+git_base_cmd="git log --graph --color=always --format='%C(auto)%h%d %s %C(black)%C(bold)%cr%C(reset)%x09%h'"
 git_current_cmd="$git_base_cmd $*"
 git_all_cmd="$git_base_cmd --all $*"
 
-# main loop
-while out=$(fzf-down \
-    --query="$q" \
-    --bind "start:reload:$git_all_cmd" \
-    --bind "ctrl-f:reload:$git_current_cmd" \
-    --bind "ctrl-a:reload:$git_all_cmd" \
-    ); do
-        q=$(head -1 <<< "$out")
-        k=$(head -2 <<< "$out" | tail -1)
-        # shas=($(sed '1,2d;s/^[^a-z0-9]*//;/^$/d' <<< "$out" | awk '{print $1}'))
-
-        shas=()
-        while IFS='' read -r new_sha; do
-          shas+=("$new_sha")
-        done < <(sed '1,2d;s/^[^a-z0-9]*//;/^$/d' <<< "$out" | awk '{print $1}')
-
-  # shellcheck disable=SC2128
-  [ -z "$shas" ] && continue
-  if [ "$k" = ctrl-d ]; then
-    bash -c "git diff --color=always ${shas[*]} | $pager"
-  else
-    for sha in "${shas[@]}"; do
-      bash -c "git show --color=always $sha | $pager"
-    done
-  fi
-done
-
+fzf-down \
+  --delimiter=$'\t' \
+  --with-nth 1 \
+  --bind "start:reload:$git_all_cmd" \
+  --bind "ctrl-f:reload:$git_current_cmd" \
+  --bind "ctrl-a:reload:$git_all_cmd" \
+  --bind "enter:execute:$show_action" \
+  --bind "ctrl-d:execute:$diff_action" \
+  > /dev/null
