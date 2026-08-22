@@ -22,32 +22,34 @@ $preview = "
     git show --color=always `$sha $preview_pager |
       bat -p --color=always
   } else {
+    `$accent = [string][char]27 + '[1;36m'
+    `$reset = [string][char]27 + '[0m'
     `$root = git rev-parse --show-toplevel 2> `$null
     if (-not `$root) { `$root = git rev-parse --absolute-git-dir 2> `$null }
     `$branch = git symbolic-ref --quiet --short HEAD 2> `$null
     `$head = git rev-parse --short HEAD 2> `$null
     `$upstream = git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2> `$null
 
-    Write-Output ('Repository: ' + `$root)
+    Write-Output (`$accent + 'Repository:' + `$reset + ' ' + `$root)
     if (`$branch) {
-      Write-Output ('HEAD:       ' + `$branch + ' (' + `$head + ')')
+      Write-Output (`$accent + 'HEAD:' + `$reset + '       ' + `$branch + ' (' + `$head + ')')
     } else {
-      Write-Output ('HEAD:       detached at ' + `$head)
+      Write-Output (`$accent + 'HEAD:' + `$reset + '       detached at ' + `$head)
     }
-    if (`$upstream) { Write-Output ('Upstream:   ' + `$upstream) }
+    if (`$upstream) { Write-Output (`$accent + 'Upstream:' + `$reset + '   ' + `$upstream) }
 
     [string[]]`$remotes = @(git remote -v)
     if (`$remotes.Count -gt 0) {
       Write-Output ''
-      Write-Output 'Remotes:'
+      Write-Output (`$accent + 'Remotes:' + `$reset)
       `$remotes
     } else {
       Write-Output ''
-      Write-Output 'Remotes:    (none)'
+      Write-Output (`$accent + 'Remotes:' + `$reset + ' (none)')
     }
 
     Write-Output ''
-    Write-Output 'Last commit:'
+    Write-Output (`$accent + 'Last commit:' + `$reset)
     git log -1 --color=always --date=relative '--format=%C(auto)%h%d %s%nAuthor: %an <%ae>%nDate:   %ad'
   }
 "

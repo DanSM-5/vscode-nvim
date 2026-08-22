@@ -26,29 +26,29 @@ preview="
     head=\$(git rev-parse --short HEAD 2>/dev/null)
     upstream=\$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
 
-    printf 'Repository: %s\\n' \"\$root\"
+    printf '\\033[1;36mRepository:\\033[0m %s\\n' \"\$root\"
     if [ -n \"\$branch\" ]; then
-      printf 'HEAD:       %s (%s)\\n' \"\$branch\" \"\$head\"
+      printf '\\033[1;36mHEAD:\\033[0m       %s (%s)\\n' \"\$branch\" \"\$head\"
     else
-      printf 'HEAD:       detached at %s\\n' \"\$head\"
+      printf '\\033[1;36mHEAD:\\033[0m       detached at %s\\n' \"\$head\"
     fi
-    [ -z \"\$upstream\" ] || printf 'Upstream:   %s\\n' \"\$upstream\"
+    [ -z \"\$upstream\" ] || printf '\\033[1;36mUpstream:\\033[0m   %s\\n' \"\$upstream\"
 
     remotes=\$(git remote -v)
     if [ -n \"\$remotes\" ]; then
-      printf '\\nRemotes:\\n%s\\n' \"\$remotes\"
+      printf '\\n\\033[1;36mRemotes:\\033[0m\\n%s\\n' \"\$remotes\"
     else
-      printf '\\nRemotes:    (none)\\n'
+      printf '\\n\\033[1;36mRemotes:\\033[0m (none)\\n'
     fi
 
-    printf '\\nLast commit:\\n'
+    printf '\\n\\033[1;36mLast commit:\\033[0m\\n'
     git log -1 --color=always --date=relative \\
       --format='%C(auto)%h%d %s%nAuthor: %an <%ae>%nDate:   %ad'
   fi
 "
-action_shas="shas=; for sha in {+2}; do [ -z \"\$sha\" ] || shas=\"\$shas \$sha\"; done; [ -z \"\$shas\" ] ||"
-show_action="$action_shas git show --color=always \$shas | $pager"
-diff_action="$action_shas git diff --color=always \$shas | $pager"
+action_shas="set --; for sha in {+2}; do [ -z \"\$sha\" ] || set -- \"\$@\" \"\$sha\"; done; [ \"\$#\" -eq 0 ] ||"
+show_action="$action_shas git show --color=always \"\$@\" | $pager"
+diff_action="$action_shas git diff --color=always \"\$@\" | $pager"
 
 # Find clipboard utility
 copy='true'
