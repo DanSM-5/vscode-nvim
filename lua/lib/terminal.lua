@@ -35,13 +35,19 @@ end
 
 -- -@field on_stdin? fun(channelId: integer, data: string[], name: 'stdin')
 
+---@class terminal.exit_args
+---@field jobId integer
+---@field code integer
+---@field event 'exit'
+
 -- TODO: should on_end include std error?
 
 ---@class terminal.float_opts
 ---@field cmd string|string[] command to execute
 ---@field term? terminal.jobstart.opts
 ---@field float? vim.api.keyset.win_config
----@field on_end? fun(lines: string[]) callback to be called at the end with full stdout
+---@field on_end? fun(lines: string[], exit_args: terminal.exit_args) callback to be called at the end with full stdout. Mutually exclusive with on_term_exit
+---@field on_term_exit? fun(lines: string[], status: integer) callback with the rendered terminal buffer on exit. Mutually exclusive with on_end
 ---@field ft? string custom filetype to use
 ---@field bt? string custom buftype to use
 ---@field name? string name to be used in buffer
@@ -51,7 +57,8 @@ end
 ---@field cmd string|string[] command to execute
 ---@field term? terminal.jobstart.opts
 ---@field fullscreen? boolean open the terminal in a new tabpage with a single window
----@field on_end? fun(lines: string[]) callback to be called at the end with full stdout
+---@field on_end? fun(lines: string[], exit_args: terminal.exit_args) callback to be called at the end with full stdout. Mutually exclusive with on_term_exit
+---@field on_term_exit? fun(lines: string[], status: integer) callback with the rendered terminal buffer on exit. Mutually exclusive with on_end
 ---@field ft? string custom filetype to use
 ---@field bt? string custom buftype to use
 ---@field name? string name to be used in buffer
@@ -152,6 +159,37 @@ local function set_options(opts, out, is_float)
   -- end
 end
 
+---Finish a terminal and optionally pass its rendered contents to a callback.
+---The lines are read before the terminal buffer is disposed, while the callback
+---is scheduled after window restoration/cleanup.
+---@param opts terminal.float_opts|terminal.win_opts
+---@param buf integer
+---@param close fun()
+---@param status integer
+local function finish_terminal(opts, buf, close, status)
+  local lines = {}
+  if opts.on_term_exit and vim.api.nvim_buf_is_valid(buf) then
+    local ok, terminal_lines = pcall(vim.api.nvim_buf_get_lines, buf, 0, -1, false)
+    if ok then
+      lines = terminal_lines
+    end
+  end
+
+  if opts.keep then
+    -- Leave terminal mode so the user can read the output and
+    -- decide when to close the buffer/window themselves.
+    pcall(vim.cmd.stopinsert)
+  else
+    close()
+  end
+
+  if opts.on_term_exit then
+    vim.schedule(function()
+      pcall(opts.on_term_exit, lines, status)
+    end)
+  end
+end
+
 ---Validate options for float_term
 ---@param opts terminal.float_opts
 local function validate_float_opts(opts)
@@ -190,10 +228,9 @@ local function get_cmd(opts)
     cmd = { vim.fs.joinpath(bin, 'run.sh') }
   end
 
-  local opts_cmd = vim.islist(opts.cmd) and opts.cmd or {
-    vim.split(opts.cmd, ' ', { plain = true, trimempty = true })
-  }
-  ---@cast opts_cmd string[]
+  ---@type string[]
+  local opts_cmd = vim.islist(opts.cmd) and opts.cmd --[[@as string[] ]]
+    or vim.split(opts.cmd --[[@as string]], ' ', { plain = true, trimempty = true }) ---@as string[]
 
   vim.list_extend(cmd, opts_cmd)
 
@@ -257,14 +294,9 @@ local function call_float(opts)
   vim.api.nvim_create_autocmd('TermClose', {
     once = true,
     buffer = buf,
-    callback = function()
-      if opts.keep then
-        -- Leave terminal mode so the user can read the output and
-        -- decide when to close the buffer/window themselves.
-        pcall(vim.cmd.stopinsert)
-        return
-      end
-      close()
+    callback = function(args)
+      local status = args.data and tonumber(args.data.status) or 0
+      finish_terminal(opts, buf, close, status)
     end,
   })
 
@@ -454,14 +486,9 @@ local function call_win(opts)
   vim.api.nvim_create_autocmd('TermClose', {
     once = true,
     buffer = buf,
-    callback = function()
-      if opts.keep then
-        -- Leave terminal mode so the user can read the output and
-        -- decide when to close the buffer/window themselves.
-        pcall(vim.cmd.stopinsert)
-        return
-      end
-      close()
+    callback = function(args)
+      local status = args.data and tonumber(args.data.status) or 0
+      finish_terminal(opts, buf, close, status)
     end,
   })
 
@@ -487,25 +514,27 @@ local function win_term(opts)
   -- Wrap command (get_cmd only reads opts.cmd / opts.on_end)
   opts.cmd = get_cmd(opts --[[@as terminal.float_opts]])
   ---@type string
-  local tempfile = vim.fn.tempfile()
+  local tempfile = vim.fn.tempname()
   local on_end = opts.on_end --[[@as fun(data: string[])]]
 
-  -- Handle on_end
-  local capture_on_exit = function()
+  --- Handle on_end
+  ---@type fun(jobId: integer, code: integer, event: 'exit')
+  local capture_on_exit = function(jobId, code, event)
+    local exit_args = { jobId = jobId, code = code, event = event }
     if not vim.uv.fs_stat(tempfile) then
-      pcall(on_end, {})
+      pcall(on_end, {}, exit_args)
       return
     end
 
     ---@type boolean, string[]
     local ok, lines = pcall(vim.fn.readfile, tempfile)
     if not ok then
-      pcall(on_end, {})
+      pcall(on_end, {}, exit_args)
       return
     end
 
     pcall(os.remove, tempfile)
-    pcall(on_end, lines)
+    pcall(on_end, lines, exit_args)
   end
 
   -- Override term.on_exit if exists
@@ -514,7 +543,7 @@ local function win_term(opts)
     opts.term.on_exit = function(...)
       ---@diagnostic disable-next-line
       opts_on_exit(...)
-      capture_on_exit()
+      capture_on_exit(...)
     end
   else
     opts.term.on_exit = capture_on_exit
