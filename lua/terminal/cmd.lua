@@ -63,7 +63,6 @@ local fzf_buffers = function(query, fullscreen)
         return
       end
 
-
       for _, line in ipairs(lines) do
         local b = vim.fn.matchstr(line, '\\[\\zs[0-9]*\\ze\\]')
         local bufnr = tonumber(b)
@@ -278,6 +277,47 @@ local register = function()
     end,
   })
 
+  vim.api.nvim_create_user_command('Fshow', function(opts)
+    local dir = opts.fargs[1]
+    if dir == nil then
+      dir = vim.fn.expand('%:p:h')
+    end
+
+    if not require('lib.std').is_git_dir(dir) then
+      vim.notify('Not a git repository', vim.log.levels.ERROR)
+      return
+    end
+
+    require('lib.git_preview').fshow(dir)
+  end, {
+    complete = 'dir',
+    nargs = '?',
+    bar = true,
+    bang = true,
+    desc = '[FShow] Show the commits in fzf',
+  })
+
+  vim.api.nvim_create_user_command('GitSearch', function(opts)
+    require('lib.gitsearch').search(opts.fargs, opts.bang)
+  end, {
+    nargs = '*',
+    bang = true,
+    bar = true,
+    force = true,
+    desc = '[GitSearch] Search commit messages or patches',
+  })
+
+  vim.api.nvim_create_user_command('GitFileHistory', function(opts)
+    require('lib.gitsearch').file_history(opts.fargs[1], opts.bang)
+  end, {
+    nargs = '?',
+    complete = 'file',
+    bang = true,
+    bar = true,
+    force = true,
+    desc = '[GitSearch] Search the history of a file',
+  })
+
   -- Recreate removed lsp commands
   if vim.fn.has('nvim-0.12.0') == 1 then
     vim.api.nvim_create_user_command('Lsp', function(info)
@@ -301,7 +341,7 @@ local register = function()
       bang = true,
       bar = true,
       force = true,
-      complete = function (...)
+      complete = function(...)
         return require('lib.pack.cmd').complete(...)
       end,
     })
